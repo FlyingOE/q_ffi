@@ -12,6 +12,6 @@ The new FFI in k9 avoids the above problems by allowing direct specification of 
 
 ### License
 
-[Apache License v2.0](http://www.apache.org/licenses/LICENSE-2.0)
+[Apache License v2.0](./LICENSE)
 
 ### Build
