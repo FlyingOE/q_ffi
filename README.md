@@ -1,6 +1,4 @@
-# q_ffi
-
-## K9-like Foreign Function Interface for k4
+# `q_ffi`: a k9-like Foreign Function Interface for k4
 
 This project provides a k9-like <a href="https://en.wikipedia.org/wiki/Foreign_function_interface"><abbr title="foreign function interface">FFI</abbr></a> for k4 inspired by k9.
 
@@ -10,17 +8,17 @@ In the original FFI of k4, foreign functions must be compiled with [`k.h`](https
 
 The new FFI in k9 avoids the above problems by allowing direct specification of function signature during library loading, thus eliminating the need for boilerplate code to convert `K` into data types usable in a foreign language.
 
-### License
+## License
 
 [Apache License v2.0](./LICENSE)
 
-### Build
+## Build
 
 `q_ffi` is built with [CMake](https://cmake.org/).
 
 After installation, both q scripts and binary libraries are located in `./dist` directory.
 
-#### Building on Linux-like environment
+### Building on Linux-like environment
 
 Follow the classic CMake Build Procedure&trade;:
 
@@ -32,7 +30,7 @@ make
 make install
 ```
 
-#### Building with Visual Studio IDE
+### Building with Visual Studio (IDE)
 
 Microsoft Visual Studio has provided [native support for CMake][1] since Visual Studio 2017.
 
@@ -41,7 +39,7 @@ To build with the IDE, you need to first install the "C++ CMake tools for Window
 [1]: https://devblogs.microsoft.com/cppblog/cmake-support-in-visual-studio/
 [2]: https://docs.microsoft.com/cpp/build/cmake-projects-in-visual-studio
 
-#### Build with Visual Studio CLI
+### Building with Visual Studio (CLI)
 
 To build from the command line, follow [this document][3] to launch the build environment, then adapt the build procedure [above](#Building on Linux-like environment) accordingly:
 

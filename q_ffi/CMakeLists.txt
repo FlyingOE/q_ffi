@@ -1,8 +1,10 @@
 include_directories(../inc)
 link_directories(../lib/${k4_PLATFORM})
-link_libraries(q)
-#set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")   	# multi-threaded static runtime
-set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")	# multi-threaded DLL runtime
+if(k4_SYSTEM 119)
+	link_libraries(q)	# Windows build requires `q.lib'
+#	set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
 
 file(GLOB q_ffi_HEADERS "*.h" "*.hpp")
 file(GLOB q_ffi_SOURCES "*.cpp")

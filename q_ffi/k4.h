@@ -1,13 +1,18 @@
 #pragma once
 // Work-around various standard-compliance issues in <k.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #	pragma warning( push )
 #	pragma warning( disable: 4201 )
+#elif defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Werror=pedantic"
 #endif
 
 #include <k.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #	pragma warning( pop )
+#elif defined(__GNUC__)
+#	pragma GCC diagnostic pop
 #endif

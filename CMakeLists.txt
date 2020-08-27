@@ -6,7 +6,7 @@ include(CMakePrintHelpers)
 ########################################
 project(q_ffi
 	VERSION 0.1
-	DESCRIPTION "K9-like FFI for kdb+/q"
+	DESCRIPTION "A k9-like FFI for kdb+/q"
 	HOMEPAGE_URL "https://github.com/FlyingOE/q_ffi")
 
 # Build requirements
@@ -49,8 +49,6 @@ elseif(UNIX AND NOT APPLE)
 		message(FATAL_ERROR
 			"Failed to detect Linux platform: CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
 	endif()
-	message(WARNING
-		"FIXME: Linux support has not been verified yet.")
 	
 	add_compile_options(-Wall -Wextra -pedantic -Werror)
 
