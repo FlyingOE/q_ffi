@@ -16,11 +16,13 @@ The new FFI in k9 avoids the above problems by allowing direct specification of 
 
 ### Build
 
-#### Building on Linux-like environments
+`q_ffi` is built with [CMake](https://cmake.org/).
 
-FIXME
+After installation, both q scripts and binary libraries are located in `./dist` directory.
 
-`q_ffi` is built with [CMake](https://cmake.org/), following the classic CMake Build Procedure&trade;:
+#### Building on Linux-like environment
+
+Follow the classic CMake Build Procedure&trade;:
 
 ```sh
 mkdir build    # build directory
@@ -30,26 +32,31 @@ make
 make install
 ```
 
-#### Building with Visual Studio
+#### Building with Visual Studio IDE
 
 Microsoft Visual Studio has provided [native support for CMake][1] since Visual Studio 2017.
 
-To build with the IDE, simply use the "Open Folder..." feature in Visual Studio and the project should automatically imported. Please refer to [Microsoft's document][2] on how to work with CMake projects in Visual Studio.
-
-To build from the command line, follow [this document][3] to launch the build environment, then adapt the build procedure [above](#Building on Linux-like environments) accordingly:
-
-```batch
-:: Run in "Developer Command Prompt for VS 2017/2019"
-mkdir build                                   :: build directory
-cd build
-cmake .. -G"Visual Studio 2017 15"            :: VS 2017, default (x64) build
-cmake .. -G"Visual Studio 2017 15 Win32"      :: VS 2017, Win32 (x86) build
-cmake .. -G"Visual Studio 2019 16"            :: VS 2019, default (x64) build
-cmake .. -G"Visual Studio 2019 16" -A Win32   :: VS 2019, Win32 (x86) build
-cmake --build .
-cmake --build . --target install
-```
+To build with the IDE, you need to first install the "C++ CMake tools for Windows" feature (under "Desktop development with C++") into Visual Studio. Then, simply use the "Open Folder..." feature in Visual Studio and this project should be automatically imported. For details, please refer to [Microsoft's document][2] on how to work with CMake projects in Visual Studio.
 
 [1]: https://devblogs.microsoft.com/cppblog/cmake-support-in-visual-studio/
 [2]: https://docs.microsoft.com/cpp/build/cmake-projects-in-visual-studio
+
+#### Build with Visual Studio CLI
+
+To build from the command line, follow [this document][3] to launch the build environment, then adapt the build procedure [above](#Building on Linux-like environment) accordingly:
+
+```batch
+:: Run in "Developer Command Prompt for VS 2017/2019"
+mkdir build                                    :: build directory
+cd build
+cmake .. -G "Visual Studio 2017 15"            :: VS 2017, default (x86) build
+cmake .. -G "Visual Studio 2017 15 x64"        :: VS 2017, 64-bit (x64) build
+cmake .. -G "Visual Studio 2019 16" -A Win32   :: VS 2019, 32-bit (x86) build
+cmake .. -G "Visual Studio 2019 16" -A x64     :: VS 2019, 64-bit (x64) build
+cmake --build .                                :: default Debug build
+cmake --build . --config ReleaseWithDebInfo    :: Release-With-Debug-Info build
+cmake --build . --config Release               :: stripped Release build
+cmake --build . --target install
+```
+
 [3]: https://docs.microsoft.com/cpp/build/building-on-the-command-line

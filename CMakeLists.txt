@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0048 NEW)	# project(VERSION)
+cmake_policy(SET CMP0091 NEW)	# set(CMAKE_MSVC_RUNTIME_LIBRARY)
 include(CMakePrintHelpers)
 
 ########################################
@@ -22,17 +23,22 @@ if(WIN32)
 		message(FATAL_ERROR
 			"FIXME: Support for non-MSVC needed...")
 	endif()
+
 	set(k4_SYSTEM 119)	# ASCII for 'w'
-	if(CMAKE_VS_PLATFORM_NAME STREQUAL "Win32")
+	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
 		set(k4_PLATFORM "w32")
-	elseif(CMAKE_VS_PLATFORM_NAME STREQUAL "x64")
+	elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
 		set(k4_PLATFORM "w64")
 	else()
 		message(FATAL_ERROR
-			"Failed to detect Visual Studio platform: CMAKE_VS_PLATFORM_NAME=${CMAKE_VS_PLATFORM_NAME}")
+			"Unknown sizeof(void*): CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
 	endif()
-	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+
+	remove_definitions(_MBCS)
+	add_compile_definitions(_UNICODE)
+	add_compile_options(/W4 /WX)
+	add_compile_options(/MP)	# multi-threaded build
+
 elseif(UNIX AND NOT APPLE)
 	set(k4_SYSTEM 108)	# ASCII for 'l'
 	if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
@@ -45,8 +51,11 @@ elseif(UNIX AND NOT APPLE)
 	endif()
 	message(WARNING
 		"FIXME: Linux support has not been verified yet.")
+	
+	add_compile_options(-Wall -Wextra -pedantic -Werror)
+
 elseif(APPLE)
-	set(k4_SYSTEM 109)	# ASCII for 'm'
+	set(k4_SYSTEM 109)	# ASCII code for 'm'
 	message(FATAL_ERROR
 		"FIXME: macOS not support yet!")
 else()

@@ -1,6 +1,8 @@
 include_directories(../inc)
 link_directories(../lib/${k4_PLATFORM})
 link_libraries(q)
+#set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")   	# multi-threaded static runtime
+set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")	# multi-threaded DLL runtime
 
 file(GLOB q_ffi_HEADERS "*.h" "*.hpp")
 file(GLOB q_ffi_SOURCES "*.cpp")
@@ -16,4 +18,4 @@ add_library(q_ffi SHARED ${q_ffi_ALL})
 install(TARGETS q_ffi
 	RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/deploy/${k4_PLATFORM})
 install(FILES ${q_ffi_SCRIPTS}
-	DESTINATION ${PROJECT_SOURCE_DIR}/deploy)
+	DESTINATION ${PROJECT_SOURCE_DIR}/dist)

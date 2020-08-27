@@ -32,7 +32,8 @@
 *.app
 
 # IDE/build directories
-/build/
+build/
+.vs/
 
 # Build dependencies
 !/lib/**/*.lib
@@ -40,3 +41,7 @@
 !/lib/**/*.a
 !/lib/**/*.so
 !/lib/**/*.o
+
+# Distributable directories
+/dist/
+
