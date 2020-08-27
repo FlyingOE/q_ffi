@@ -33,3 +33,10 @@
 
 # IDE/build directories
 /build/
+
+# Build dependencies
+!/lib/**/*.lib
+!/lib/**/*.dll
+!/lib/**/*.a
+!/lib/**/*.so
+!/lib/**/*.o
