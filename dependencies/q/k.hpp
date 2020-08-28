@@ -6,7 +6,7 @@
 #	pragma warning( disable: 4201 )
 #elif defined(__GNUC__)
 #	pragma GCC diagnostic push
-#	pragma GCC diagnostic ignored "-Werror=pedantic"
+#	pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
 #include <k.h>

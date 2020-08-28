@@ -36,11 +36,11 @@ build/
 .vs/
 
 # Build dependencies
-!/lib/**/*.lib
-!/lib/**/*.dll
-!/lib/**/*.a
-!/lib/**/*.so
-!/lib/**/*.o
+!/dependencies/**/*.lib
+!/dependencies/**/*.dll
+!/dependencies/**/*.a
+!/dependencies/**/*.so
+!/dependencies/**/*.o
 
 # Distributable directories
 /dist/

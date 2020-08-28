@@ -50,7 +50,7 @@ elseif(UNIX AND NOT APPLE)
 			"Failed to detect Linux platform: CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
 	endif()
 	
-	add_compile_options(-Wall -Wextra -pedantic -Werror)
+	add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 elseif(APPLE)
 	set(k4_SYSTEM 109)	# ASCII code for 'm'

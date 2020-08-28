@@ -1,6 +1,6 @@
-include_directories(../inc)
-link_directories(../lib/${k4_PLATFORM})
-if(k4_SYSTEM 119)
+include_directories(${PROJECT_SOURCE_DIR}/dependencies/q)
+link_directories(${PROJECT_SOURCE_DIR}/dependencies/q/${k4_PLATFORM})
+if(k4_SYSTEM EQUAL 119)
 	link_libraries(q)	# Windows build requires `q.lib'
 #	set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
