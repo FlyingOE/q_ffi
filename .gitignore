@@ -36,9 +36,8 @@ build/
 .vs/
 
 # Build dependencies
-!/dependencies/**/*.lib
 !/dependencies/**/*.dll
-!/dependencies/**/*.a
+!/dependencies/**/*.lib
 !/dependencies/**/*.so
 !/dependencies/**/*.o
 

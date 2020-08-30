@@ -1,38 +1,28 @@
 #pragma once
+/* vim: set et noai ts=4 sw=4 syntax=cpp: */
 
-#define VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define VERSION_PATCH @PROJECT_VERSION_PATCH@
-#define VERSION_TWEAK @PROJECT_VERSION_TWEAK@
-#define VERSION      #@PROJECT_VERSION@
-
-// q/k4 platform: w32/w64/l32/l64/etc.
-#cmakedefine k4_PLATFORM @k4_PLATFORM@
-#cmakedefine k4_SYSTEM   @k4_SYSTEM@
-
-// q/k4 binary API version
-#define KXVER 3
+#define q_ffi_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define q_ffi_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define q_ffi_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define q_ffi_VERSION_TWEAK @PROJECT_VERSION_TWEAK@
+#define q_ffi_VERSION       @PROJECT_VERSION@
 
 // C++/C name mangling
 #ifdef __cplusplus
-#	define q_ffi_EXTERN extern "C"
+#   define q_ffi_EXTERN extern "C"
 #else
-#	define q_ffi_EXTERN
+#   define q_ffi_EXTERN
 #endif
 
 // DLL export nuance
-#if k4_SYSTEM == 119 //'w'
-#	ifdef q_ffi_EXPORTS
-#		define q_ffi_API q_ffi_EXTERN __declspec(dllexport)
-#	else
-#		define q_ffi_API q_ffi_EXTERN __declspec(dllimport)
-#	endif
-#	ifdef _WIN64
-#		define K4_DECL
-#	else //_WIN32 is exposed on both Win32 and x64
-#		define K4_DECL __cdecl
-#	endif
+#ifdef _WIN32
+#   ifdef q_ffi_EXPORTS
+#       define q_ffi_API  q_ffi_EXTERN __declspec(dllexport)
+#   else
+#       define q_ffi_API  q_ffi_EXTERN __declspec(dllimport)
+#   endif
+#   define K4_DECL  __cdecl
 #else
-#		define q_ffi_API q_ffi_EXTERN
-#		define K4_DECL
+#   define q_ffi_API q_ffi_EXTERN
+#   define K4_DECL
 #endif
