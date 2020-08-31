@@ -2,6 +2,6 @@
 
 namespace q_ffi {
 
-    constexpr char const* version();
+    extern char const* const version;
 
 }//namespace q_ffi

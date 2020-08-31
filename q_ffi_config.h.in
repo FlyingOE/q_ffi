@@ -7,6 +7,9 @@
 #define q_ffi_VERSION_TWEAK @PROJECT_VERSION_TWEAK@
 #define q_ffi_VERSION       @PROJECT_VERSION@
 
+
+#define q_ffi_GIT_HASH      @q_ffi_GIT_HASH@
+
 // C++/C name mangling
 #ifdef __cplusplus
 #   define q_ffi_EXTERN extern "C"

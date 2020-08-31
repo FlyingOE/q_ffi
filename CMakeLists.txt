@@ -66,6 +66,12 @@ endif()
 cmake_print_variables(k4_SYSTEM)
 cmake_print_variables(k4_PLATFORM)
 
+# Embed Git hash into binary
+execute_process(
+	COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+	OUTPUT_VARIABLE q_ffi_GIT_HASH
+	OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 # Project contents
 configure_file(q_ffi_config.h.in q_ffi.h @ONLY)
 include_directories(${PROJECT_BINARY_DIR})
@@ -78,5 +84,4 @@ ExternalProject_Add(magic_enum
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${q_ffi_DEPENDENCIES}/magic_enum
     GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
     GIT_TAG v0.6.6
-    GIT_SHALLOW ON
-    BUILD_ALWAYS ON)
+    GIT_SHALLOW ON)
