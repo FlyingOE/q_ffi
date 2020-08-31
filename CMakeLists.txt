@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0048 NEW)    # project(VERSION)
 cmake_policy(SET CMP0091 NEW)    # set(CMAKE_MSVC_RUNTIME_LIBRARY)
 include(CMakePrintHelpers)
+include(ExternalProject)
+find_package(Git REQUIRED)
 
 ########################################
 project(q_ffi
@@ -13,10 +15,10 @@ project(q_ffi
 # Build requirements
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Project global setup
-set_property(GLOBAL PROPERTY USE_FOLDERS On)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(q_ffi_DEPENDENCIES   ${PROJECT_SOURCE_DIR}/dependencies)
 set(q_ffi_DISTRIBUTABLES ${PROJECT_SOURCE_DIR}/dist)
 
@@ -69,3 +71,12 @@ configure_file(q_ffi_config.h.in q_ffi.h @ONLY)
 include_directories(${PROJECT_BINARY_DIR})
 
 add_subdirectory(q_ffi)
+
+# External dependencies
+ExternalProject_Add(magic_enum
+    PREFIX ${PROJECT_BINARY_DIR}/magic_enum
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${q_ffi_DEPENDENCIES}/magic_enum
+    GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+    GIT_TAG v0.6.6
+    GIT_SHALLOW ON
+    BUILD_ALWAYS ON)

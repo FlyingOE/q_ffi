@@ -40,6 +40,7 @@ build/
 !/dependencies/**/*.lib
 !/dependencies/**/*.so
 !/dependencies/**/*.o
+/dependencies/magic_enum/
 
 # Distributable directories
 /dist/

@@ -1,7 +1,9 @@
 ### vim: set et noai ts=4 sw=4 syntax=cmake:
 
 # Build configurations
-include_directories(${q_ffi_DEPENDENCIES}/q)
+include_directories(
+	${q_ffi_DEPENDENCIES}/q
+	${q_ffi_DEPENDENCIES}/magic_enum/include)
 link_directories   (${q_ffi_DEPENDENCIES}/q/${k4_PLATFORM})
 if(k4_SYSTEM STREQUAL "w")
 	link_libraries(q)	# Windows build requires `q.lib'
@@ -32,6 +34,7 @@ add_library(q_ffi SHARED
 	${q_ffi_SOURCES}
 	${q_ffi_HEADERS}
 	${q_ffi_PUBLIC_HEADERS})
+add_dependencies(q_ffi magic_enum)
 set_target_properties(q_ffi PROPERTIES
 	RESOURCE      "${q_ffi_Q_SCRIPTS}"
 	PUBLIC_HEADER "${q_ffi_PUBLIC_HEADERS}")
