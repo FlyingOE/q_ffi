@@ -58,3 +58,15 @@ cmake --build . --target install
 ```
 
 [3]: https://docs.microsoft.com/cpp/build/building-on-the-command-line
+
+## Test / Sample Code
+
+`q_ffi` is tested with [GoogleTest](https://github.com/google/googletest).
+
+### Testing with Visual Studio
+
+GoogleTest is [natively supported][4] since Visual Studio 2017.
+
+The `test` subdirectory contains all unit tests. Upon CMake testing, GoogleTest is automatically checked out from [GitHub](https://github.com/google/googletest) and built into the test project.
+
+[4]: https://docs.microsoft.com/en-us/visualstudio/test/how-to-use-google-test-for-cpp
