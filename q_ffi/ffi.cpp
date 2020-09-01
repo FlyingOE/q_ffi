@@ -1,5 +1,6 @@
-#include "ffi.h"
 #include "version.hpp"
+#include "types.hpp"
+#include "ffi.h"
 
 K K4_DECL load(K dllSym, K fName, K resType, K parTypes)
 {

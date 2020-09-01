@@ -16,12 +16,14 @@ set(q_ffi_Q_SCRIPTS
 	"q_ffi.q")
 set(q_ffi_PUBLIC_HEADERS
 	"k_compat.h"
-	"${PROJECT_BINARY_DIR}/q_ffi.h")
+	"${PROJECT_BINARY_DIR}/q_ffi.h"
+	"types.hpp")
 set(q_ffi_HEADERS
 	"ffi.h"
 	"version.hpp")
 set(q_ffi_SOURCES
-	"ffi.cpp")
+	"ffi.cpp"
+	"types.cpp")
 set(q_ffi_VERSION_SOURCE
 	"version.cpp")
 
