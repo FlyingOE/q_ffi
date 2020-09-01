@@ -36,11 +36,10 @@ build/
 .vs/
 
 # Build dependencies
-!/dependencies/**/*.dll
-!/dependencies/**/*.lib
-!/dependencies/**/*.so
-!/dependencies/**/*.o
-/dependencies/magic_enum/
+!/depends/**/*.dll
+!/depends/**/*.lib
+!/depends/**/*.so
+!/depends/**/*.o
 
 # Distributable directories
 /dist/
