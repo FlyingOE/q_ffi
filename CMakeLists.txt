@@ -45,7 +45,7 @@ endif()
 # Platform detection
 if(WIN32)
     if(NOT (MSVC OR MSYS OR MINGW))
-        message(FATAL_ERROR "FIXME: Support for non-MSVC needed...")
+        message(FATAL_ERROR "FIXME: Support non-MSVC?")
     endif()
 
     set(k4_SYSTEM "w")
@@ -57,15 +57,16 @@ if(WIN32)
         message(FATAL_ERROR "Unknown sizeof(void*): CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
     endif()
 
-    remove_definitions(_MBCS)
-    add_compile_definitions(_UNICODE)
+    add_compile_options(/nologo)
     add_compile_options(/MP)        # multi-threaded build
     add_compile_options(/W4 /WX)    # warning level
-    # work-around conflicting /W3 and /W4
     string(FIND "${CMAKE_CXX_FLAGS}" "/W3" NEED_FIX_W3)
-    if(NOT NEED_FIX_W3 EQUAL -1)
+    if(NOT NEED_FIX_W3 EQUAL -1)    # work-around conflicting /W3 and /W4
         string(REPLACE "/W3" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     endif()
+    remove_definitions(_MBCS)
+    add_compile_definitions(_UNICODE)
+    add_link_options(/nologo)
 
 elseif(UNIX AND NOT APPLE)
     set(k4_SYSTEM "l")
