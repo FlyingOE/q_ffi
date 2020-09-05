@@ -12,7 +12,7 @@
 
 // C++/C name mangling
 #ifdef __cplusplus
-#   define q_ffi_EXTERN extern "C"
+#   define q_ffi_EXTERN  extern "C"
 #else
 #   define q_ffi_EXTERN
 #endif
@@ -20,9 +20,9 @@
 // DLL export nuance
 #ifdef _WIN32
 #   ifdef q_ffi_EXPORTS
-#       define q_ffi_API  q_ffi_EXTERN __declspec(dllexport)
+#       define q_ffi_API  __declspec(dllexport)
 #   else
-#       define q_ffi_API  q_ffi_EXTERN __declspec(dllimport)
+#       define q_ffi_API  __declspec(dllimport)
 #   endif
 #   define K4_DECL  __cdecl
 #else
