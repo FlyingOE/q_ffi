@@ -35,125 +35,114 @@ TEST(KptrTests, RefCount)
     EXPECT_EQ(k->r, refCount) << "destructing K_ptr<> should decrement ref count";
 }
 
-namespace {
+template<typename Tr>
+class KptrTests : public ::testing::Test
+{
+protected:
+    using Traits = Tr;
+    using value_type = typename Traits::value_type;
 
-    template<q::Type tid, typename T>
-    void checkEqualAtoms(q::K_ptr const& pk, T const& v)
+private:
+    static std::vector<value_type> const tests_;
+
+    static bool memory_compare(value_type const& actual, value_type const& expected)
     {
-        using Traits = q::TypeTraits<tid>;
+        return sizeof(actual) == sizeof(expected) &&
+            0 == std::memcmp(&actual, &expected, sizeof(actual));
+    };
 
-        auto memory_compare = [](auto const actual, auto const expected)
-        {
-            return sizeof(actual) == sizeof(expected) &&
-                0 == std::memcmp(&actual, &expected, sizeof(actual));
-        };
+    template<typename = std::enable_if_t<!std::is_same_v<value_type, char const*>>>
+    void checkEqualAtoms(q::K_ptr const& pk, value_type const& v)
+    {
         // Use memory comparison because some values (e.g. NaN) are not comparable
         EXPECT_PRED2(memory_compare, Traits::value(pk.get()), v)
-            << "unexpected different K object values (" << tid << ')';
+            << "unexpected different K object values (" << Traits::id << ')';
     }
 
-    template<q::Type tid>
     void checkEqualAtoms(q::K_ptr const& pk, char const* str)
     {
-        using Traits = q::TypeTraits<tid>;
-
         EXPECT_STREQ(Traits::value(pk.get()), str)
-            << "unexpected different K object strings (" << tid << ')';
+            << "unexpected different K object strings (" << Traits::id << ')';
     }
 
-    template<q::Type = q::kNil>
-    void checkEqualAtoms(q::K_ptr const& pk, void* /*ignore*/) {}
-
-    template<q::Type tid, typename T>
+    template<typename T>
     void test_make_K(T&& v)
     {
-        using Traits = q::TypeTraits<tid>;
-        auto pk = q::make_K<tid>(std::forward<T>(v));
-        ASSERT_NE(pk.get(), q::Nil) << "q::make_K<" << tid << ">() fails to create K object";
-        EXPECT_EQ(q::typeOf(pk), tid) << "q::make_K<" << tid << ">() creates K object of the wrong type";
-        checkEqualAtoms<tid>(pk, v);
+        ASSERT_TRUE((std::is_same_v<value_type, std::decay_t<T>>)) << "<BUG> invalid test data type";
+
+        auto pk = q::make_K<Traits::id>(std::forward<T>(v));
+        ASSERT_NE(pk.get(), q::Nil) << "q::make_K<" << Traits::id << ">() fails to create K object";
+        EXPECT_EQ(q::typeOf(pk), Traits::id) << "q::make_K<" << Traits::id << ">() creates K object of the wrong type";
+        checkEqualAtoms(pk, v);
     }
 
-}//namespace <anonymous>
+protected:
 
-TEST(KptrTests, makeK)
+    void test_samples()
+    {
+        for (auto const test : tests_)
+            test_make_K(test);
+    }
+
+    void test_null(std::false_type) {}
+    void test_null(std::true_type)
+    {
+        test_make_K(Traits::null());
+    }
+
+    void test_numeric(std::false_type) {}
+    void test_numeric(std::true_type)
+    {
+        test_make_K(Traits::inf());
+        test_make_K(std::numeric_limits<value_type>::min());
+        test_make_K(std::numeric_limits<value_type>::max());
+    }
+};
+
+#define KPTR_TEST_PARAMS(qType, cppType, ...)   \
+    template<>  \
+    std::vector<cppType> const  \
+    KptrTests<q::TypeTraits<qType>>::tests_ =   \
+        { __VA_ARGS__ }
+
+KPTR_TEST_PARAMS(q::kBoolean, bool,
+    true, false);
+KPTR_TEST_PARAMS(q::kByte, char,
+    0, 0x20, -127);
+KPTR_TEST_PARAMS(q::kShort, short,
+    0, 129, -128);
+KPTR_TEST_PARAMS(q::kInt, int32_t,
+    0, 65536, -32768);
+KPTR_TEST_PARAMS(q::kLong, int64_t,
+    0, 4294967296LL, -2147483648LL);
+KPTR_TEST_PARAMS(q::kReal, float,
+    0.f, 987.654f, -123.456f);
+KPTR_TEST_PARAMS(q::kFloat, double,
+    0., 987.6543210123, -123.4567890987);
+KPTR_TEST_PARAMS(q::kChar, char,
+    '\0', 'Z', '\xFF');
+KPTR_TEST_PARAMS(q::kSymbol, char const*,
+    "600000.SH", "123 abc ABC", "≤‚ ‘");
+//KPTR_TEST_PARAMS(q::kNil, void,
+//    );    //<q::kNil> cannot be `created'!
+//KPTR_TEST_PARAMS(q::kError, char const*,
+//    );    //<q::kError> cannot be `created'!   
+
+using TestTypes = ::testing::Types <
+    q::TypeTraits<q::kBoolean>, q::TypeTraits<q::kByte>,
+    q::TypeTraits<q::kShort>, q::TypeTraits<q::kInt>, q::TypeTraits<q::kLong>,
+    q::TypeTraits<q::kReal>, q::TypeTraits<q::kFloat>,
+    q::TypeTraits<q::kChar>, q::TypeTraits<q::kSymbol>
+    //q::TypeTraits<q::kNil>
+    //q::TypeTraits<q::kError>
+>;
+TYPED_TEST_SUITE(KptrTests, TestTypes);
+
+TYPED_TEST(KptrTests, makeK)
 {
-    {
-        using Traits = q::TypeTraits<q::kBoolean>;
-        test_make_K<Traits::id>(true);
-        test_make_K<Traits::id>(false);
-    }
-    {
-        using Traits = q::TypeTraits<q::kByte>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>(static_cast<char>(0x20));
-        test_make_K<Traits::id>(static_cast<char>(0xFF));
-    }
-    {
-        using Traits = q::TypeTraits<q::kShort>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>(Traits::inf());
-        test_make_K<Traits::id>((short)0);
-        test_make_K<Traits::id>((short)-128);
-        test_make_K<Traits::id>(std::numeric_limits<short>::min());
-        test_make_K<Traits::id>(std::numeric_limits<short>::max());
-    }
-    {
-        using Traits = q::TypeTraits<q::kInt>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>(Traits::inf());
-        test_make_K<Traits::id>(0);
-        test_make_K<Traits::id>(-32768);
-        test_make_K<Traits::id>(std::numeric_limits<int32_t>::min());
-        test_make_K<Traits::id>(std::numeric_limits<int32_t>::max());
-    }
-    {
-        using Traits = q::TypeTraits<q::kLong>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>(Traits::inf());
-        test_make_K<Traits::id>(0LL);
-        test_make_K<Traits::id>(-2147483648LL);
-        test_make_K<Traits::id>(std::numeric_limits<int64_t>::min());
-        test_make_K<Traits::id>(std::numeric_limits<int64_t>::max());
-    }
-    {
-        using Traits = q::TypeTraits<q::kReal>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>(Traits::inf());
-        test_make_K<Traits::id>(0.f);
-        test_make_K<Traits::id>(-123.456f);
-        test_make_K<Traits::id>(std::numeric_limits<float>::min());
-        test_make_K<Traits::id>(std::numeric_limits<float>::max());
-    }
-    {
-        using Traits = q::TypeTraits<q::kFloat>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>(Traits::inf());
-        test_make_K<Traits::id>(0.);
-        test_make_K<Traits::id>(-123.456789012);
-        test_make_K<Traits::id>(std::numeric_limits<double>::min());
-        test_make_K<Traits::id>(std::numeric_limits<double>::max());
-    }
-    {
-        using Traits = q::TypeTraits<q::kChar>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>('\0');
-        test_make_K<Traits::id>('Z');
-    }
-    {
-        using Traits = q::TypeTraits<q::kSymbol>;
-        test_make_K<Traits::id>(Traits::null());
-        test_make_K<Traits::id>("600000.SH");
-        test_make_K<Traits::id>("≤‚ ‘");
-    }
-    {
-        using Traits = q::TypeTraits<q::kNil>;
-        // <q::kNil> cannot be created with q::make_K<>()
-    }
-    {
-        using Traits = q::TypeTraits<q::kSymbol>;
-        test_make_K<Traits::id>("(default) non-system error");
-    }
+    test_samples();
+    test_null(q::has_null<Traits::id>());
+    test_numeric(q::is_numeric<Traits::id>());
 }
 
 TEST(KptrTests, dupK)

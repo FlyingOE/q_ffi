@@ -49,24 +49,24 @@ TYPED_TEST(TypeTraitsTests, qTypeTraitsQuery)
     using Traits = q::TypeTraits<TypeParam::id_>;
     auto const non_prefix = [](bool f) { return f ? "" : "-non"; };
 
-    EXPECT_EQ(q::has_value<Traits>(), TypeParam::hasValue_)
+    EXPECT_EQ(q::has_value_t<Traits::id>, TypeParam::hasValue_)
         << "q::TypeTraits<" << TypeParam::id_ << "> should report as "
         << non_prefix(TypeParam::hasValue_) << "value type";
-    EXPECT_EQ(q::has_value<TypeParam::id_>(), TypeParam::hasValue_)
+    EXPECT_EQ(q::has_value_t<Traits::id>, TypeParam::hasValue_)
         << "<" << TypeParam::id_ << "> should report as "
         << non_prefix(TypeParam::hasValue_) << "value type";
 
-    EXPECT_EQ(q::has_null<Traits>(), TypeParam::hasNull_)
+    EXPECT_EQ(q::has_null_t<Traits::id>, TypeParam::hasNull_)
         << "q::TypeTraits<" << TypeParam::id_ << "> should report as "
         << non_prefix(TypeParam::hasNull_) << "nullable type";
-    EXPECT_EQ(q::has_null<TypeParam::id_>(), TypeParam::hasNull_)
+    EXPECT_EQ(q::has_null_t<Traits::id>, TypeParam::hasNull_)
         << "<" << TypeParam::id_ << "> should report as "
         << non_prefix(TypeParam::hasNull_) << "nullable type";
 
-    EXPECT_EQ(q::is_numeric<Traits>(), TypeParam::isNumeric_)
+    EXPECT_EQ(q::is_numeric_t<Traits::id>, TypeParam::isNumeric_)
         << "q::TypeTraits<" << TypeParam::id_ << "> should report as "
         << non_prefix(TypeParam::isNumeric_) << "numeric type";
-    EXPECT_EQ(q::is_numeric<TypeParam::id_>(), TypeParam::isNumeric_)
+    EXPECT_EQ(q::is_numeric_t<Traits::id>, TypeParam::isNumeric_)
         << "<" << TypeParam::id_ << "> should report as "
         << non_prefix(TypeParam::isNumeric_) << "numeric type";
 }

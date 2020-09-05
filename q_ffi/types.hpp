@@ -118,26 +118,26 @@ namespace q {
 
     }//namespace q::impl
 
-    /// @brief check if a @c Traits has <code>value(K)</code>
-    template<typename Traits>
-    constexpr bool has_value() noexcept { return std_ext::can_apply<impl::has_value_t, Traits>::value; }
+    /// @brief check if q type @c tid has <code>value(K)</code>
+    template<Type tid>
+    using has_value = std_ext::can_apply<impl::has_value_t, TypeTraits<tid>>;
 
     template<Type tid>
-    constexpr bool has_value() noexcept { return has_value<TypeTraits<tid>>(); }
+    constexpr bool has_value_t = has_value<tid>::value;
 
-    /// @brief check if a @c Traits has <code>null()</code>
-    template<typename Traits>
-    constexpr bool has_null() noexcept { return std_ext::can_apply<impl::has_null_t, Traits>::value; }
+    /// @brief check if q type @c tid has <code>null()</code>
+    template<Type tid>
+    using has_null = std_ext::can_apply<impl::has_null_t, TypeTraits<tid>>;
 
     template<Type tid>
-    constexpr bool has_null() noexcept { return has_null<TypeTraits<tid>>(); }
+    constexpr bool has_null_t = has_null<tid>::value;
 
     /// @brief check if a @c Traits is of a numeric type (thus, has <code>inf()</code>)
-    template<typename Traits>
-    constexpr bool is_numeric() noexcept { return std_ext::can_apply<impl::has_inf_t, Traits>::value; }
+    template<Type tid>
+    using is_numeric = std_ext::can_apply<impl::has_inf_t, TypeTraits<tid>>;
 
     template<Type tid>
-    constexpr bool is_numeric() noexcept { return is_numeric<TypeTraits<tid>>(); }
+    constexpr bool is_numeric_t = is_numeric<tid>::value;
 
     template<>
     struct TypeTraits<kBoolean>
@@ -341,10 +341,16 @@ namespace q {
         constexpr static value_type value(K k) noexcept
         { return k->s; }
 
+        /// @return Always <code>q::Nil</code> while errors will be signaled to kdb+ host
         static K atom(value_type msg, bool sys = false) noexcept
         { return (sys ? orr : krr)(const_cast<S>(msg)); }
     };
 
     constexpr K const Nil = TypeTraits<kNil>::atom();
+
+    inline K error(char const* msg, bool sys = false) noexcept
+    {
+        return TypeTraits<kError>::atom(msg, sys);
+    }
 
 }//namespace q
