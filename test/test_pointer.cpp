@@ -103,10 +103,10 @@ protected:
     KptrTests<q::TypeTraits<qType>>::tests_
 
 KPTR_TEST_PARAMS(q::kBoolean, bool) = { true, false };
-KPTR_TEST_PARAMS(q::kByte, char) = { 0, 0x20, -127 };
-KPTR_TEST_PARAMS(q::kShort, short) = { 0, 129, -128 };
+KPTR_TEST_PARAMS(q::kByte, uint8_t) = { 0, 0x20, 0xFF };
+KPTR_TEST_PARAMS(q::kShort, int16_t) = { 0, 129, -128 };
 KPTR_TEST_PARAMS(q::kInt, int32_t) = { 0, 65536, -32768 };
-KPTR_TEST_PARAMS(q::kLong, int64_t) = { 0, 4294967296LL, -2147483648LL };
+KPTR_TEST_PARAMS(q::kLong, int64_t) = { 0, 4'294'967'296LL, -2'147'483'648LL };
 KPTR_TEST_PARAMS(q::kReal, float) = { 0.f, 987.654f, -123.456f };
 KPTR_TEST_PARAMS(q::kFloat, double) = { 0., 987.6543210123, -123.4567890987 };
 KPTR_TEST_PARAMS(q::kChar, char) = { '\0', 'Z', '\xFF' };

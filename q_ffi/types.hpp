@@ -2,6 +2,8 @@
 
 #include <cassert>
 #include <limits>
+#include <sstream>
+#include <iomanip>
 #include "std_ext.hpp"
 #include "k_compat.h"
 
@@ -59,6 +61,8 @@ namespace q {
     ///     <dd>Get C++ array pointer from a @c K pointer
     ///     <dt><code>K atom(value_type)</code>
     ///     <dd>Create allocate a @c K atom for a C++ atom
+    ///     <dt><code>std::string to_str(value_type)</code>
+    ///     <dd>Convert to string</dd>
     ///     </dl>
     /// @tparam tid Result of q @c type function
     template<Type tid>
@@ -78,71 +82,100 @@ namespace q {
 
     namespace impl {
 
-        /// @brief Helper to detect if <code>Tr::value(K)</code> is available
-        template<typename T>
-        using value_signature = decltype(T::value(std::declval<K>()));
-
-        template<typename T>
-        using can_value = std_ext::can_apply<value_signature, T>;
-
-        /// @brief Helper to detect if <code>Tr::null()</code> is available
-        template<typename T>
-        using null_sig_t = decltype(std::declval<T>().null(std::declval<void>()));
-        template<typename T>
-        using can_null = std_ext::can_apply<null_sig_t, T>;
-
-        /// @brief Helper to detect if <code>Tr::inf()</code> is available
-        template<typename T>
-        using inf_signature = decltype(T::inf());
-
-        template<typename T>
-        using can_inf = std_ext::can_apply<inf_signature, T>;
-
-        /// @remark Use CRTP to provide common traits
-        template<typename Value, q::Type id, char ch, typename Tr>
+        /// @brief Common type traits logic for <code>q::TypeTraits<id></code>
+        template<typename Value, q::Type id, char ch>
         struct TypeBase
         {
             using value_type = Value; 
+
             constexpr static Type const id = id;
             constexpr static char const ch = ch;
+
+#       pragma region q::TypeTraits<>::to_str()
+
+            template<typename T,
+                typename = std::enable_if_t<!std::is_void_v<value_type>>>
+            static std::string to_str(T&& value)
+            {
+                return to_str(std::forward<T>(value), is_numeric<id>());
+            }
+
+            template<typename T>
+            static std::string to_str(T&& value, std::false_type)
+            {
+                std::ostringstream buffer;
+                buffer << value;
+                return buffer.str();
+            }
+
+            template<typename T>
+            static std::string to_str(T&& value, std::true_type)
+            {
+                std::ostringstream buffer;
+                if (value == TypeTraits<id>::null()) {
+                    buffer << "0N";
+                }
+                else if (value == TypeTraits<id>::inf()) {
+                    buffer << "0W";
+                }
+                else if (value == -TypeTraits<id>::inf()) {
+                    buffer << "-0W";
+                }
+                else {
+                    buffer << std::to_string(value);
+                }
+                buffer << ch;
+                return buffer.str();
+            }
+
+        private:
+
+#       pragma endregion
+
         };
 
-        template<typename Traits>
-        using has_value_t = decltype(Traits::value(std::declval<K>()));
+#       pragma region Type traits signatures to be detected
 
         template<typename Traits>
-        using has_null_t = decltype(Traits::null());
+        using value_sig = decltype(Traits::value(std::declval<K>()));
 
         template<typename Traits>
-        using has_inf_t = decltype(Traits::inf());
+        using null_sig = decltype(Traits::null());
+
+        template<typename Traits>
+        using inf_sig = decltype(Traits::inf());
+
+#       pragma endregion
 
     }//namespace q::impl
 
+#   pragma region Type traits detection
+
     /// @brief check if q type @c tid has <code>value(K)</code>
     template<Type tid>
-    using has_value = std_ext::can_apply<impl::has_value_t, TypeTraits<tid>>;
+    using has_value = std_ext::can_apply<impl::value_sig, TypeTraits<tid>>;
 
     template<Type tid>
-    constexpr bool has_value_t = has_value<tid>::value;
+    constexpr bool has_value_v = has_value<tid>::value;
 
     /// @brief check if q type @c tid has <code>null()</code>
     template<Type tid>
-    using has_null = std_ext::can_apply<impl::has_null_t, TypeTraits<tid>>;
+    using has_null = std_ext::can_apply<impl::null_sig, TypeTraits<tid>>;
 
     template<Type tid>
-    constexpr bool has_null_t = has_null<tid>::value;
+    constexpr bool has_null_v = has_null<tid>::value;
 
     /// @brief check if a @c Traits is of a numeric type (thus, has <code>inf()</code>)
     template<Type tid>
-    using is_numeric = std_ext::can_apply<impl::has_inf_t, TypeTraits<tid>>;
+    using is_numeric = std_ext::can_apply<impl::inf_sig, TypeTraits<tid>>;
 
     template<Type tid>
-    constexpr bool is_numeric_t = is_numeric<tid>::value;
+    constexpr bool is_numeric_v = is_numeric<tid>::value;
+
+#   pragma endregion
 
     template<>
-    struct TypeTraits<kBoolean>
-        : public impl::TypeBase<bool, kBoolean, 'b', TypeTraits<kBoolean>>
-    {
+    struct TypeTraits<kBoolean> : public impl::TypeBase<bool, kBoolean, 'b'> {
         static_assert(sizeof(G) == sizeof(value_type), "sizeof(G) == sizeof(<q::kBoolean>)");
 
         constexpr static value_type value(K k) noexcept
@@ -153,11 +186,21 @@ namespace q {
 
         static K atom(value_type b) noexcept
         { return kb(b); }
+
+        template<typename T,
+            typename = std::enable_if_t<
+                std::is_same_v<std::decay_t<T>, value_type>
+            >>
+        static std::string to_str(T&& v)
+        {
+            std::ostringstream buffer;
+            buffer << v << ch;
+            return buffer.str();
+        }
     };
 
     template<>
-    struct TypeTraits<kByte>
-        : public impl::TypeBase<char, kByte, 'x', TypeTraits<kByte>>
+    struct TypeTraits<kByte> : public impl::TypeBase<uint8_t, kByte, 'x'>
     {
         static_assert(sizeof(G) == sizeof(value_type), "sizeof(G) == sizeof(<q::kByte>)");
 
@@ -172,11 +215,21 @@ namespace q {
 
         static K atom(value_type b) noexcept
         { return kg(b); }
+
+        template<typename T,
+            typename = std::enable_if_t<
+                std::is_same_v<std::decay_t<T>, value_type>
+            >>
+        static std::string to_str(T&& v)
+        {
+            std::ostringstream buffer;
+            buffer << std::setw(2) << std::setfill('0') << std::hex << (int)v;
+            return buffer.str();
+        }
     };
 
     template<>
-    struct TypeTraits<kShort>
-        : public impl::TypeBase<short, kShort, 'h', TypeTraits<kShort>>
+    struct TypeTraits<kShort> : public impl::TypeBase<int16_t, kShort, 'h'>
     {
         static_assert(sizeof(H) == sizeof(value_type), "sizeof(H) == sizeof(<q::kShort>)");
 
@@ -197,8 +250,7 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kInt>
-        : public impl::TypeBase<int32_t, kInt, 'i', TypeTraits<kInt>>
+    struct TypeTraits<kInt> : public impl::TypeBase<int32_t, kInt, 'i'>
     {
         static_assert(sizeof(I) == sizeof(value_type), "sizeof(I) == sizeof(<q::kInt>)");
 
@@ -219,8 +271,7 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kLong>
-        : public impl::TypeBase<int64_t, kLong, 'j', TypeTraits<kLong>>
+    struct TypeTraits<kLong> : public impl::TypeBase<int64_t, kLong, 'j'>
     {
         static_assert(sizeof(J) == sizeof(value_type), "sizeof(J) == sizeof(<q::kLong>)");
 
@@ -241,8 +292,7 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kReal>
-        : public impl::TypeBase<float, kReal, 'e', TypeTraits<kReal>>
+    struct TypeTraits<kReal> : public impl::TypeBase<float, kReal, 'e'>
     {
         static_assert(std::numeric_limits<float>::is_iec559, "<q::kReal> is IEC 559/IEEE 754-compliant");
         static_assert(sizeof(E) == sizeof(value_type), "sizeof(E) == sizeof(<q::kReal>)");
@@ -264,8 +314,34 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kFloat>
-        : public impl::TypeBase<double, kFloat, 'f', TypeTraits<kFloat>>
+    template<typename T>
+    static std::string
+    impl::TypeBase<float, kReal, 'e'>::to_str(T&& value, std::true_type)
+    {
+        std::ostringstream buffer;
+        auto const bit_match = [](auto a, auto b) -> bool
+        {
+            return 0 == std::memcmp(&a, &b, sizeof(value_type));
+        };
+
+        if (bit_match(value, TypeTraits<id>::null())) {
+            buffer << "0N";
+        }
+        else if (value == TypeTraits<id>::inf()) {
+            buffer << "0W";
+        }
+        else if (value == -TypeTraits<id>::inf()) {
+            buffer << "-0W";
+        }
+        else {
+            buffer << std::to_string(value);
+        }
+        buffer << ch;
+        return buffer.str();
+    }
+
+    template<>
+    struct TypeTraits<kFloat> : public impl::TypeBase<double, kFloat, 'f'>
     {
         static_assert(std::numeric_limits<double>::is_iec559, "<q::kFloat> is IEC 559/IEEE 754-compliant");
         static_assert(sizeof(F) == sizeof(value_type), "sizeof(F) == sizeof(<q::kFloat>)");
@@ -287,8 +363,34 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kChar>
-        : public impl::TypeBase<char, kChar, 'c', TypeTraits<kChar>>
+    template<typename T>
+    static std::string
+    impl::TypeBase<double, kFloat, 'f'>::to_str(T&& value, std::true_type)
+    {
+        std::ostringstream buffer;
+        auto const bit_match = [](auto a, auto b) -> bool
+        {
+            return 0 == std::memcmp(&a, &b, sizeof(value_type));
+        };
+
+        if (bit_match(value, TypeTraits<id>::null())) {
+            buffer << "0n";
+        }
+        else if (value == TypeTraits<id>::inf()) {
+            buffer << "0w";
+        }
+        else if (value == -TypeTraits<id>::inf()) {
+            buffer << "-0w";
+        }
+        else {
+            buffer << std::to_string(value);
+        }
+        buffer << ch;
+        return buffer.str();
+    }
+
+    template<>
+    struct TypeTraits<kChar> : public impl::TypeBase<char, kChar, 'c'>
     {
         static_assert(sizeof(C) == sizeof(value_type), "sizeof(C) == sizeof(<q::kChar>)");
 
@@ -306,8 +408,7 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kSymbol>
-        : public impl::TypeBase<char const*, kSymbol, 's', TypeTraits<kSymbol>>
+    struct TypeTraits<kSymbol> : public impl::TypeBase<char const*, kSymbol, 's'>
     {
         static_assert(sizeof(S) == sizeof(value_type), "sizeof(S) == sizeof(<q::kSymbol>)");
 
@@ -325,16 +426,70 @@ namespace q {
     };
 
     template<>
-    struct TypeTraits<kNil>
-        : public impl::TypeBase<void, kNil, ' ', TypeTraits<kNil>>
+    struct TypeTraits<kTimestamp> : public TypeTraits<kLong>
+    {
+        constexpr static Type id = kTimestamp;
+        constexpr static char ch = 'p';
+    };
+
+    template<>
+    struct TypeTraits<kMonth> : public TypeTraits<kInt>
+    {
+        constexpr static Type id = kMonth;
+        constexpr static char ch = 'm';
+    };
+
+    template<>
+    struct TypeTraits<kDate> : public TypeTraits<kInt>
+    {
+        constexpr static Type id = kDate;
+        constexpr static char ch = 'd';
+    };
+
+    template<>
+    struct TypeTraits<kDatetime> : public TypeTraits<kFloat>
+    {
+        constexpr static Type id = kDatetime;
+        constexpr static char ch = 'z';
+    };
+
+    template<>
+    struct TypeTraits<kTimespan> : public TypeTraits<kLong>
+    {
+        constexpr static Type id = kTimespan;
+        constexpr static char ch = 'n';
+    };
+
+    template<>
+    struct TypeTraits<kMinute> : public TypeTraits<kInt>
+    {
+        constexpr static Type id = kMinute;
+        constexpr static char ch = 'u';
+    };
+
+    template<>
+    struct TypeTraits<kSecond> : public TypeTraits<kInt>
+    {
+        constexpr static Type id = kSecond;
+        constexpr static char ch = 'v';
+    };
+
+    template<>
+    struct TypeTraits<kTime> : public TypeTraits<kInt>
+    {
+        constexpr static Type id = kTime;
+        constexpr static char ch = 't';
+    };
+
+    template<>
+    struct TypeTraits<kNil> : public impl::TypeBase<void, kNil, ' '>
     {
         constexpr static K atom() noexcept
         { return nullptr; }
     };
 
     template<>
-    struct TypeTraits<kError>
-        : public impl::TypeBase<char const*, kError, ' ', TypeTraits<kError>>
+    struct TypeTraits<kError> : public impl::TypeBase<char const*, kError, ' '>
     {
         static_assert(sizeof(S) == sizeof(value_type), "sizeof(S) == sizeof(<q::kError>)");
 
@@ -346,11 +501,11 @@ namespace q {
         { return (sys ? orr : krr)(const_cast<S>(msg)); }
     };
 
-    constexpr K const Nil = TypeTraits<kNil>::atom();
-
     inline K error(char const* msg, bool sys = false) noexcept
     {
         return TypeTraits<kError>::atom(msg, sys);
     }
+
+    constexpr K const Nil = TypeTraits<kNil>::atom();
 
 }//namespace q
