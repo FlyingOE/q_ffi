@@ -10,30 +10,32 @@ TEST(KptrTests, RefCount)
     EXPECT_EQ(refCount, 0) << "different initial ref count vs documentation?";
 
     q::K_ptr pk1{ k };
-    EXPECT_EQ(k->r, refCount) << "creating K_ptr<> should not change ref count";
+    EXPECT_EQ(k->r, refCount);
 
     for (auto i : { 1, 1 }) { r1(k); refCount += i; }
-    ASSERT_EQ(k->r, refCount) << "r1() fail to increment ref count";
+    EXPECT_EQ(k->r, refCount);
     {
         q::K_ptr pk2;
-        EXPECT_EQ(pk2.get(), q::Nil) << "empty K_ptr<> cannot be properly created";
+        EXPECT_EQ(pk2.get(), q::Nil);
         pk2.reset(k);
-        EXPECT_EQ(k->r, refCount) << "setting K_ptr<> should not change ref count";
+        EXPECT_EQ(k->r, refCount);
         pk2.release();
-        EXPECT_EQ(k->r, refCount) << "releasing K_ptr<> should not change ref count";
+        EXPECT_EQ(k->r, refCount);
         pk2.reset(k);
-        EXPECT_EQ(k->r, refCount) << "setting K_ptr<> again should not change ref count";
+        EXPECT_EQ(k->r, refCount);
         pk2.reset();
         --refCount;
-        EXPECT_EQ(k->r, refCount) << "resetting K_ptr<> should decrement ref count";
+        EXPECT_EQ(k->r, refCount);
 
         pk2.reset(k);
         q::K_ptr pk3 = std::move(pk2);
-        EXPECT_EQ(k->r, refCount) << "moving K_ptr<> should not change ref count";
+        EXPECT_EQ(k->r, refCount);
     }
     --refCount;
-    EXPECT_EQ(k->r, refCount) << "destructing K_ptr<> should decrement ref count";
+    EXPECT_EQ(k->r, refCount);
 }
+
+#pragma region KptrTests<> typed test suite
 
 template<typename Tr>
 class KptrTests : public ::testing::Test
@@ -45,24 +47,21 @@ protected:
 private:
     static std::vector<value_type> const tests_;
 
-    static bool memory_compare(value_type const& actual, value_type const& expected)
-    {
-        return sizeof(actual) == sizeof(expected) &&
-            0 == std::memcmp(&actual, &expected, sizeof(actual));
-    };
-
     template<typename = std::enable_if_t<!std::is_same_v<value_type, char const*>>>
     void checkEqualAtoms(q::K_ptr const& pk, value_type const& v)
     {
+        auto const memory_compare = [](auto&& actual, auto&& expected)
+        {
+            return sizeof(actual) == sizeof(expected) &&
+                0 == std::memcmp(&actual, &expected, sizeof(actual));
+        };
         // Use memory comparison because some values (e.g. NaN) are not comparable
-        EXPECT_PRED2(memory_compare, Traits::value(pk.get()), v)
-            << "unexpected different K object values (" << Traits::id << ')';
+        EXPECT_PRED2(memory_compare, Traits::value(pk.get()), v);
     }
 
     void checkEqualAtoms(q::K_ptr const& pk, char const* str)
     {
-        EXPECT_STREQ(Traits::value(pk.get()), str)
-            << "unexpected different K object strings (" << Traits::id << ')';
+        EXPECT_STREQ(Traits::value(pk.get()), str);
     }
 
     template<typename T>
@@ -72,12 +71,11 @@ private:
 
         auto pk = q::make_K<Traits::id>(std::forward<T>(v));
         ASSERT_NE(pk.get(), q::Nil) << "q::make_K<" << Traits::id << ">() fails to create K object";
-        EXPECT_EQ(q::typeOf(pk), Traits::id) << "q::make_K<" << Traits::id << ">() creates K object of the wrong type";
+        EXPECT_EQ(q::typeOf(pk), Traits::id);
         checkEqualAtoms(pk, v);
     }
 
 protected:
-
     void test_samples()
     {
         for (auto const test : tests_)
@@ -99,34 +97,22 @@ protected:
     }
 };
 
-#define KPTR_TEST_PARAMS(qType, cppType, ...)   \
+#define KPTR_TEST_PARAMS(qType, cppType)    \
     template<>  \
     std::vector<cppType> const  \
-    KptrTests<q::TypeTraits<qType>>::tests_ =   \
-        { __VA_ARGS__ }
+    KptrTests<q::TypeTraits<qType>>::tests_
 
-KPTR_TEST_PARAMS(q::kBoolean, bool,
-    true, false);
-KPTR_TEST_PARAMS(q::kByte, char,
-    0, 0x20, -127);
-KPTR_TEST_PARAMS(q::kShort, short,
-    0, 129, -128);
-KPTR_TEST_PARAMS(q::kInt, int32_t,
-    0, 65536, -32768);
-KPTR_TEST_PARAMS(q::kLong, int64_t,
-    0, 4294967296LL, -2147483648LL);
-KPTR_TEST_PARAMS(q::kReal, float,
-    0.f, 987.654f, -123.456f);
-KPTR_TEST_PARAMS(q::kFloat, double,
-    0., 987.6543210123, -123.4567890987);
-KPTR_TEST_PARAMS(q::kChar, char,
-    '\0', 'Z', '\xFF');
-KPTR_TEST_PARAMS(q::kSymbol, char const*,
-    "600000.SH", "123 abc ABC", "≤‚ ‘");
-//KPTR_TEST_PARAMS(q::kNil, void,
-//    );    //<q::kNil> cannot be `created'!
-//KPTR_TEST_PARAMS(q::kError, char const*,
-//    );    //<q::kError> cannot be `created'!   
+KPTR_TEST_PARAMS(q::kBoolean, bool) = { true, false };
+KPTR_TEST_PARAMS(q::kByte, char) = { 0, 0x20, -127 };
+KPTR_TEST_PARAMS(q::kShort, short) = { 0, 129, -128 };
+KPTR_TEST_PARAMS(q::kInt, int32_t) = { 0, 65536, -32768 };
+KPTR_TEST_PARAMS(q::kLong, int64_t) = { 0, 4294967296LL, -2147483648LL };
+KPTR_TEST_PARAMS(q::kReal, float) = { 0.f, 987.654f, -123.456f };
+KPTR_TEST_PARAMS(q::kFloat, double) = { 0., 987.6543210123, -123.4567890987 };
+KPTR_TEST_PARAMS(q::kChar, char) = { '\0', 'Z', '\xFF' };
+KPTR_TEST_PARAMS(q::kSymbol, char const*) = { "600000.SH", "123 abc ABC", "≤‚ ‘" };
+//KPTR_TEST_PARAMS(q::kNil, void) = //<q::kNil> cannot be `created'!
+//KPTR_TEST_PARAMS(q::kError, char const*) = //<q::kError> cannot be `created'!
 
 using TestTypes = ::testing::Types <
     q::TypeTraits<q::kBoolean>, q::TypeTraits<q::kByte>,
@@ -137,6 +123,8 @@ using TestTypes = ::testing::Types <
     //q::TypeTraits<q::kError>
 >;
 TYPED_TEST_SUITE(KptrTests, TestTypes);
+
+#pragma endregion
 
 TYPED_TEST(KptrTests, makeK)
 {
@@ -153,21 +141,31 @@ TEST(KptrTests, dupK)
     EXPECT_EQ(refCount, 0) << "different initial ref count vs documentation?";
 
     q::K_ptr pk1{ k };
-    EXPECT_EQ(k->r, refCount) << "creating K_ptr<> should not change ref count";
-    EXPECT_EQ(pk1.get(), k) << "creating K_ptr<> should point to the original K object";
+    EXPECT_EQ(k->r, refCount);
+    EXPECT_EQ(pk1.get(), k);
 
     q::K_ptr pk2 = q::dup_K(pk1);
     ++refCount;
-    EXPECT_EQ(k->r, refCount) << "duplicating K_ptr<> should increment ref count";
-    EXPECT_EQ(pk2.get(), pk1.get()) << "duplicated K_ptr<> should point to the same K object";
+    EXPECT_EQ(k->r, refCount);
+    EXPECT_EQ(pk2.get(), pk1.get());
 
     pk1.reset();
     --refCount;
-    EXPECT_EQ(k->r, refCount) << "releasing a duplicated K_ptr<> should decrement ref count";
-    EXPECT_EQ(pk2.get(), k) << "releasing a duplicated K_ptr<> should not affect other copies";
+    EXPECT_EQ(k->r, refCount);
+    EXPECT_EQ(pk2.get(), k);
 
     q::K_ptr pk3;
     ASSERT_EQ(pk3.get(), q::Nil) << "fail to create empty K_ptr<>";
     pk2 = q::dup_K(pk3);
-    EXPECT_EQ(pk2.get(), q::Nil) << "duplicate of an empty K_ptr<> should be empty, too";
+    EXPECT_EQ(pk2.get(), q::Nil);
+}
+
+TEST(KptrTests, dupKNil)
+{
+    q::K_ptr nil{ q::TypeTraits<q::kNil>::atom() };
+    ASSERT_EQ(nil.get(), q::Nil) << "unexpected non-nil value";
+
+    q::K_ptr pk;
+    EXPECT_NO_THROW(pk = q::dup_K(nil));
+    EXPECT_EQ(pk.get(), q::Nil);
 }

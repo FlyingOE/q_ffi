@@ -53,16 +53,11 @@ TEST_F(stdextTests, canApplyFunction)
 {
     class no_to_string {};
 
-    EXPECT_TRUE(can_to_string<int>::value)
-        << "std::to_string(int) should be ok";
-    EXPECT_TRUE(can_to_string<double>::value)
-        << "std::to_string(double) should be ok";
-    EXPECT_FALSE(can_to_string<std::string>::value)
-        << "std::to_string(std::string) should not be ok";
-    EXPECT_FALSE(can_to_string<char*>::value)
-        << "std::to_string(char*) should not be ok";
-    EXPECT_FALSE(can_to_string<no_to_string>::value)
-        << "class w/o std::to_string() overload should not be ok";
+    EXPECT_TRUE(can_to_string<int>::value);
+    EXPECT_TRUE(can_to_string<double>::value);
+    EXPECT_FALSE(can_to_string<std::string>::value);
+    EXPECT_FALSE(can_to_string<char*>::value);
+    EXPECT_FALSE(can_to_string<no_to_string>::value);
 }
 
 TEST_F(stdextTests, canApplyMemberFunction)
@@ -70,18 +65,12 @@ TEST_F(stdextTests, canApplyMemberFunction)
     struct const_c_str { char const* c_str() const; };
     struct nonconst_c_str { char const* c_str(); };
 
-    EXPECT_TRUE(has_c_str<std::string>::value)
-        << "std::string::c_str() should be ok";
-    EXPECT_TRUE(has_c_str<std::string const>::value)
-        << "const std::string::c_str() should be ok as const";
-    EXPECT_TRUE(has_c_str<const_c_str>::value)
-        << "class w/ const c_str() should be ok";
-    EXPECT_TRUE(has_c_str<const_c_str const>::value)
-        << "class w/ const c_str() should be ok as const";
-    EXPECT_TRUE(has_c_str<nonconst_c_str>::value)
-        << "class w/ non-const c_str() should be ok";
-    EXPECT_FALSE(has_c_str<nonconst_c_str const>::value)
-        << "class w/ non-const c_str() should not be ok as const";
+    EXPECT_TRUE(has_c_str<std::string>::value);
+    EXPECT_TRUE(has_c_str<std::string const>::value);
+    EXPECT_TRUE(has_c_str<const_c_str>::value);
+    EXPECT_TRUE(has_c_str<const_c_str const>::value);
+    EXPECT_TRUE(has_c_str<nonconst_c_str>::value);
+    EXPECT_FALSE(has_c_str<nonconst_c_str const>::value);
 }
 
 TEST_F(stdextTests, canApplyMemberVariable)
@@ -89,10 +78,8 @@ TEST_F(stdextTests, canApplyMemberVariable)
     class public_value { public: bool value; };
     class private_value { private: bool value; };
 
-    EXPECT_TRUE(has_value<public_value>::value)
-        << "class w/ public value member should be ok";
-    EXPECT_FALSE(has_value<private_value>::value)
-        << "class w/ private value member should not be ok";
+    EXPECT_TRUE(has_value<public_value>::value);
+    EXPECT_FALSE(has_value<private_value>::value);
 }
 
 TEST_F(stdextTests, canApplyStaticMember)
@@ -110,19 +97,13 @@ TEST_F(stdextTests, canApplyStaticMember)
         char const* fun1a(int);
     };
 
-    EXPECT_TRUE(has_static_member<static_member>::value)
-        << "static member should be ok";
-    EXPECT_TRUE(has_static_member1<static_member>::value)
-        << "static member w/ 1 argument should be ok";
-    EXPECT_FALSE(has_static_member1a<static_member>::value)
-        << "static member w/ wrong argument should not be ok";
+    EXPECT_TRUE(has_static_member<static_member>::value);
+    EXPECT_TRUE(has_static_member1<static_member>::value);
+    EXPECT_FALSE(has_static_member1a<static_member>::value);
 
-    EXPECT_FALSE(has_static_member<nonstatic_member>::value)
-        << "non-static member should not be ok";
-    EXPECT_FALSE(has_static_member1<nonstatic_member>::value)
-        << "non-static member w/ 1 argument should not be ok";
-    EXPECT_FALSE(has_static_member1a<nonstatic_member>::value)
-        << "non-static member w/ wrong argument should not be ok";
+    EXPECT_FALSE(has_static_member<nonstatic_member>::value);
+    EXPECT_FALSE(has_static_member1<nonstatic_member>::value);
+    EXPECT_FALSE(has_static_member1a<nonstatic_member>::value);
 }
 
 TEST_F(stdextTests, canApplyMemberOverload)
@@ -133,12 +114,8 @@ TEST_F(stdextTests, canApplyMemberOverload)
         static int fun(float);
     };
 
-    EXPECT_TRUE((has_member_overload<member_overloads, int>::value))
-        << "should have overload for (int)";
-    EXPECT_TRUE((has_member_overload<member_overloads, float>::value))
-        << "should have overload for (float)";
-    EXPECT_FALSE((has_member_overload<member_overloads, char const*>::value))
-        << "should not have overload for (char const*)";
-    EXPECT_FALSE((has_member_overload<member_overloads, double>::value))
-        << "should not have overload for (double)";
+    EXPECT_TRUE((has_member_overload<member_overloads, int>::value));
+    EXPECT_TRUE((has_member_overload<member_overloads, float>::value));
+    EXPECT_FALSE((has_member_overload<member_overloads, char const*>::value));
+    EXPECT_FALSE((has_member_overload<member_overloads, double>::value));
 }
