@@ -4,8 +4,10 @@
 
 TEST(KptrTests, RefCount)
 {
-    K k = q::TypeTraits<q::kSymbol>::atom(test_info_->name());
-    ASSERT_NE(k, q::Nil) << "fail to create K object";
+    q::K_ptr pk = q::TypeTraits<q::kSymbol>::atom(test_info_->name());
+    ASSERT_NE(pk.get(), q::Nil) << "fail to create K object";
+
+    K k = pk.get();
     auto refCount = k->r;
     EXPECT_EQ(refCount, 0) << "different initial ref count vs documentation?";
 
@@ -41,17 +43,48 @@ template<typename Tr>
 class KptrTests : public ::testing::Test
 {
 protected:
+
     using Traits = Tr;
     using value_type = typename Traits::value_type;
 
+    static std::vector<value_type> tests_;
+
+    KptrTests() : Test()
+    {
+        add_tests_for_null(q::has_null<Traits::id>());
+        add_tests_for_numeric(q::is_numeric<Traits::id>());
+    }
+
+    void test_make_K(value_type const& v)
+    {
+        q::K_ptr pk{ Traits::atom(v) };
+        ASSERT_NE(pk.get(), q::Nil) << "Fail to create <" << Traits::id << "> K object";
+        EXPECT_EQ(q::typeOf(pk), -Traits::id);
+        checkEqualAtoms(pk, v);
+    }
+
 private:
-    static std::vector<value_type> const tests_;
+
+    void add_tests_for_null(std::false_type) {}
+    void add_tests_for_null(std::true_type)
+    {
+        tests_.push_back(Traits::null());
+    }
+
+    void add_tests_for_numeric(std::false_type) {}
+    void add_tests_for_numeric(std::true_type)
+    {
+        tests_.insert(std::end(tests_), {
+            Traits::inf(),
+            std::numeric_limits<value_type>::min(),
+            std::numeric_limits<value_type>::max()
+        });
+    }
 
     template<typename = std::enable_if_t<!std::is_same_v<value_type, char const*>>>
     void checkEqualAtoms(q::K_ptr const& pk, value_type const& v)
     {
-        auto const memory_compare = [](auto&& actual, auto&& expected)
-        {
+        auto const memory_compare = [](auto&& actual, auto&& expected) {
             return sizeof(actual) == sizeof(expected) &&
                 0 == std::memcmp(&actual, &expected, sizeof(actual));
         };
@@ -63,43 +96,11 @@ private:
     {
         EXPECT_STREQ(Traits::value(pk.get()), str);
     }
-
-    template<typename T>
-    void test_make_K(T&& v)
-    {
-        ASSERT_TRUE((std::is_same_v<value_type, std::decay_t<T>>)) << "<BUG> invalid test data type";
-
-        auto pk = q::make_K<Traits::id>(std::forward<T>(v));
-        ASSERT_NE(pk.get(), q::Nil) << "q::make_K<" << Traits::id << ">() fails to create K object";
-        EXPECT_EQ(q::typeOf(pk), Traits::id);
-        checkEqualAtoms(pk, v);
-    }
-
-protected:
-    void test_samples()
-    {
-        for (auto const test : tests_)
-            test_make_K(test);
-    }
-
-    void test_null(std::false_type) {}
-    void test_null(std::true_type)
-    {
-        test_make_K(Traits::null());
-    }
-
-    void test_numeric(std::false_type) {}
-    void test_numeric(std::true_type)
-    {
-        test_make_K(Traits::inf());
-        test_make_K(std::numeric_limits<value_type>::min());
-        test_make_K(std::numeric_limits<value_type>::max());
-    }
 };
 
 #define KPTR_TEST_PARAMS(qType, cppType)    \
     template<>  \
-    std::vector<cppType> const  \
+    std::vector<cppType>    \
     KptrTests<q::TypeTraits<qType>>::tests_
 
 KPTR_TEST_PARAMS(q::kBoolean, bool) = { true, false };
@@ -128,15 +129,17 @@ TYPED_TEST_SUITE(KptrTests, TestTypes);
 
 TYPED_TEST(KptrTests, makeK)
 {
-    test_samples();
-    test_null(q::has_null<Traits::id>());
-    test_numeric(q::is_numeric<Traits::id>());
+    for (auto const test : tests_) {
+        test_make_K(test);
+    }
 }
 
 TEST(KptrTests, dupK)
 {
-    K k = q::TypeTraits<q::kSymbol>::atom(test_info_->name());
-    ASSERT_NE(k, q::Nil) << "fail to create K object";
+    q::K_ptr pk = q::TypeTraits<q::kSymbol>::atom(test_info_->name());
+    ASSERT_NE(pk.get(), q::Nil) << "fail to create K object";
+
+    K k = pk.get();
     auto refCount = k->r;
     EXPECT_EQ(refCount, 0) << "different initial ref count vs documentation?";
 
