@@ -8,12 +8,7 @@ template<typename Params>
 class TypeTraitsTests : public ::testing::Test
 {
 protected:
-    void test_typeOf()
-    {
-        test_typeOf(q::has_value<Params::id_>());
-    }
 
-private:
     template<typename TF>
     void test_typeOf(TF) { }
 
@@ -89,7 +84,7 @@ TYPED_TEST(TypeTraitsTests, qTypeTraitsQuery)
 
 TYPED_TEST(TypeTraitsTests, typeOf)
 {
-    test_typeOf();
+    test_typeOf(q::has_value<TypeParam::id_>());
 }
 
 #pragma region TypeTraitsOpsTests<> typed test suite
@@ -221,7 +216,7 @@ TYPED_TEST(TypeTraitsOpsTests, atom)
         q::K_ptr k{ Traits::atom(test.first) };
         ASSERT_NE(k.get(), q::Nil);
         EXPECT_EQ(typeOf(k), -Traits::id);
-        expect_equal(Traits::value(k.get()), test.first);
+        expect_equal(Traits::value(k), test.first);
     }
 }
 
@@ -238,8 +233,50 @@ TYPED_TEST(TypeTraitsOpsTests, list)
     ASSERT_EQ(k->n, tests_.size());
     auto s = std::cbegin(samples);
     auto const e = std::cend(samples);
-    for (auto p = Traits::index(k.get()); s != e; ++p, ++s) {
+    for (auto p = Traits::index(k); s != e; ++p, ++s) {
         expect_equal(*p, *s);
+    }
+}
+
+TEST(TypeTraitsOpsTests, kCharList)
+{
+    using Traits = q::TypeTraits<q::kChar>;
+    char const sample[] = "ABC 123 ²âÊÔ";
+
+    auto str_check = [&sample](q::K_ptr k, size_t length) {
+        ASSERT_NE(k.get(), q::Nil);
+        EXPECT_EQ(typeOf(k), Traits::id);
+        EXPECT_EQ(k->n, length);
+        for (size_t i = 0; i < length; ++i) {
+            EXPECT_EQ(Traits::index(k)[i], sample[i]);
+        }
+    };
+
+    size_t const length = std::extent_v<decltype(sample), 0> - 1;   //account for \0 terminator
+    str_check(q::K_ptr{ Traits::list(sample) }, length);
+
+    size_t const sublen = 7;
+    assert(sublen < length);
+    str_check(q::K_ptr{ Traits::list(sample, sublen) }, sublen);
+}
+
+TEST(TypeTraitsOpsTests, kSymbolList)
+{
+    using Traits = q::TypeTraits<q::kSymbol>;
+    std::vector<std::string> sample{
+        "600000.SH",
+        "123 abc ABC",
+        "²âÊÔ",
+        Traits::null()
+    };
+    size_t const length = sample.size();
+
+    q::K_ptr k{ Traits::list(std::cbegin(sample), std::cend(sample)) };
+    ASSERT_NE(k.get(), q::Nil);
+    EXPECT_EQ(typeOf(k), Traits::id);
+    EXPECT_EQ(k->n, length);
+    for (size_t i = 0; i < length; ++i) {
+        EXPECT_STREQ(Traits::index(k)[i], sample[i].c_str());
     }
 }
 
