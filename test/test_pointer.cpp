@@ -84,12 +84,12 @@ private:
     template<typename = std::enable_if_t<!std::is_same_v<value_type, char const*>>>
     void checkEqualAtoms(q::K_ptr const& pk, value_type const& v)
     {
-        auto const memory_compare = [](auto&& actual, auto&& expected) {
+        auto const memory_equal = [](auto&& actual, auto&& expected) {
             return sizeof(actual) == sizeof(expected) &&
                 0 == std::memcmp(&actual, &expected, sizeof(actual));
         };
         // Use memory comparison because some values (e.g. NaN) are not comparable
-        EXPECT_PRED2(memory_compare, Traits::value(pk.get()), v);
+        EXPECT_PRED2(memory_equal, Traits::value(pk.get()), v);
     }
 
     void checkEqualAtoms(q::K_ptr const& pk, char const* str)

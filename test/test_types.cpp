@@ -92,46 +92,51 @@ TYPED_TEST(TypeTraitsTests, typeOf)
     test_typeOf();
 }
 
-#pragma region TypeTraitsToStrTests<> typed test suite
+#pragma region TypeTraitsOpsTests<> typed test suite
 
 template<typename Tr>
-class TypeTraitsToStrTests : public ::testing::Test
+class TypeTraitsOpsTests : public ::testing::Test
 {
 protected:
     using Traits = Tr;
     using value_type = typename Traits::value_type;
 
-private:
     static std::vector<std::pair<value_type, std::string>> const tests_;
 
-protected:
-    void test_samples()
+    template<typename T>
+    void expect_equal(T const& actual, T const& expected)
     {
-        for (auto const& test : tests_)
-        {
-            EXPECT_EQ(Traits::to_str(test.first), test.second);
-        }
+        // Since there are values that are not comparable (e.g., NaN), use memory compare 
+        auto const memory_equal = [](auto&& actual, auto&& expected) -> bool {
+            return 0 == std::memcmp(&actual, &expected, sizeof(T));
+        };
+        EXPECT_PRED2(memory_equal, actual, expected);
+    }
+
+    void expect_equal(char const* actual, char const* expected)
+    {
+        EXPECT_STREQ(actual, expected);
     }
 };
 
-#define TO_STR_TEST_PARAMS(qType)   \
+#define OPS_TEST_PARAMS(qType)   \
     template<>  \
     std::vector<std::pair<  \
         typename q::TypeTraits<qType>::value_type,  \
         std::string>> const  \
-    TypeTraitsToStrTests<q::TypeTraits<qType>>::tests_
+    TypeTraitsOpsTests<q::TypeTraits<qType>>::tests_
 
-TO_STR_TEST_PARAMS(q::kBoolean) = {
+OPS_TEST_PARAMS(q::kBoolean) = {
     { true, "1b" },
     { false, "0b" }
 };
-TO_STR_TEST_PARAMS(q::kByte) = {
+OPS_TEST_PARAMS(q::kByte) = {
     { (uint8_t)0, "00" },
     { (uint8_t)0x20, "20" },
     { (uint8_t)0xA7, "a7" },
     { (uint8_t)0xFF, "ff" }
 };
-TO_STR_TEST_PARAMS(q::kShort) = {
+OPS_TEST_PARAMS(q::kShort) = {
     { (int16_t)0, "0h" },
     { (int16_t)129, "129h" },
     { (int16_t)-128, "-128h" },
@@ -139,7 +144,7 @@ TO_STR_TEST_PARAMS(q::kShort) = {
     { q::TypeTraits<q::kShort>::inf(), "0Wh" },
     { (int16_t)-q::TypeTraits<q::kShort>::inf(), "-0Wh" }
 };
-TO_STR_TEST_PARAMS(q::kInt) = {
+OPS_TEST_PARAMS(q::kInt) = {
     { 0, "0i" },
     { 65536, "65536i" },
     { -32768, "-32768i" },
@@ -147,7 +152,7 @@ TO_STR_TEST_PARAMS(q::kInt) = {
     { q::TypeTraits<q::kInt>::inf(), "0Wi" },
     { -q::TypeTraits<q::kInt>::inf(), "-0Wi" }
 };
-TO_STR_TEST_PARAMS(q::kLong) = {
+OPS_TEST_PARAMS(q::kLong) = {
     { 0, "0j" },
     { 4'294'967'296LL, "4294967296j" },
     { -2'147'483'648LL, "-2147483648j" },
@@ -155,7 +160,7 @@ TO_STR_TEST_PARAMS(q::kLong) = {
     { q::TypeTraits<q::kLong>::inf(), "0Wj" },
     { -q::TypeTraits<q::kLong>::inf(), "-0Wj" }
 };
-TO_STR_TEST_PARAMS(q::kReal) = {
+OPS_TEST_PARAMS(q::kReal) = {
     { 0.f, "0.000000e" },
     { 987.654f, "987.653992e" },
     { -123.456f, "-123.456001e" },
@@ -163,7 +168,7 @@ TO_STR_TEST_PARAMS(q::kReal) = {
     { q::TypeTraits<q::kReal>::inf(), "0We" },
     { -q::TypeTraits<q::kReal>::inf(), "-0We" }
 };
-TO_STR_TEST_PARAMS(q::kFloat) = {
+OPS_TEST_PARAMS(q::kFloat) = {
     { 0., "0.000000f" },
     { 987.6543210123, "987.654321f" },
     { -123.4567890987, "-123.456789f" },
@@ -171,20 +176,20 @@ TO_STR_TEST_PARAMS(q::kFloat) = {
     { q::TypeTraits<q::kFloat>::inf(), "0wf" },
     { -q::TypeTraits<q::kFloat>::inf(), "-0wf" }
 };
-TO_STR_TEST_PARAMS(q::kChar) = {
+OPS_TEST_PARAMS(q::kChar) = {
     { '\0', std::string("\0", 1) },
     { 'Z', "Z" },
     { '\xFF', "\xFF" },
     { q::TypeTraits<q::kChar>::null(), " " }
 };
-TO_STR_TEST_PARAMS(q::kSymbol) = {
+OPS_TEST_PARAMS(q::kSymbol) = {
     { "600000.SH", "600000.SH" },
     { "123 abc ABC", "123 abc ABC" },
     { "≤‚ ‘", "≤‚ ‘" },
     { q::TypeTraits<q::kSymbol>::null(), "" }
 };
 
-using ToStrTypes = ::testing::Types<
+using OpsTypes = ::testing::Types<
     q::TypeTraits<q::kBoolean>,
     q::TypeTraits<q::kByte>,
     q::TypeTraits<q::kShort>,
@@ -206,11 +211,41 @@ using ToStrTypes = ::testing::Types<
     //q::TypeTraits<q::kNil>
     //q::TypeTraits<q::kError>
 >;
-TYPED_TEST_SUITE(TypeTraitsToStrTests, ToStrTypes);
+TYPED_TEST_SUITE(TypeTraitsOpsTests, OpsTypes);
 
 #pragma endregion
 
-TYPED_TEST(TypeTraitsToStrTests, toStr)
+TYPED_TEST(TypeTraitsOpsTests, atom)
 {
-    test_samples();
+    for (auto const& test : tests_) {
+        q::K_ptr k{ Traits::atom(test.first) };
+        ASSERT_NE(k.get(), q::Nil);
+        EXPECT_EQ(typeOf(k), -Traits::id);
+        expect_equal(Traits::value(k.get()), test.first);
+    }
+}
+
+TYPED_TEST(TypeTraitsOpsTests, list)
+{
+    std::vector<value_type> samples(tests_.size());
+    std::transform(std::cbegin(tests_), std::cend(tests_),
+        std::begin(samples), [](auto const& test) { return test.first; });
+
+    q::K_ptr k{ Traits::list(samples.cbegin(), samples.cend()) };
+    ASSERT_NE(k.get(), q::Nil);
+    EXPECT_EQ(typeOf(k), Traits::id);
+
+    ASSERT_EQ(k->n, tests_.size());
+    auto s = std::cbegin(samples);
+    auto const e = std::cend(samples);
+    for (auto p = Traits::index(k.get()); s != e; ++p, ++s) {
+        expect_equal(*p, *s);
+    }
+}
+
+TYPED_TEST(TypeTraitsOpsTests, toStr)
+{
+    for (auto const& test : tests_) {
+        EXPECT_EQ(Traits::to_str(test.first), test.second);
+    }
 }

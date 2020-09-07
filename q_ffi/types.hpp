@@ -350,12 +350,8 @@ namespace q {
     impl::TypeBase<float, kReal, 'e'>::to_str(T&& value, std::true_type)
     {
         std::ostringstream buffer;
-        auto const bit_match = [](auto a, auto b) -> bool
-        {
-            return 0 == std::memcmp(&a, &b, sizeof(value_type));
-        };
-
-        if (bit_match(value, TypeTraits<id>::null())) {
+        value_type const null = TypeTraits<id>::null();
+        if (0 == std::memcmp(&value, &null, sizeof(value_type))) {
             buffer << "0N";
         }
         else if (value == TypeTraits<id>::inf()) {
@@ -402,12 +398,8 @@ namespace q {
     impl::TypeBase<double, kFloat, 'f'>::to_str(T&& value, std::true_type)
     {
         std::ostringstream buffer;
-        auto const bit_match = [](auto a, auto b) -> bool
-        {
-            return 0 == std::memcmp(&a, &b, sizeof(value_type));
-        };
-
-        if (bit_match(value, TypeTraits<id>::null())) {
+        value_type const null = TypeTraits<id>::null();
+        if (0 == std::memcmp(&value, &null, sizeof(value_type))) {
             buffer << "0n";
         }
         else if (value == TypeTraits<id>::inf()) {
