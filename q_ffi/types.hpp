@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <algorithm>
 #include <limits>
 #include <type_traits>
 #include <iterator>
@@ -67,6 +68,8 @@ namespace q {
     ///         <dd>Allocate a @c K list for a C++ range
     ///     <dt><code>std::string to_str(value_type)</code>
     ///         <dd>Convert to string</dd>
+    ///     <dt>above functions with slightly different signatures,
+    ///             catering to the specific of the respective q types
     ///     </dl>
     /// @tparam tid Result of q @c type function
     template<Type tid>
@@ -91,26 +94,28 @@ namespace q {
         struct TypeBase
         {
             using value_type = Value; 
-
             constexpr static Type const id = id;
             constexpr static char const ch = ch;
+            using base_traits = TypeBase<Value, id, ch>;
 
-#       pragma region q::TypeTraits<>::list(...)
+            constexpr static value_type value(K_ptr const& k) noexcept
+            { return TypeTraits<id>::value(k.get()); }
+
+            constexpr static value_type* index(K_ptr const& k) noexcept
+            { return TypeTraits<id>::index(k.get()); }
 
             template<typename It,
                 typename = std::enable_if_t<
                     std::is_same_v<typename std::iterator_traits<It>::value_type, value_type>
                 >>
-            static K_ptr list(It begin, It end)
+            static K_ptr list(It begin, It end) noexcept
             {
                 ptrdiff_t n = std::distance(begin, end);
                 assert(0 <= n && n <= std::numeric_limits<J>::max());
                 K_ptr k{ ktn(id, n) };
-                std::copy(begin, end, TypeTraits<id>::index(k.get()));
+                std::copy(begin, end, index(k));
                 return k;
             }
-
-#       pragma endregion
 
 #       pragma region q::TypeTraits<>::to_str(...)
 
@@ -120,6 +125,8 @@ namespace q {
             {
                 return to_str(std::forward<T>(value), is_numeric<id>());
             }
+
+        private:
 
             template<typename T>
             static std::string to_str(T&& value, std::false_type)
@@ -149,10 +156,7 @@ namespace q {
                 return buffer.str();
             }
 
-        private:
-
 #       pragma endregion
-
         };
 
 #       pragma region Type traits signatures to be detected
@@ -202,8 +206,12 @@ namespace q {
         static_assert(sizeof(G) == sizeof(value_type),
             "sizeof(G) == sizeof(<q::kBoolean>)");
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return (value_type)k->g; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return (value_type*)(kG(k)); }
@@ -231,8 +239,12 @@ namespace q {
         constexpr static value_type null() noexcept
         { return 0x00; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->g; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return (value_type*)(kG(k)); }
@@ -263,14 +275,19 @@ namespace q {
         constexpr static value_type inf() noexcept
         { return wh; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->h; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return kH(k); }
 
         static K_ptr atom(value_type h) noexcept
         { return K_ptr{ kh(h) }; }
+
     };
 
     template<>
@@ -286,8 +303,12 @@ namespace q {
         constexpr static value_type inf() noexcept
         { return wi; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->i; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return kI(k); }
@@ -309,8 +330,12 @@ namespace q {
         constexpr static value_type inf() noexcept
         { return wj; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->j; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return kJ(k); }
@@ -334,8 +359,12 @@ namespace q {
         static value_type inf() noexcept
         { static value_type const e = (value_type)wf; return e; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->e; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return kE(k); }
@@ -382,8 +411,12 @@ namespace q {
         static value_type inf() noexcept
         { static value_type const f = wf; return f; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->f; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return kF(k); }
@@ -425,14 +458,26 @@ namespace q {
         constexpr static value_type null() noexcept
         { return ' '; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->g; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return (value_type*)(kG(k)); }
 
         static K_ptr atom(value_type c) noexcept
         { return K_ptr{ kc(c) }; }
+
+        using base_traits::list;
+
+        static K_ptr list(char const* str) noexcept
+        { return K_ptr{ kp(const_cast<S>(str)) }; }
+
+        static K_ptr list(char const* str, size_t len) noexcept
+        { return K_ptr{ kpn(const_cast<S>(str), len) }; }
     };
 
     template<>
@@ -442,17 +487,43 @@ namespace q {
         static_assert(sizeof(S) == sizeof(value_type),
             "sizeof(S) == sizeof(<q::kSymbol>)");
 
+        using Base = impl::TypeBase<char, kChar, 'c'>;
         constexpr static value_type null() noexcept
         { return ""; }
 
+        using base_traits::value;
+
         constexpr static value_type value(K k) noexcept
         { return k->s; }
+
+        using base_traits::index;
 
         constexpr static value_type* index(K k) noexcept
         { return (value_type*)(kS(k)); }
 
         static K_ptr atom(value_type s) noexcept
         { return K_ptr{ ks(const_cast<S>(s)) }; }
+
+        using base_traits::list;
+
+        template<typename It>
+        static K_ptr list(It begin, It end) noexcept
+        {
+            ptrdiff_t n = std::distance(begin, end);
+            assert(0 <= n && n <= std::numeric_limits<J>::max());
+            K_ptr k{ ktn(id, n) };
+            std::transform(begin, end, index(k),
+                [](auto const& sym) { return intern_str(sym); });
+            return k;
+        }
+    
+    private:
+
+        static auto intern_str(value_type const& sym) noexcept
+        { return ss(const_cast<S>(sym)); }
+
+        static auto intern_str(std::string const& sym) noexcept
+        { return ss(const_cast<S>(sym.c_str())); }
     };
 
     template<>
@@ -533,6 +604,8 @@ namespace q {
     {
         static_assert(sizeof(S) == sizeof(value_type),
             "sizeof(S) == sizeof(<q::kError>)");
+
+        using base_traits::value;
 
         constexpr static value_type value(K k) noexcept
         { return k->s; }

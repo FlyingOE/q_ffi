@@ -89,12 +89,12 @@ private:
                 0 == std::memcmp(&actual, &expected, sizeof(actual));
         };
         // Use memory comparison because some values (e.g. NaN) are not comparable
-        EXPECT_PRED2(memory_equal, Traits::value(pk.get()), v);
+        EXPECT_PRED2(memory_equal, Traits::value(pk), v);
     }
 
     void checkEqualAtoms(q::K_ptr const& pk, char const* str)
     {
-        EXPECT_STREQ(Traits::value(pk.get()), str);
+        EXPECT_STREQ(Traits::value(pk), str);
     }
 };
 
