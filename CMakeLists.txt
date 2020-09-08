@@ -57,7 +57,7 @@ if(WIN32)
         message(FATAL_ERROR "Unknown sizeof(void*): CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
     endif()
 
-    add_compile_options(/nologo)
+    add_compile_options(/nologo /utf-8)
     add_compile_options(/MP)        # multi-threaded build
     add_compile_options(/W4 /WX)    # warning level
     string(FIND "${CMAKE_CXX_FLAGS}" "/W3" NEED_FIX_W3)
