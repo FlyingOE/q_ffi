@@ -51,15 +51,15 @@ protected:
 
     KptrTests() : Test()
     {
-        add_tests_for_null(q::has_null<Traits::id>());
-        add_tests_for_numeric(q::is_numeric<Traits::id>());
+        add_tests_for_null(q::has_null<Traits::type_id>());
+        add_tests_for_numeric(q::is_numeric<Traits::type_id>());
     }
 
     void test_make_K(value_type const& v)
     {
         q::K_ptr pk{ Traits::atom(v) };
-        ASSERT_NE(pk.get(), q::Nil) << "Fail to create <" << Traits::id << "> K object";
-        EXPECT_EQ(q::typeOf(pk), -Traits::id);
+        ASSERT_NE(pk.get(), q::Nil) << "Fail to create <" << Traits::type_id << "> K object";
+        EXPECT_EQ(q::type_of(pk.get()), -Traits::type_id);
         checkEqualAtoms(pk, v);
     }
 
@@ -89,12 +89,12 @@ private:
                 0 == std::memcmp(&actual, &expected, sizeof(actual));
         };
         // Use memory comparison because some values (e.g. NaN) are not comparable
-        EXPECT_PRED2(memory_equal, Traits::value(pk), v);
+        EXPECT_PRED2(memory_equal, Traits::value(pk.get()), v);
     }
 
     void checkEqualAtoms(q::K_ptr const& pk, char const* str)
     {
-        EXPECT_STREQ(Traits::value(pk), str);
+        EXPECT_STREQ(Traits::value(pk.get()), str);
     }
 };
 
@@ -111,7 +111,7 @@ KPTR_TEST_PARAMS(q::kLong, int64_t) = { 0, 4'294'967'296LL, -2'147'483'648LL };
 KPTR_TEST_PARAMS(q::kReal, float) = { 0.f, 987.654f, -123.456f };
 KPTR_TEST_PARAMS(q::kFloat, double) = { 0., 987.6543210123, -123.4567890987 };
 KPTR_TEST_PARAMS(q::kChar, char) = { '\0', 'Z', '\xFF' };
-KPTR_TEST_PARAMS(q::kSymbol, char const*) = { "600000.SH", "123 abc ABC", "²âÊÔ" };
+KPTR_TEST_PARAMS(q::kSymbol, char const*) = { "600000.SH", "123 abc ABC", "æµ‹è¯•" };
 //KPTR_TEST_PARAMS(q::kNil, void) = //<q::kNil> cannot be `created'!
 //KPTR_TEST_PARAMS(q::kError, char const*) = //<q::kError> cannot be `created'!
 

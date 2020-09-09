@@ -65,21 +65,18 @@ TYPED_TEST(TypeTraitsTests, qTypeTraits)
 {
     using Traits = q::TypeTraits<TypeParam::id_>;
 
-    EXPECT_TRUE((std::is_same_v<
-        typename Traits::value_type,
-        typename TypeParam::Value_
-    >));
-    EXPECT_EQ(Traits::id, TypeParam::id_);
-    EXPECT_EQ(Traits::ch, TypeParam::ch_);
+    EXPECT_TRUE((std::is_same_v<typename Traits::value_type, typename TypeParam::Value_>));
+    EXPECT_EQ(Traits::type_id, TypeParam::id_);
+    EXPECT_EQ(Traits::type_code, TypeParam::ch_);
 }
 
 TYPED_TEST(TypeTraitsTests, qTypeTraitsQuery)
 {
     using Traits = q::TypeTraits<TypeParam::id_>;
 
-    EXPECT_EQ(q::has_value_v<Traits::id>, TypeParam::hasValue_);
-    EXPECT_EQ(q::has_null_v<Traits::id>, TypeParam::hasNull_);
-    EXPECT_EQ(q::is_numeric_v<Traits::id>, TypeParam::isNumeric_);
+    EXPECT_EQ(q::has_value_v<Traits::type_id>, TypeParam::hasValue_);
+    EXPECT_EQ(q::has_null_v<Traits::type_id>, TypeParam::hasNull_);
+    EXPECT_EQ(q::is_numeric_v<Traits::type_id>, TypeParam::isNumeric_);
 }
 
 TYPED_TEST(TypeTraitsTests, typeOf)
@@ -180,7 +177,7 @@ OPS_TEST_PARAMS(q::kChar) = {
 OPS_TEST_PARAMS(q::kSymbol) = {
     { "600000.SH", "600000.SH" },
     { "123 abc ABC", "123 abc ABC" },
-    { "²âÊÔ", "²âÊÔ" },
+    { "æµ‹è¯•", "æµ‹è¯•" },
     { q::TypeTraits<q::kSymbol>::null(), "" }
 };
 
@@ -215,8 +212,8 @@ TYPED_TEST(TypeTraitsOpsTests, atom)
     for (auto const& test : tests_) {
         q::K_ptr k{ Traits::atom(test.first) };
         ASSERT_NE(k.get(), q::Nil);
-        EXPECT_EQ(typeOf(k), -Traits::id);
-        expect_equal(Traits::value(k), test.first);
+        EXPECT_EQ(q::type_of(k.get()), -Traits::type_id);
+        expect_equal(Traits::value(k.get()), test.first);
     }
 }
 
@@ -228,12 +225,12 @@ TYPED_TEST(TypeTraitsOpsTests, list)
 
     q::K_ptr k{ Traits::list(samples.cbegin(), samples.cend()) };
     ASSERT_NE(k.get(), q::Nil);
-    EXPECT_EQ(typeOf(k), Traits::id);
+    EXPECT_EQ(q::type_of(k.get()), Traits::type_id);
 
     ASSERT_EQ(k->n, tests_.size());
     auto s = std::cbegin(samples);
     auto const e = std::cend(samples);
-    for (auto p = Traits::index(k); s != e; ++p, ++s) {
+    for (auto p = Traits::index(k.get()); s != e; ++p, ++s) {
         expect_equal(*p, *s);
     }
 }
@@ -241,14 +238,14 @@ TYPED_TEST(TypeTraitsOpsTests, list)
 TEST(TypeTraitsOpsTests, kCharList)
 {
     using Traits = q::TypeTraits<q::kChar>;
-    char const sample[] = "ABC 123 ²âÊÔ";
+    char const sample[] = "ABC 123 æµ‹è¯•";
 
     auto str_check = [&sample](q::K_ptr k, size_t length) {
         ASSERT_NE(k.get(), q::Nil);
-        EXPECT_EQ(typeOf(k), Traits::id);
+        EXPECT_EQ(q::type_of(k.get()), Traits::type_id);
         EXPECT_EQ(k->n, length);
         for (size_t i = 0; i < length; ++i) {
-            EXPECT_EQ(Traits::index(k)[i], sample[i]);
+            EXPECT_EQ(Traits::index(k.get())[i], sample[i]);
         }
     };
 
@@ -266,17 +263,17 @@ TEST(TypeTraitsOpsTests, kSymbolList)
     std::vector<std::string> sample{
         "600000.SH",
         "123 abc ABC",
-        "²âÊÔ",
+        "æµ‹è¯•",
         Traits::null()
     };
     size_t const length = sample.size();
 
     q::K_ptr k{ Traits::list(std::cbegin(sample), std::cend(sample)) };
     ASSERT_NE(k.get(), q::Nil);
-    EXPECT_EQ(typeOf(k), Traits::id);
+    EXPECT_EQ(q::type_of(k.get()), Traits::type_id);
     EXPECT_EQ(k->n, length);
     for (size_t i = 0; i < length; ++i) {
-        EXPECT_STREQ(Traits::index(k)[i], sample[i].c_str());
+        EXPECT_STREQ(Traits::index(k.get())[i], sample[i].c_str());
     }
 }
 
