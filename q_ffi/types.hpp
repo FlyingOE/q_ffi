@@ -13,7 +13,7 @@
 
 namespace q {
 
-    /// @brief All q data type IDs.
+    /// @brief All q data type IDs, same as those returnd by @c type function in q
     enum Type : ::H
     {
         kMixed = 0,
@@ -43,469 +43,561 @@ namespace q {
         kError = -128
     };
 
-    inline Type type_of(::K const k) noexcept
-    {
-        return nullptr == k ? kNil : static_cast<Type>(k->t);
-    }
+    inline Type type_of(::K const k) noexcept { return nullptr == k ? q::kNil : static_cast<Type>(k->t); }
 
-    /// @brief q data type traits and mapping logic to C++ types.
-    ///     All traits must contain the following:
-    ///     <dl>
-    ///     <dt>@c value_type
-    ///         <dd>C++ type corresponding to @c tid
-    ///     <dt>@c type_id
-    ///         <dd>Same as @c tid
-    ///     <dt>@c type_code
-    ///         <dd>q type character corresponding to @c tid
-    ///     </dl>
-    ///     Many traits may contain the following:
-    ///     <dl>
-    ///     <dt><code>value_type null()</code>
-    ///         <dd>The special null value for the q type, if available
-    ///     <dt><code>value_type inf()</code>
-    ///         <dd>The special infinity value for the q type, if available
-    ///     <dt><code>value_type value(K)</code>
-    ///         <dd>Get C++ value from a @c K pointer
-    ///     <dt><code>value_type* index(K)</code>
-    ///         <dd>Get C++ array pointer from a @c K pointer
-    ///     <dt><code>q::K_ptr atom(value_type)</code>
-    ///         <dd>Allocate a @c K atom for a C++ atom
-    ///     <dt><code>q::K_ptr list(begin, end)</code>
-    ///         <dd>Allocate a @c K list for a C++ range
-    ///     <dt><code>std::string to_str(value_type)</code>
-    ///         <dd>Convert to string</dd>
-    ///     <dt>above functions with slightly different signatures,
-    ///             catering to the specific of the respective q types
-    ///     </dl>
-    /// @tparam tid Result of q @c type function
-    template<Type tid>
+    /// @ref q::kNil
+    constexpr ::K Nil = static_cast<::K>(nullptr);
+
+    /// @tparam tid <code>q::Type</code> corresponding to the q type.
+    /// @tparam Tr (optional) subclass that is the actual type traits (using CRTP).
+    /// @ref q::impl::TypeBase
+    template<Type tid, typename Tr = void>
     struct TypeTraits;
+
+    q_ffi_API
+    ::K error(char const* msg, bool sys = false) noexcept;
 
 }//namespace q
 
 #include "pointer.hpp"
 
-namespace q {
-
+namespace q
+{
     namespace impl {
 
-        /// @brief Common type traits logic for <code>q::TypeTraits<id></code>
-        template<typename Value, Type tid, char code>
+        /// @tparam Tr subclass that is the actual type traits.
+        /// @remark Type traits use CRTP to provide common logic in base class and
+        ///     manage type-specific details in implementation classes.
+        template<typename Tr>
         struct TypeBase
         {
-            using value_type = Value; 
-            constexpr static Type const type_id = tid;
-            constexpr static char const type_code = code;
-            using base_traits = TypeBase<value_type, type_id, type_code>;
+            template<typename T,
+                typename = std::enable_if_t<
+                    can_index_v<Tr::type_id> &&
+                    std::is_convertible_v<std::decay_t<T>, typename Tr::value_type>
+                >>
+            static ::K list(std::initializer_list<T> const& vs) noexcept
+            { return Tr::list(std::cbegin(vs), std::cend(vs)); }
 
             template<typename It,
                 typename = std::enable_if_t<
-                    std::is_same_v<typename std::iterator_traits<It>::value_type, value_type>
+                    can_index_v<Tr::type_id> &&
+                    std::is_convertible_v<
+                        typename std::iterator_traits<It>::value_type,
+                        typename Tr::value_type>
                 >>
-            static K_ptr list(It begin, It end) noexcept
+            static ::K list(It begin, It end) noexcept
             {
                 ptrdiff_t n = std::distance(begin, end);
                 assert(0 <= n && n <= std::numeric_limits<::J>::max());
-                K_ptr k{ ::ktn(type_id, n) };
-//                std::copy(begin, end, index(k.get()));
-                return k;
+                K_ptr k{ ::ktn(Tr::type_id, n) };
+                std::copy(begin, end, Tr::index(k.get()));
+                return k.release();
             }
-
-#       pragma region q::TypeTraits<>::to_str(...)
 
             template<typename T,
-                typename = std::enable_if_t<!std::is_void_v<value_type>>>
-            static std::string to_str(T&& value)
-            {
-                return to_str(std::forward<T>(value), is_numeric<type_id>());
-            }
-
-        private:
-
-            template<typename T>
-            static std::string to_str(T&& value, std::false_type)
+                typename = std::enable_if_t<
+                    has_value_v<Tr::type_id>&&
+                    std::is_convertible_v<std::decay_t<T>, typename Tr::value_type>
+                >>
+            static std::string to_str(T&& v)
             {
                 std::ostringstream buffer;
-                buffer << value;
+                Tr::print(buffer, static_cast<Tr::value_type>(v), is_numeric<Tr::type_id>());
                 return buffer.str();
             }
 
-            template<typename T>
-            static std::string to_str(T&& value, std::true_type)
+        protected:
+
+            template<typename Tr2, typename V>
+            inline static ::K generic_atom(V&& v) noexcept
             {
-                std::ostringstream buffer;
-                if (value == TypeTraits<type_id>::null()) {
-                    buffer << "0N";
+                K_ptr k{ ::ka(-Tr2::type_id) };
+                Tr2::value(k.get()) = v;
+                return k.release();
+            }
+
+            template<typename Elem, typename ElemTr, typename T>
+            static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::false_type /*is_numeric*/)
+            {
+                out << std::forward<T>(v);
+            }
+
+            template<typename Elem, typename ElemTr, typename T>
+            static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+            {
+                static_assert(sizeof(typename Tr::value_type) == sizeof(v),
+                    "<BUG> unexpected specialization w/ differing types");
+
+                Tr::value_type const null_v = Tr::null();
+                Tr::value_type const inf_v = Tr::inf();
+                // Some null values are not comparable (e.g. NaN), use bit comparison
+                if (0 == std::memcmp(&null_v, &v, sizeof(typename Tr::value_type))) {
+                    out << "0N";
                 }
-                else if (value == TypeTraits<type_id>::inf()) {
-                    buffer << "0W";
+                else if (v == inf_v) {
+                    out << "0W";
                 }
-                else if (value == -TypeTraits<type_id>::inf()) {
-                    buffer << "-0W";
+                else if (v == -inf_v) {
+                    out << "-0W";
                 }
                 else {
-                    buffer << std::to_string(value);
+                    out << std::to_string(std::forward<T>(v));
                 }
-                buffer << type_code;
-                return buffer.str();
+                out << Tr::type_code;
             }
-
-#       pragma endregion
         };
-
-#       pragma region Type traits signatures to be detected
-
-        template<typename Traits>
-        using value_sig = decltype(Traits::value(std::declval<::K>()));
-
-        template<typename Traits>
-        using null_sig = decltype(Traits::null());
-
-        template<typename Traits>
-        using inf_sig = decltype(Traits::inf());
-
-#       pragma endregion
 
     }//namespace q::impl
 
-    q_ffi_API
-    K_ptr error(char const* msg, bool sys = false) noexcept;
+#pragma region Type traits queries
 
-    constexpr K const Nil = static_cast<K>(nullptr);
+    namespace impl
+    {
+        template<typename Tr>
+        using value_sig = decltype(Tr::value(std::declval<::K>()));
 
-#   pragma region Type traits detection
+        template<typename Tr>
+        using null_sig = decltype(Tr::null());
 
-    /// @brief check if q type @c tid has <code>value(K)</code>
+        template<typename Tr>
+        using index_sig = decltype(Tr::index(std::declval<::K>()));
+
+        template<typename Tr>
+        using inf_sig = decltype(Tr::inf());
+
+    }//namespace q::impl
+
     template<Type tid>
     using has_value = std_ext::can_apply<impl::value_sig, TypeTraits<tid>>;
-
     template<Type tid>
-    constexpr bool has_value_v = has_value<tid>::value;
+    constexpr static bool has_value_v = has_value<tid>::value;
 
-    /// @brief check if q type @c tid has <code>null()</code>
     template<Type tid>
     using has_null = std_ext::can_apply<impl::null_sig, TypeTraits<tid>>;
+    template<Type tid>
+    constexpr static bool has_null_v = has_null<tid>::value;
 
     template<Type tid>
-    constexpr bool has_null_v = has_null<tid>::value;
+    using can_index = std_ext::can_apply<impl::index_sig, TypeTraits<tid>>;
+    template<Type tid>
+    constexpr static bool can_index_v = can_index<tid>::value;
 
-    /// @brief check if a @c Traits is of a numeric type (thus, has <code>inf()</code>)
     template<Type tid>
     using is_numeric = std_ext::can_apply<impl::inf_sig, TypeTraits<tid>>;
-
     template<Type tid>
-    constexpr bool is_numeric_v = is_numeric<tid>::value;
+    constexpr static bool is_numeric_v = is_numeric<tid>::value;
 
-#   pragma endregion
+#pragma endregion
+
+#pragma region Type traits implementations
 
     template<>
-    struct TypeTraits<kBoolean>
-        : public impl::TypeBase<bool, kBoolean, 'b'>
+    struct q_ffi_API TypeTraits<kBoolean> final
+        : public impl::TypeBase<TypeTraits<kBoolean>>
     {
-        static_assert(sizeof(::G) == sizeof(value_type),
-            "sizeof(G) == sizeof(<q::kBoolean>)");
+        using value_type = unsigned char;
+        constexpr static Type type_id = kBoolean;
+        constexpr static char type_code = 'b';
 
-        inline static value_type value(::K k) noexcept { return static_cast<value_type>(k->g); }
-        inline static value_type* index(::K k) noexcept { return (value_type*)(kG(k)); }
-        inline static K_ptr atom(value_type b) noexcept { return K_ptr{ ::kb(b) }; } 
+        static_assert(sizeof(::G) == sizeof(value_type),
+            "sizeof(G) == sizeof(<kBoolean>)");
+
+        inline static value_type& value(::K k) noexcept { return k->g; }
+        inline static value_type* index(::K k) noexcept { return static_cast<value_type*>(kG(k)); }
+        inline static ::K atom(bool b) noexcept { return ::kb(!!b); } 
 
         template<typename T,
-            typename = std::enable_if_t<std::is_same_v<std::decay_t<T>, value_type>>>
+            typename = std::enable_if_t<std::is_convertible_v<std::decay_t<T>, value_type>>>
         static std::string to_str(T&& v)
         {
             std::ostringstream buffer;
-            buffer << v << type_code;
+            buffer << static_cast<bool>(v) << type_code;
             return buffer.str();
         }
     };
 
     template<>
-    struct TypeTraits<kByte>
-        : public impl::TypeBase<uint8_t, kByte, 'x'>
+    struct q_ffi_API TypeTraits<kByte> final
+        : public impl::TypeBase<TypeTraits<kByte>>
     {
+        using value_type = uint8_t;
+        constexpr static Type type_id = kByte;
+        constexpr static char type_code = 'x';
+
         static_assert(sizeof(::G) == sizeof(value_type),
-            "sizeof(G) == sizeof(<q::kByte>)");
+            "sizeof(G) == sizeof(<kByte>)");
 
         constexpr static value_type null() noexcept { return 0x00; }
-        inline static value_type value(::K k) noexcept { return k->g; }
-        inline static value_type* index(::K k) noexcept { return static_cast<value_type*>(kG(k)); }
-        inline static K_ptr atom(value_type b) noexcept { return K_ptr{ ::kg(b) }; }
+        inline static value_type& value(::K k) noexcept { return k->g; }
+        inline static value_type* index(::K k) noexcept { return (kG(k)); }
+        inline static ::K atom(value_type b) noexcept { return ::kg(b); }
 
         template<typename T,
-            typename = std::enable_if_t<std::is_same_v<std::decay_t<T>, value_type>>>
+            typename = std::enable_if_t<std::is_convertible_v<std::decay_t<T>, value_type>>>
         static std::string to_str(T&& v)
         {
             std::ostringstream buffer;
-            buffer << std::setw(2) << std::setfill('0') << std::hex << (int)v;
+            buffer << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(v);
             return buffer.str();
         }
     };
 
     template<>
-    struct TypeTraits<kShort>
-        : public impl::TypeBase<int16_t, kShort, 'h'>
+    struct q_ffi_API TypeTraits<kShort> final
+        : public impl::TypeBase<TypeTraits<kShort>>
     {
+        using value_type = int16_t;
+        constexpr static Type type_id = kShort;
+        constexpr static char type_code = 'h';
+
         static_assert(sizeof(::H) == sizeof(value_type),
-            "sizeof(H) == sizeof(<q::kShort>)");
+            "sizeof(H) == sizeof(<kShort>)");
 
         constexpr static value_type null() noexcept { return (nh); }
         constexpr static value_type inf() noexcept { return (wh); }
-        inline static value_type value(::K k) noexcept { return k->h; }
+        inline static value_type& value(::K k) noexcept { return k->h; }
         inline static value_type* index(::K k) noexcept { return (kH(k)); }
-        inline static K_ptr atom(value_type h) noexcept { return K_ptr{ ::kh(h) }; }
-
+        inline static ::K atom(value_type h) noexcept { return ::kh(h); }
     };
 
-    template<>
-    struct TypeTraits<kInt>
-        : public impl::TypeBase<int32_t, kInt, 'i'>
+    template<typename Tr>
+    struct q_ffi_API TypeTraits<kInt, Tr>
+        : public impl::TypeBase<std::conditional_t<std::is_void_v<Tr>, TypeTraits<kInt>, Tr>>
     {
+    private:
+        template<typename T>
+        struct TypeDefault  // dummy type
+        {
+            constexpr static Type type_id{};
+            constexpr static char type_code{};
+        };
+
+        template<>
+        struct TypeDefault<void>
+        {
+            constexpr static Type type_id = kInt;
+            constexpr static char type_code = 'i';
+        };
+
+    public:
+        using value_type = int32_t;
+        constexpr static Type type_id = TypeDefault<Tr>::type_id;
+        constexpr static char type_code = TypeDefault<Tr>::type_code;
+
         static_assert(sizeof(::I) == sizeof(value_type),
-            "sizeof(I) == sizeof(<q::kInt>)");
+            "sizeof(I) == sizeof(<kInt>)");
 
         constexpr static value_type null() noexcept { return (ni); }
         constexpr static value_type inf() noexcept { return (wi); }
-        inline static value_type value(::K k) noexcept { return k->i; }
+        inline static value_type& value(::K k) noexcept { return k->i; }
         inline static value_type* index(::K k) noexcept { return (kI(k)); }
-        inline static K_ptr atom(value_type i) noexcept { return K_ptr{ ::ki(i) }; }
+        inline static ::K atom(value_type i) noexcept { return ::ki(i); }
     };
 
-    template<>
-    struct TypeTraits<kLong>
-        : public impl::TypeBase<int64_t, kLong, 'j'>
+    template<typename Tr>
+    struct q_ffi_API TypeTraits<kLong, Tr>
+        : public impl::TypeBase<std::conditional_t<std::is_void_v<Tr>, TypeTraits<kLong>, Tr>>
     {
+    private:
+        template<typename T>
+        struct TypeDefault  // dummy type
+        {
+            constexpr static Type type_id{};
+            constexpr static char type_code{};
+        };
+
+        template<>
+        struct TypeDefault<void>
+        {
+            constexpr static Type type_id = kLong;
+            constexpr static char type_code = 'j';
+        };
+
+    public:
+        using value_type = int64_t;
+        constexpr static Type type_id = TypeDefault<Tr>::type_id;
+        constexpr static char type_code = TypeDefault<Tr>::type_code;
+
         static_assert(sizeof(::J) == sizeof(value_type),
-            "sizeof(J) == sizeof(<q::kLong>)");
+            "sizeof(J) == sizeof(<kLong>)");
 
         constexpr static value_type null() noexcept { return (nj); }
         constexpr static value_type inf() noexcept { return (wj); }
-        inline static value_type value(::K k) noexcept { return k->j; }
+        inline static value_type& value(::K k) noexcept { return k->j; }
         inline static value_type* index(K k) noexcept { return (kJ(k)); }
-        inline static K_ptr atom(value_type j) noexcept { return K_ptr{ ::kj(j) }; }
+        inline static ::K atom(value_type j) noexcept { return ::kj(j); }
     };
 
     template<>
-    struct TypeTraits<kReal>
-        : public impl::TypeBase<float, kReal, 'e'>
+    struct q_ffi_API TypeTraits<kReal> final
+        : public impl::TypeBase<TypeTraits<kReal>>
     {
+        using value_type = float;
+        constexpr static Type type_id = kReal;
+        constexpr static char type_code = 'e';
+
         static_assert(std::numeric_limits<float>::is_iec559,
             "<q::kReal> should be IEC 559/IEEE 754-compliant");
         static_assert(sizeof(::E) == sizeof(value_type),
-            "sizeof(E) == sizeof(<q::kReal>)");
+            "sizeof(E) == sizeof(<kReal>)");
 
         inline static value_type null() noexcept { return static_cast<value_type>(nf); }
         inline static value_type inf() noexcept { return static_cast<value_type>(wf); }
-        inline static value_type value(::K k) noexcept { return k->e; }
+        inline static value_type& value(::K k) noexcept { return k->e; }
         inline static value_type* index(::K k) noexcept { return (kE(k)); }
-
-        static K_ptr atom(value_type e) noexcept
-        { return K_ptr{ ke(e) }; }
+        inline static ::K atom(value_type e) noexcept { return ::ke(e); }
     };
 
-    template<>
-    template<typename T>
-    static std::string
-    impl::TypeBase<float, kReal, 'e'>::to_str(T&& value, std::true_type)
+    template<typename Tr>
+    struct q_ffi_API TypeTraits<kFloat, Tr>
+        : public impl::TypeBase<std::conditional_t<std::is_void_v<Tr>, TypeTraits<kFloat>, Tr>>
     {
-        std::ostringstream buffer;
-        value_type const null = TypeTraits<type_id>::null();
-        if (0 == std::memcmp(&value, &null, sizeof(value_type))) {
-            buffer << "0N";
-        }
-        else if (value == TypeTraits<type_id>::inf()) {
-            buffer << "0W";
-        }
-        else if (value == -TypeTraits<type_id>::inf()) {
-            buffer << "-0W";
-        }
-        else {
-            buffer << std::to_string(value);
-        }
-        buffer << type_code;
-        return buffer.str();
-    }
+    private:
+        template<typename T>
+        struct TypeDefault  // dummy type
+        {
+            constexpr static Type type_id{};
+            constexpr static char type_code{};
+        };
 
-    template<>
-    struct TypeTraits<kFloat>
-        : public impl::TypeBase<double, kFloat, 'f'>
-    {
+        template<>
+        struct TypeDefault<void>
+        {
+            constexpr static Type type_id = kFloat;
+            constexpr static char type_code = 'f';
+        };
+
+    public:
+        using value_type = double;
+        constexpr static Type type_id = TypeDefault<Tr>::type_id;
+        constexpr static char type_code = TypeDefault<Tr>::type_code;
+
         static_assert(std::numeric_limits<double>::is_iec559,
             "<q::kFloat> should be IEC 559/IEEE 754-compliant");
         static_assert(sizeof(::F) == sizeof(value_type),
-            "sizeof(F) == sizeof(<q::kFloat>)");
+            "sizeof(F) == sizeof(<kFloat>)");
 
         inline static value_type null() noexcept { return (nf); }
         inline static value_type inf() noexcept { return (wf); }
-        inline static value_type value(::K k) noexcept { return k->f; }
+        inline static value_type& value(::K k) noexcept { return k->f; }
         inline static value_type* index(::K k) noexcept { return (kF(k)); }
-        inline static K_ptr atom(value_type f) noexcept { return K_ptr{ ::kf(f) }; }
+        inline static ::K atom(value_type f) noexcept { return ::kf(f); }
     };
 
     template<>
-    template<typename T>
-    static std::string
-    impl::TypeBase<double, kFloat, 'f'>::to_str(T&& value, std::true_type)
+    struct q_ffi_API TypeTraits<kChar> final
+        : public impl::TypeBase<TypeTraits<kChar>>
     {
-        std::ostringstream buffer;
-        value_type const null = TypeTraits<type_id>::null();
-        if (0 == std::memcmp(&value, &null, sizeof(value_type))) {
-            buffer << "0n";
-        }
-        else if (value == TypeTraits<type_id>::inf()) {
-            buffer << "0w";
-        }
-        else if (value == -TypeTraits<type_id>::inf()) {
-            buffer << "-0w";
-        }
-        else {
-            buffer << std::to_string(value);
-        }
-        buffer << type_code;
-        return buffer.str();
-    }
+        using value_type = char;
+        constexpr static Type type_id = kChar;
+        constexpr static char type_code = 'c';
 
-    template<>
-    struct TypeTraits<kChar>
-        : public impl::TypeBase<char, kChar, 'c'>
-    {
         static_assert(sizeof(::C) == sizeof(value_type),
-            "sizeof(C) == sizeof(<q::kChar>)");
+            "sizeof(C) == sizeof(<kChar>)");
 
         constexpr static value_type null() noexcept { return ' '; }
-        inline static value_type value(K k) noexcept { return k->g; }
+        inline static value_type& value(K k) noexcept { return (value_type&)(k->g); }
         inline static value_type* index(K k) noexcept { return (value_type*)(kG(k)); }
-        inline static K_ptr atom(value_type c) noexcept { return K_ptr{ ::kc(c) }; }
+        inline static ::K atom(value_type c) noexcept { return ::kc(c); }
 
-        using base_traits::list;
+        using impl::TypeBase<TypeTraits<kChar>>::list;
 
-        inline static K_ptr list(char const* str) noexcept
-        {
-            return K_ptr{ ::kp(const_cast<::S>(str)) };
-        }
+        inline static ::K list(char const* str) noexcept
+        { return ::kp(const_cast<::S>(str)); }
 
-        inline static K_ptr list(char const* str, size_t len) noexcept
-        {
-            return K_ptr{ ::kpn(const_cast<::S>(str), len) };
-        }
+        inline static ::K list(char const* str, size_t len) noexcept
+        { return ::kpn(const_cast<::S>(str), len); }
+
+        inline static ::K list(std::string const& str) noexcept
+        { return list(str.c_str(), str.length()); }
     };
 
     template<>
-    struct TypeTraits<kSymbol>
-        : public impl::TypeBase<char const*, kSymbol, 's'>
+    struct q_ffi_API TypeTraits<kSymbol> final
+        : public impl::TypeBase<TypeTraits<kSymbol>>
     {
-        static_assert(sizeof(::S) == sizeof(value_type),
-            "sizeof(S) == sizeof(<q::kSymbol>)");
+        using value_type = char const*;
+        constexpr static Type type_id = kSymbol;
+        constexpr static char type_code = 's';
 
-        using Base = impl::TypeBase<char, kChar, 'c'>;
+        static_assert(sizeof(::S) == sizeof(value_type),
+            "sizeof(S) == sizeof(<kSymbol>)");
+        static_assert(sizeof(std::remove_const_t<std::remove_pointer_t<::S>>)
+                == sizeof(std::remove_const_t<std::remove_pointer_t<value_type>>),
+            "sizeof(S#char) == sizeof(<kSymbol>#char)");
 
         constexpr static value_type null() noexcept { return ""; }
-        inline static value_type value(::K k) noexcept { return k->s; }
+        inline static value_type& value(::K k) noexcept { return (value_type&)(k->s); }
         inline static value_type* index(::K k) noexcept { return (value_type*)(kS(k)); }
-        inline static K_ptr atom(value_type s) noexcept { return K_ptr{ ::ks(const_cast<::S>(s)) }; }
+        inline static ::K atom(value_type s) noexcept { return ::ks(const_cast<::S>(s)); }
 
-        using base_traits::list;
+        using impl::TypeBase<TypeTraits<kSymbol>>::list;
 
         template<typename It>
-        static K_ptr list(It begin, It end) noexcept
+        inline static ::K list(It begin, It end) noexcept
+        {
+            return make_list(begin, end,
+                str_getter<typename std::iterator_traits<It>::value_type>());
+        }
+
+    private:
+        template<typename StrT>
+        struct str_getter;
+
+        template<>
+        struct str_getter<value_type>
+        { inline value_type operator()(value_type s) const { return s; } };
+
+        template<>
+        struct str_getter<std::string>
+        { inline value_type operator()(std::string const& s) const { return s.c_str(); } };
+
+        template<typename It, typename GetStr>
+        static ::K make_list(It begin, It end, GetStr const& get_str) noexcept
         {
             ptrdiff_t n = std::distance(begin, end);
             assert(0 <= n && n <= std::numeric_limits<::J>::max());
             K_ptr k{ ::ktn(type_id, n) };
             std::transform(begin, end, index(k.get()),
-                [](auto const& sym) { return intern_str(sym); });
-            return k;
+                [&get_str](auto&& sym) {
+                    return ::ss(const_cast<::S>(get_str(std::forward<decltype(sym)>(sym))));
+                });
+            return k.release();
         }
-    
-    private:
-        inline static auto intern_str(value_type const& sym) noexcept { return ss(const_cast<::S>(sym)); }
-        inline static auto intern_str(std::string const& sym) noexcept { return ss(const_cast<::S>(sym.c_str())); }
     };
 
     template<>
-    struct TypeTraits<kTimestamp>
-        : public TypeTraits<kLong>
+    struct q_ffi_API TypeTraits<kTimestamp> final
+        : public TypeTraits<kLong, TypeTraits<kTimestamp>>
     {
-        constexpr static Type id = kTimestamp;
-        constexpr static char ch = 'p';
+        constexpr static Type type_id = kTimestamp;
+        constexpr static char type_code = 'p';
+ 
+        inline static ::K atom(value_type p) noexcept { return ::ktj(-type_id, p); }
     };
 
     template<>
-    struct TypeTraits<kMonth>
-        : public TypeTraits<kInt>
+    struct q_ffi_API TypeTraits<kMonth> final
+        : public TypeTraits<kInt, TypeTraits<kMonth>>
     {
-        constexpr static Type id = kMonth;
-        constexpr static char ch = 'm';
+        constexpr static Type type_id = kMonth;
+        constexpr static char type_code = 'm';
+
+        inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
     };
 
     template<>
-    struct TypeTraits<kDate>
-        : public TypeTraits<kInt>
+    struct q_ffi_API TypeTraits<kDate> final
+        : public TypeTraits<kInt, TypeTraits<kDate>>
     {
-        constexpr static Type id = kDate;
-        constexpr static char ch = 'd';
+        constexpr static Type type_id = kDate;
+        constexpr static char type_code = 'd';
+
+        inline static ::K atom(value_type d) noexcept { return ::kd(d); }
+
+        using TypeTraits<kInt, TypeTraits<kDate>>::value;
+        inline static value_type value(int year, int month, int day) noexcept { return ::ymd(year, month, day); }
+        static value_type value(char const* ymd);
     };
 
     template<>
-    struct TypeTraits<kDatetime>
-        : public TypeTraits<kFloat>
+    struct q_ffi_API TypeTraits<kDatetime> final
+        : public TypeTraits<kFloat, TypeTraits<kDatetime>>
     {
-        constexpr static Type id = kDatetime;
-        constexpr static char ch = 'z';
+        constexpr static Type type_id = kDatetime;
+        constexpr static char type_code = 'z';
+
+        inline static ::K atom(value_type z) noexcept { return ::kz(z); }
     };
 
     template<>
-    struct TypeTraits<kTimespan>
-        : public TypeTraits<kLong>
+    struct q_ffi_API TypeTraits<kTimespan> final
+        : public TypeTraits<kLong, TypeTraits<kTimespan>>
     {
-        constexpr static Type id = kTimespan;
-        constexpr static char ch = 'n';
+        constexpr static Type type_id = kTimespan;
+        constexpr static char type_code = 'n';
+
+        inline static ::K atom(value_type n) noexcept { return ::ktj(-type_id, n); }
     };
 
     template<>
-    struct TypeTraits<kMinute>
-        : public TypeTraits<kInt>
+    struct q_ffi_API TypeTraits<kMinute> final
+        : public TypeTraits<kInt, TypeTraits<kMinute>>
     {
-        constexpr static Type id = kMinute;
-        constexpr static char ch = 'u';
+        constexpr static Type type_id = kMinute;
+        constexpr static char type_code = 'u';
+
+        inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
     };
 
     template<>
-    struct TypeTraits<kSecond>
-        : public TypeTraits<kInt>
+    struct q_ffi_API TypeTraits<kSecond> final
+        : public TypeTraits<kInt, TypeTraits<kSecond>>
     {
-        constexpr static Type id = kSecond;
-        constexpr static char ch = 'v';
+        constexpr static Type type_id = kSecond;
+        constexpr static char type_code = 'v';
+
+        inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
     };
 
     template<>
-    struct TypeTraits<kTime>
-        : public TypeTraits<kInt>
+    struct q_ffi_API TypeTraits<kTime> final
+        : public TypeTraits<kInt, TypeTraits<kTime>>
     {
-        constexpr static Type id = kTime;
-        constexpr static char ch = 't';
+        constexpr static Type type_id = kTime;
+        constexpr static char type_code = 't';
+
+        inline static ::K atom(value_type t) noexcept { return ::kt(t); }
     };
 
     template<>
-    struct TypeTraits<kNil>
-        : public impl::TypeBase<void, kNil, ' '>
+    struct q_ffi_API TypeTraits<kNil> final
+        : public impl::TypeBase<TypeTraits<kNil>>
     {
-        inline static K_ptr atom() noexcept { return K_ptr{ Nil }; }
+        using value_type = void;
+        constexpr static Type type_id = kNil;
+        constexpr static char type_code = ' ';
+
+        inline static ::K atom(...) noexcept { return Nil; }
     };
 
     template<>
-    struct TypeTraits<kError>
-        : public impl::TypeBase<char const*, kError, ' '>
+    struct q_ffi_API TypeTraits<kError> final
+        : public impl::TypeBase<TypeTraits<kError>>
     {
+        using value_type = char const*;
+        constexpr static Type type_id = kError;
+        constexpr static char type_code = ' ';
+
         static_assert(sizeof(::S) == sizeof(value_type),
-            "sizeof(S) == sizeof(<q::kError>)");
+            "sizeof(S) == sizeof(<kError>)");
 
         inline static value_type value(::K k) noexcept { return k->s; }
 
-        /// @return Always <code>q::Nil</code> while errors will be signaled to kdb+ host
-        inline static K_ptr atom(value_type msg, bool sys = false) noexcept
-        {
-            return K_ptr{ (sys ? ::orr : ::krr)(const_cast<::S>(msg)) };
-        }
+        /// @return Always @c Nil (errors will be signaled to kdb+ host)
+        inline static ::K atom(value_type msg, bool sys = false) noexcept
+        { return (sys ? ::orr : ::krr)(const_cast<::S>(msg)); }
     };
+
+#pragma endregion
+
+    /// @brief UDLs that are adapted from q literal suffices
+    inline namespace literals
+    {
+#       define Q_FFI_LITERAL(suffix, tid, cppType)   \
+            constexpr decltype(auto) operator"" suffix(cppType v) noexcept  \
+            { return static_cast<TypeTraits<(tid)>::value_type>(v); }
+
+        Q_FFI_LITERAL(_kb, kBoolean, unsigned long long int)
+        Q_FFI_LITERAL(_kx, kByte, unsigned long long int)
+        Q_FFI_LITERAL(_kh, kShort, unsigned long long int)
+        Q_FFI_LITERAL(_ki, kInt, unsigned long long int)
+        Q_FFI_LITERAL(_kj, kLong, unsigned long long int)
+        Q_FFI_LITERAL(_ke, kReal, long double)
+        Q_FFI_LITERAL(_kf, kFloat, long double)
+
+#       undef Q_FFI_LITERAL
+    }//inline namespace q::literals
 
 }//namespace q
