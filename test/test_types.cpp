@@ -161,51 +161,51 @@ using namespace std::literals;
 using namespace q::literals;
 
 OPS_TEST_SET(q::kBoolean) = {
-    { 1_kb, "1b" },
-    { 0_kb, "0b" }
+    { 1_qb, "1b" },
+    { 0_qb, "0b" }
 };
 OPS_TEST_SET(q::kByte) = {
-    { 0_kx, "00" },
-    { 0x20_kx, "20" },
-    { 0xA7_kx, "a7" },
-    { 0xFF_kx, "ff" }
+    { 0_qx, "00" },
+    { 0x20_qx, "20" },
+    { 0xA7_qx, "a7" },
+    { 0xFF_qx, "ff" }
 };
 OPS_TEST_SET(q::kShort) = {
-    { 0_kh, "0h" },
-    { 129_kh, "129h" },
+    { 0_qh, "0h" },
+    { 129_qh, "129h" },
     { q::TypeTraits<q::kShort>::value_type{ -128 }, "-128h" },
     { q::TypeTraits<q::kShort>::null(), "0Nh" },
     { q::TypeTraits<q::kShort>::inf(), "0Wh" },
     { q::TypeTraits<q::kShort>::value_type{ -q::TypeTraits<q::kShort>::inf() }, "-0Wh" }
 };
 OPS_TEST_SET(q::kInt) = {
-    { 0_ki, "0i" },
-    { 65536_ki, "65536i" },
-    { -32768_ki, "-32768i" },
+    { 0_qi, "0i" },
+    { 65536_qi, "65536i" },
+    { -32768_qi, "-32768i" },
     { q::TypeTraits<q::kInt>::null(), "0Ni" },
     { q::TypeTraits<q::kInt>::inf(), "0Wi" },
     { -q::TypeTraits<q::kInt>::inf(), "-0Wi" }
 };
 OPS_TEST_SET(q::kLong) = {
-    { 0_kj, "0j" },
-    { 4'294'967'296_kj, "4294967296j" },
-    { -2'147'483'648_kj, "-2147483648j" },
+    { 0_qj, "0j" },
+    { 4'294'967'296_qj, "4294967296j" },
+    { -2'147'483'648_qj, "-2147483648j" },
     { q::TypeTraits<q::kLong>::null(), "0Nj" },
     { q::TypeTraits<q::kLong>::inf(), "0Wj" },
     { -q::TypeTraits<q::kLong>::inf(), "-0Wj" }
 };
 OPS_TEST_SET(q::kReal) = {
-    { 0._ke, "0.000000e" },
-    { 987.654_ke, "987.653992e" },
-    { -123.456_ke, "-123.456001e" },
+    { 0._qe, "0.000000e" },
+    { 987.654_qe, "987.653992e" },
+    { -123.456_qe, "-123.456001e" },
     { q::TypeTraits<q::kReal>::null(), "0Ne" },
     { q::TypeTraits<q::kReal>::inf(), "0We" },
     { -q::TypeTraits<q::kReal>::inf(), "-0We" }
 };
 OPS_TEST_SET(q::kFloat) = {
-    { 0._kf, "0.000000f" },
-    { 987.6543210123_kf, "987.654321f" },
-    { -123.4567890987_kf, "-123.456789f" },
+    { 0._qf, "0.000000f" },
+    { 987.6543210123_qf, "987.654321f" },
+    { -123.4567890987_qf, "-123.456789f" },
     { q::TypeTraits<q::kFloat>::null(), "0Nf" },
     { q::TypeTraits<q::kFloat>::inf(), "0Wf" },
     { -q::TypeTraits<q::kFloat>::inf(), "-0Wf" }
@@ -224,21 +224,21 @@ OPS_TEST_SET(q::kSymbol) = {
 };
 
 OPS_TEST_SET(q::kMonth) = {
-    { "2000.01m"_km, "2000.01m"s },
-    { "2020/09"_km, "2020.09m"s },
-    { "1997-11"_km, "1997.11m"s },
-    { 197001_km, "1970.01m"s },
-    { "1900.01"_km, "1900.01m"s },
+    { "2000.01m"_qm, "2000.01m"s },
+    { "2020/9"_qm, "2020.09m"s },
+    { "1997-11"_qm, "1997.11m"s },
+    { 197001_qm, "1970.01m"s },
+    { "1900.1"_qm, "1900.01m"s },
     { q::TypeTraits<q::kMonth>::null(), "0Nm"s },
     { q::TypeTraits<q::kMonth>::inf(), "0Wm"s },
     { -q::TypeTraits<q::kMonth>::inf(), "-0Wm"s }
 };
 OPS_TEST_SET(q::kDate) = {
-    { "2000.01.01"_kd, "2000.01.01"s },
-    { "2020/09/10"_kd, "2020.09.10"s },
-    { "1997-11-28"_kd, "1997.11.28"s },
-    { 19700101_kd, "1970.01.01"s },
-    { "1900.01.01"_kd, "1900.01.01"s },
+    { "2000.01.01"_qd, "2000.01.01"s },
+    { "2020/9/10"_qd, "2020.09.10"s },
+    { "1997-11-28"_qd, "1997.11.28"s },
+    { 19700101_qd, "1970.01.01"s },
+    { "1900.1.1"_qd, "1900.01.01"s },
     { q::TypeTraits<q::kDate>::null(), "0Nd"s },
     { q::TypeTraits<q::kDate>::inf(), "0Wd"s },
     { -q::TypeTraits<q::kDate>::inf(), "-0Wd"s }

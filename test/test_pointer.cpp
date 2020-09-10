@@ -97,20 +97,20 @@ protected:
 
 using namespace q::literals;
 
-KPTR_TEST_SET(q::kBoolean) = { 1_kb, 0_kb };
-KPTR_TEST_SET(q::kByte) = { 0_kx, 0x20_kx, 0xA7_kx, 0xFF_kx };
-KPTR_TEST_SET(q::kShort) = { 0_kh, 129_kh, q::TypeTraits<q::kShort>::value_type{ -128 } };
-KPTR_TEST_SET(q::kInt) = { 0_ki, 65536_ki, -32768_ki };
-KPTR_TEST_SET(q::kLong) = { 0_kj, 4'294'967'296_kj, -2'147'483'648_kj };
-KPTR_TEST_SET(q::kReal) = { 0._ke, 987.654_ke, -123.456_ke };
-KPTR_TEST_SET(q::kFloat) = { 0._kf, 987.6543210123_kf, -123.4567890987_kf };
+KPTR_TEST_SET(q::kBoolean) = { 1_qb, 0_qb };
+KPTR_TEST_SET(q::kByte) = { 0_qx, 0x20_qx, 0xA7_qx, 0xFF_qx };
+KPTR_TEST_SET(q::kShort) = { 0_qh, 129_qh, q::TypeTraits<q::kShort>::value_type{ -128 } };
+KPTR_TEST_SET(q::kInt) = { 0_qi, 65536_qi, -32768_qi };
+KPTR_TEST_SET(q::kLong) = { 0_qj, 4'294'967'296_qj, -2'147'483'648_qj };
+KPTR_TEST_SET(q::kReal) = { 0._qe, 987.654_qe, -123.456_qe };
+KPTR_TEST_SET(q::kFloat) = { 0._qf, 987.6543210123_qf, -123.4567890987_qf };
 KPTR_TEST_SET(q::kChar) = { '\0', 'Z', '\xFF' };
 KPTR_TEST_SET(q::kSymbol) = { "600000.SH", "123 abc ABC", "测试" };
 
-KPTR_TEST_SET(q::kMonth) = { "2000.01m"_km, "2020/09"_km,
-    "1997-11"_km, "197001"_km, "1900.01"_km };
-KPTR_TEST_SET(q::kDate) = { "2000.01.01"_kd, "2020/09/10"_kd,
-    "1997-11-28"_kd, "19700101"_kd, "1900.01.01"_kd };
+KPTR_TEST_SET(q::kMonth) = { "2000.01m"_qm, "2020/9"_qm,
+    "1997-11"_qm, 197001_qm, "1900.1"_qm };
+KPTR_TEST_SET(q::kDate) = { "2000.01.01"_qd, "2020/9/10"_qd,
+    "1997-11-28"_qd, 19700101_qd, "1900.1.1"_qd };
 //KPTR_TEST_PARAMS(q::kNil) =   // cannot be `created'
 //KPTR_TEST_PARAMS(q::kError) = // cannot be `created'
 

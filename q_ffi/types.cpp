@@ -14,7 +14,7 @@
 ::I q::parse_month(char const* ym)
 {
     using traits = typename TypeTraits<kMonth>;
-    static std::regex pattern{R"(^(\d{4})[.\-/]?(\d{2})m?$)"};
+    static std::regex pattern{R"(^(\d{4})[.\-/](\d\d?)m?$)"};
 
     if (nullptr == ym) return traits::null();
     std::cmatch matches;
@@ -40,7 +40,7 @@
 ::I q::parse_date(char const* ymd)
 {
     using traits = typename TypeTraits<kDate>;
-    static std::regex pattern{R"(^(\d{4})([.\-/]?)(\d{2})\2(\d{2})$)"};
+    static std::regex pattern{R"(^(\d{4})([.\-/])(\d\d?)\2(\d\d?)$)"};
 
     if (nullptr == ymd) return traits::null();
     std::cmatch matches;

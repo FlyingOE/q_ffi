@@ -656,32 +656,32 @@ namespace q
             constexpr decltype(auto) operator"" suffix(cppType v) noexcept  \
             { return static_cast<TypeTraits<(tid)>::value_type>(v); }
 
-        Q_FFI_LITERAL(_kb, kBoolean, unsigned long long int)
-        Q_FFI_LITERAL(_kx, kByte, unsigned long long int)
-        Q_FFI_LITERAL(_kh, kShort, unsigned long long int)
-        Q_FFI_LITERAL(_ki, kInt, unsigned long long int)
-        Q_FFI_LITERAL(_kj, kLong, unsigned long long int)
-        Q_FFI_LITERAL(_ke, kReal, long double)
-        Q_FFI_LITERAL(_kf, kFloat, long double)
+        Q_FFI_LITERAL(_qb, kBoolean, unsigned long long int)
+        Q_FFI_LITERAL(_qx, kByte, unsigned long long int)
+        Q_FFI_LITERAL(_qh, kShort, unsigned long long int)
+        Q_FFI_LITERAL(_qi, kInt, unsigned long long int)
+        Q_FFI_LITERAL(_qj, kLong, unsigned long long int)
+        Q_FFI_LITERAL(_qe, kReal, long double)
+        Q_FFI_LITERAL(_qf, kFloat, long double)
 
 #       undef Q_FFI_LITERAL
 
-        inline decltype(auto) operator""_km(char const* ym, size_t /*len*/)
+        inline decltype(auto) operator""_qm(char const* ym, size_t /*len*/)
         {
             return TypeTraits<kMonth>::value(ym);
         }
-        inline decltype(auto) operator""_km(unsigned long long int yyyymm)
+        inline decltype(auto) operator""_qm(unsigned long long int yyyymm)
         {
             return TypeTraits<kMonth>::value(
                 static_cast<int>(yyyymm / 100),
                 static_cast<int>(yyyymm % 100));
         }
 
-        inline decltype(auto) operator""_kd(char const* ymd, size_t /*len*/)
+        inline decltype(auto) operator""_qd(char const* ymd, size_t /*len*/)
         {
             return TypeTraits<kDate>::value(ymd);
         }
-        inline decltype(auto) operator""_kd(unsigned long long int yyyymmdd)
+        inline decltype(auto) operator""_qd(unsigned long long int yyyymmdd)
         {
             return TypeTraits<kDate>::value(
                 static_cast<int>(yyyymmdd / 100'00),
