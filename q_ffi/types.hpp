@@ -43,7 +43,11 @@ namespace q {
         kError = -128
     };
 
-    inline Type type_of(::K const k) noexcept { return nullptr == k ? q::kNil : static_cast<Type>(k->t); }
+    inline Type type_of(::K const k) noexcept
+    { return nullptr == k ? q::kNil : static_cast<Type>(k->t); }
+
+    inline size_t count_of(::K const k) noexcept
+    { return nullptr == k ? 0 : 0 > type_of(k) ? 1 : static_cast<size_t>(k->n); }
 
     /// @ref q::kNil
     constexpr ::K Nil = static_cast<::K>(nullptr);
@@ -663,9 +667,27 @@ namespace q
 #       undef Q_FFI_LITERAL
 
         inline decltype(auto) operator""_km(char const* ym, size_t /*len*/)
-        { return TypeTraits<kMonth>::value(ym); }
+        {
+            return TypeTraits<kMonth>::value(ym);
+        }
+        inline decltype(auto) operator""_km(unsigned long long int yyyymm)
+        {
+            return TypeTraits<kMonth>::value(
+                static_cast<int>(yyyymm / 100),
+                static_cast<int>(yyyymm % 100));
+        }
+
         inline decltype(auto) operator""_kd(char const* ymd, size_t /*len*/)
-        { return TypeTraits<kDate>::value(ymd); }
+        {
+            return TypeTraits<kDate>::value(ymd);
+        }
+        inline decltype(auto) operator""_kd(unsigned long long int yyyymmdd)
+        {
+            return TypeTraits<kDate>::value(
+                static_cast<int>(yyyymmdd / 100'00),
+                static_cast<int>(yyyymmdd % 100'00 / 100),
+                static_cast<int>(yyyymmdd % 100));
+        }
 
     }//inline namespace q::literals
 

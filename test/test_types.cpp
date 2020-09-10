@@ -227,7 +227,7 @@ OPS_TEST_SET(q::kMonth) = {
     { "2000.01m"_km, "2000.01m"s },
     { "2020/09"_km, "2020.09m"s },
     { "1997-11"_km, "1997.11m"s },
-    { "197001"_km, "1970.01m"s },
+    { 197001_km, "1970.01m"s },
     { "1900.01"_km, "1900.01m"s },
     { q::TypeTraits<q::kMonth>::null(), "0Nm"s },
     { q::TypeTraits<q::kMonth>::inf(), "0Wm"s },
@@ -237,7 +237,7 @@ OPS_TEST_SET(q::kDate) = {
     { "2000.01.01"_kd, "2000.01.01"s },
     { "2020/09/10"_kd, "2020.09.10"s },
     { "1997-11-28"_kd, "1997.11.28"s },
-    { "19700101"_kd, "1970.01.01"s },
+    { 19700101_kd, "1970.01.01"s },
     { "1900.01.01"_kd, "1900.01.01"s },
     { q::TypeTraits<q::kDate>::null(), "0Nd"s },
     { q::TypeTraits<q::kDate>::inf(), "0Wd"s },
@@ -291,7 +291,7 @@ TYPED_TEST(TypeTraitsOpsTests, listAndIndex)
     q::K_ptr k{ traits::list(std::cbegin(values), std::cend(values)) };
     ASSERT_NE(k.get(), q::Nil);
     EXPECT_EQ(q::type_of(k.get()), TypeParam::type_id);
-    ASSERT_EQ(k->n, values.size());
+    ASSERT_EQ(q::count_of(k.get()), values.size());
 
     auto s = std::cbegin(values);
     auto const e = std::cend(values);
@@ -308,7 +308,7 @@ TEST(TypeTraitsOpsTests, kCharList)
     auto str_check = [&sample](q::K_ptr k, size_t length) {
         ASSERT_NE(k.get(), q::Nil);
         EXPECT_EQ(q::type_of(k.get()), traits::type_id);
-        ASSERT_EQ(k->n, length);
+        ASSERT_EQ(q::count_of(k.get()), length);
         for (size_t i = 0; i < length; ++i) {
             EXPECT_EQ(traits::index(k.get())[i], sample[i]);
         }
@@ -337,7 +337,7 @@ TEST(TypeTraitsOpsTests, kSymbolList)
     q::K_ptr k{ traits::list(std::cbegin(sample), std::cend(sample)) };
     ASSERT_NE(k.get(), q::Nil);
     EXPECT_EQ(q::type_of(k.get()), traits::type_id);
-    ASSERT_EQ(k->n, length);
+    ASSERT_EQ(q::count_of(k.get()), length);
     for (size_t i = 0; i < length; ++i) {
         EXPECT_STREQ(traits::index(k.get())[i], sample[i].c_str());
     }
