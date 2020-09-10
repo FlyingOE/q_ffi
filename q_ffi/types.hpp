@@ -54,8 +54,13 @@ namespace q {
     template<Type tid, typename Tr = void>
     struct TypeTraits;
 
-    q_ffi_API
-    ::K error(char const* msg, bool sys = false) noexcept;
+    q_ffi_API ::K error(char const* msg, bool sys = false) noexcept;
+
+    q_ffi_API ::I parse_month(int year, int month);
+    q_ffi_API ::I parse_month(char const* ym);
+    q_ffi_API ::I decode_month(::I m);
+
+    q_ffi_API ::I parse_date(char const* ymd);
 
 }//namespace q
 
@@ -193,7 +198,7 @@ namespace q
 #pragma region Type traits implementations
 
     template<>
-    struct q_ffi_API TypeTraits<kBoolean> final
+    struct TypeTraits<kBoolean> final
         : public impl::TypeBase<TypeTraits<kBoolean>>
     {
         using value_type = unsigned char;
@@ -218,7 +223,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kByte> final
+    struct TypeTraits<kByte> final
         : public impl::TypeBase<TypeTraits<kByte>>
     {
         using value_type = uint8_t;
@@ -244,7 +249,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kShort> final
+    struct TypeTraits<kShort> final
         : public impl::TypeBase<TypeTraits<kShort>>
     {
         using value_type = int16_t;
@@ -262,7 +267,7 @@ namespace q
     };
 
     template<typename Tr>
-    struct q_ffi_API TypeTraits<kInt, Tr>
+    struct TypeTraits<kInt, Tr>
         : public impl::TypeBase<std::conditional_t<std::is_void_v<Tr>, TypeTraits<kInt>, Tr>>
     {
     private:
@@ -296,7 +301,7 @@ namespace q
     };
 
     template<typename Tr>
-    struct q_ffi_API TypeTraits<kLong, Tr>
+    struct TypeTraits<kLong, Tr>
         : public impl::TypeBase<std::conditional_t<std::is_void_v<Tr>, TypeTraits<kLong>, Tr>>
     {
     private:
@@ -330,7 +335,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kReal> final
+    struct TypeTraits<kReal> final
         : public impl::TypeBase<TypeTraits<kReal>>
     {
         using value_type = float;
@@ -350,7 +355,7 @@ namespace q
     };
 
     template<typename Tr>
-    struct q_ffi_API TypeTraits<kFloat, Tr>
+    struct TypeTraits<kFloat, Tr>
         : public impl::TypeBase<std::conditional_t<std::is_void_v<Tr>, TypeTraits<kFloat>, Tr>>
     {
     private:
@@ -386,7 +391,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kChar> final
+    struct TypeTraits<kChar> final
         : public impl::TypeBase<TypeTraits<kChar>>
     {
         using value_type = char;
@@ -414,7 +419,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kSymbol> final
+    struct TypeTraits<kSymbol> final
         : public impl::TypeBase<TypeTraits<kSymbol>>
     {
         using value_type = char const*;
@@ -468,7 +473,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kTimestamp> final
+    struct TypeTraits<kTimestamp> final
         : public TypeTraits<kLong, TypeTraits<kTimestamp>>
     {
         constexpr static Type type_id = kTimestamp;
@@ -478,17 +483,48 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kMonth> final
+    struct TypeTraits<kMonth> final
         : public TypeTraits<kInt, TypeTraits<kMonth>>
     {
         constexpr static Type type_id = kMonth;
         constexpr static char type_code = 'm';
 
         inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
+
+        using TypeTraits<kInt, TypeTraits<kMonth>>::value;
+        inline static value_type value(int year, int month) noexcept { return parse_month(year, month); }
+        inline static value_type value(char const* ym) { return parse_month(ym); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kMonth>>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            static_assert(sizeof(value_type) == sizeof(v),
+                "<BUG> unexpected specialization w/ differing types");
+
+            if (v == null()) {
+                out << "0N";
+            }
+            else if (v == inf()) {
+                out << "0W";
+            }
+            else if (v == -inf()) {
+                out << "-0W";
+            }
+            else {
+                ::I const yyyymm = decode_month(v);
+                out << std::setfill('0')
+                    << std::setw(4) << (yyyymm / 100) << '.'
+                    << std::setw(2) << (yyyymm % 100);
+            }
+            out << type_code;
+        }
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kDate> final
+    struct TypeTraits<kDate> final
         : public TypeTraits<kInt, TypeTraits<kDate>>
     {
         constexpr static Type type_id = kDate;
@@ -498,11 +534,38 @@ namespace q
 
         using TypeTraits<kInt, TypeTraits<kDate>>::value;
         inline static value_type value(int year, int month, int day) noexcept { return ::ymd(year, month, day); }
-        static value_type value(char const* ymd);
+        inline static value_type value(char const* ymd) { return parse_date(ymd); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kDate>>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            static_assert(sizeof(value_type) == sizeof(v),
+                "<BUG> unexpected specialization w/ differing types");
+
+            if (v == null()) {
+                out << "0N" << type_code;
+            }
+            else if (v == inf()) {
+                out << "0W" << type_code;
+            }
+            else if (v == -inf()) {
+                out << "-0W" << type_code;
+            }
+            else {
+                ::I const yyyymmdd = ::dj(v);
+                out << std::setfill('0')
+                    << std::setw(4) << (yyyymmdd / 100'00) << '.'
+                    << std::setw(2) << (yyyymmdd % 100'00 / 100) << '.'
+                    << std::setw(2) << (yyyymmdd % 100);
+            }
+        }
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kDatetime> final
+    struct TypeTraits<kDatetime> final
         : public TypeTraits<kFloat, TypeTraits<kDatetime>>
     {
         constexpr static Type type_id = kDatetime;
@@ -512,7 +575,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kTimespan> final
+    struct TypeTraits<kTimespan> final
         : public TypeTraits<kLong, TypeTraits<kTimespan>>
     {
         constexpr static Type type_id = kTimespan;
@@ -522,7 +585,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kMinute> final
+    struct TypeTraits<kMinute> final
         : public TypeTraits<kInt, TypeTraits<kMinute>>
     {
         constexpr static Type type_id = kMinute;
@@ -532,7 +595,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kSecond> final
+    struct TypeTraits<kSecond> final
         : public TypeTraits<kInt, TypeTraits<kSecond>>
     {
         constexpr static Type type_id = kSecond;
@@ -542,7 +605,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kTime> final
+    struct TypeTraits<kTime> final
         : public TypeTraits<kInt, TypeTraits<kTime>>
     {
         constexpr static Type type_id = kTime;
@@ -552,7 +615,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kNil> final
+    struct TypeTraits<kNil> final
         : public impl::TypeBase<TypeTraits<kNil>>
     {
         using value_type = void;
@@ -563,7 +626,7 @@ namespace q
     };
 
     template<>
-    struct q_ffi_API TypeTraits<kError> final
+    struct TypeTraits<kError> final
         : public impl::TypeBase<TypeTraits<kError>>
     {
         using value_type = char const*;
@@ -598,6 +661,12 @@ namespace q
         Q_FFI_LITERAL(_kf, kFloat, long double)
 
 #       undef Q_FFI_LITERAL
+
+        inline decltype(auto) operator""_km(char const* ym, size_t /*len*/)
+        { return TypeTraits<kMonth>::value(ym); }
+        inline decltype(auto) operator""_kd(char const* ymd, size_t /*len*/)
+        { return TypeTraits<kDate>::value(ymd); }
+
     }//inline namespace q::literals
 
 }//namespace q

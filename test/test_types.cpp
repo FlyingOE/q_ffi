@@ -223,6 +223,27 @@ OPS_TEST_SET(q::kSymbol) = {
     { q::TypeTraits<q::kSymbol>::null(), ""s }
 };
 
+OPS_TEST_SET(q::kMonth) = {
+    { "2000.01m"_km, "2000.01m"s },
+    { "2020/09"_km, "2020.09m"s },
+    { "1997-11"_km, "1997.11m"s },
+    { "197001"_km, "1970.01m"s },
+    { "1900.01"_km, "1900.01m"s },
+    { q::TypeTraits<q::kMonth>::null(), "0Nm"s },
+    { q::TypeTraits<q::kMonth>::inf(), "0Wm"s },
+    { -q::TypeTraits<q::kMonth>::inf(), "-0Wm"s }
+};
+OPS_TEST_SET(q::kDate) = {
+    { "2000.01.01"_kd, "2000.01.01"s },
+    { "2020/09/10"_kd, "2020.09.10"s },
+    { "1997-11-28"_kd, "1997.11.28"s },
+    { "19700101"_kd, "1970.01.01"s },
+    { "1900.01.01"_kd, "1900.01.01"s },
+    { q::TypeTraits<q::kDate>::null(), "0Nd"s },
+    { q::TypeTraits<q::kDate>::inf(), "0Wd"s },
+    { -q::TypeTraits<q::kDate>::inf(), "-0Wd"s }
+};
+
 using TraitsOpsTestTypes = ::testing::Types<
     q::TypeTraits<q::kBoolean>,
     q::TypeTraits<q::kByte>,
@@ -233,15 +254,14 @@ using TraitsOpsTestTypes = ::testing::Types<
     q::TypeTraits<q::kFloat>,
     q::TypeTraits<q::kChar>,
     q::TypeTraits<q::kSymbol>/*,
-    q::TypeTraits<q::kTimestamp>,
+    q::TypeTraits<q::kTimestamp>*/,
     q::TypeTraits<q::kMonth>,
-    q::TypeTraits<q::kDate>,
+    q::TypeTraits<q::kDate>/*,
     q::TypeTraits<q::kDatetime>,
     q::TypeTraits<q::kTimespan>,
     q::TypeTraits<q::kMinute>,
     q::TypeTraits<q::kSecond>,
-    q::TypeTraits<q::kTime>
-    */
+    q::TypeTraits<q::kTime>*/
     //q::TypeTraits<q::kNil>
     //q::TypeTraits<q::kError>
 >;
