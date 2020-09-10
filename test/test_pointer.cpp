@@ -51,7 +51,7 @@ protected:
 
     static std::vector<value_type> samples_;
 
-    void SetUp()
+    void SetUp() override
     {
         extra_samples_for_null(q::has_null<traits::type_id>());
         extra_samples_for_numeric(q::is_numeric<traits::type_id>());

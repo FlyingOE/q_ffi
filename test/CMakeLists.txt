@@ -22,6 +22,7 @@ endif()
 
 # Build targets
 add_executable(test_q_ffi
+    setup.cpp   setup.hpp
     test_std_ext.cpp
     test_types.cpp
     test_pointer.cpp
