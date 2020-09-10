@@ -34,11 +34,21 @@ target_link_libraries(test_q_ffi
 
 # Copy test dependencies
 if(k4_SYSTEM STREQUAL "w")
-    add_custom_target(copy_test_deps ALL
+    add_custom_command(
+        TARGET test_q_ffi
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E
+            copy ${CMAKE_CURRENT_BINARY_DIR}/../q_ffi/q_ffi.dll ${CMAKE_CURRENT_BINARY_DIR}
         COMMAND ${CMAKE_COMMAND} -E
             copy ${q_ffi_DEPENDENCIES}/q/${k4_PLATFORM}/c.dll ${CMAKE_CURRENT_BINARY_DIR}
     )
-    add_dependencies(test_q_ffi copy_test_deps)
+else()
+    add_custom_command(
+        TARGET test_q_ffi
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E
+            copy ${CMAKE_CURRENT_BINARY_DIR}/../q_ffi/libq_ffi.so ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endif()
 
 # Test cases
