@@ -62,8 +62,8 @@ namespace q {
 
     q_ffi_API ::J encode_timestamp(long long year, long long month, long long day,
         long long hour, long long minute, long long second, long long nanos) noexcept;
-    q_ffi_API ::J parse_timestamp(long long yyyymmddhhmmssf9) noexcept;
-    q_ffi_API ::J parse_timestamp(char const* ymdhmsf) noexcept;
+    /// @param raw If @c ymdhmsf is a raw literal string
+    q_ffi_API ::J parse_timestamp(char const* ymdhmsf, bool raw = false) noexcept;
 
     q_ffi_API ::I encode_month(int year, int month) noexcept;
     q_ffi_API ::I parse_month(int yyyymm) noexcept;
@@ -121,7 +121,7 @@ namespace q
                     std::is_convertible_v<std::decay_t<T>, typename Tr::value_type>
                 >>
             static ::K list(std::initializer_list<T> const& vs) noexcept
-            { return Tr::list(std::cbegin(vs), std::cend(vs)); }
+            { return Tr::list(vs.begin(), vs.end()); }
 
             template<typename It,
                 typename = std::enable_if_t<
@@ -533,11 +533,8 @@ namespace q
             long long hour, long long minute, long long second, long long nanos) noexcept
         { return encode_timestamp(year, month, day, hour, minute, second, nanos); }
 
-        inline static value_type parse(long long yyyymmddhhmmssf9) noexcept
-        { return parse_timestamp(yyyymmddhhmmssf9); }
-
-        inline static value_type parse(char const* ymdhmsf) noexcept
-        { return parse_timestamp(ymdhmsf); }
+        inline static value_type parse(char const* ymdhmsf, bool raw = false) noexcept
+        { return parse_timestamp(ymdhmsf, raw); }
 
     private:
         friend impl::TypeBase<TypeTraits<kTimestamp>>;
@@ -878,44 +875,44 @@ namespace q
 
 #       undef Q_FFI_LITERAL
 
-        inline decltype(auto) operator""_qp(char const* ymdhmsf, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qp(char const* ymdhmsf, size_t /*len*/) noexcept
         { return TypeTraits<kTimestamp>::parse(ymdhmsf); }
-        inline decltype(auto) operator""_qp(unsigned long long int yyyymmddhhmmssf9) noexcept
-        { return TypeTraits<kTimestamp>::parse(static_cast<long long>(yyyymmddhhmmssf9)); }
+        inline decltype(auto) operator"" _qp(char const* yyyymmddhhmmssf9) noexcept
+        { return TypeTraits<kTimestamp>::parse(yyyymmddhhmmssf9, true); }
 
-        inline decltype(auto) operator""_qm(char const* ym, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qm(char const* ym, size_t /*len*/) noexcept
         { return TypeTraits<kMonth>::parse(ym); }
-        inline decltype(auto) operator""_qm(unsigned long long int yyyymm) noexcept
+        inline decltype(auto) operator"" _qm(unsigned long long int yyyymm) noexcept
         { return TypeTraits<kMonth>::parse(static_cast<int>(yyyymm)); }
 
-        inline decltype(auto) operator""_qd(char const* ymd, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qd(char const* ymd, size_t /*len*/) noexcept
         { return TypeTraits<kDate>::parse(ymd); }
-        inline decltype(auto) operator""_qd(unsigned long long int yyyymmdd) noexcept
+        inline decltype(auto) operator"" _qd(unsigned long long int yyyymmdd) noexcept
         { return TypeTraits<kDate>::parse(static_cast<int>(yyyymmdd)); }
 
-        inline decltype(auto) operator""_qz(char const* ymdhmsf, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qz(char const* ymdhmsf, size_t /*len*/) noexcept
         { return TypeTraits<kDatetime>::parse(ymdhmsf); }
-        inline decltype(auto) operator""_qz(unsigned long long int yyyymmddhhmmssf3) noexcept
+        inline decltype(auto) operator"" _qz(unsigned long long int yyyymmddhhmmssf3) noexcept
         { return TypeTraits<kDatetime>::parse(static_cast<long long>(yyyymmddhhmmssf3)); }
 
-        inline decltype(auto) operator""_qn(char const* dhmsf, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qn(char const* dhmsf, size_t /*len*/) noexcept
         { return TypeTraits<kTimespan>::parse(dhmsf); }
-        inline decltype(auto) operator""_qn(unsigned long long int hhmmssf9) noexcept
+        inline decltype(auto) operator"" _qn(unsigned long long int hhmmssf9) noexcept
         { return TypeTraits<kTimespan>::parse(static_cast<long long>(hhmmssf9)); }
 
-        inline decltype(auto) operator""_qu(char const* hm, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qu(char const* hm, size_t /*len*/) noexcept
         { return TypeTraits<kMinute>::parse(hm); }
-        inline decltype(auto) operator""_qu(unsigned long long int hhmm) noexcept
+        inline decltype(auto) operator"" _qu(unsigned long long int hhmm) noexcept
         { return TypeTraits<kMinute>::parse(static_cast<int>(hhmm)); }
 
-        inline decltype(auto) operator""_qv(char const* hms, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qv(char const* hms, size_t /*len*/) noexcept
         { return TypeTraits<kSecond>::parse(hms); }
-        inline decltype(auto) operator""_qv(unsigned long long int hhmmss) noexcept
+        inline decltype(auto) operator"" _qv(unsigned long long int hhmmss) noexcept
         { return TypeTraits<kSecond>::parse(static_cast<int>(hhmmss)); }
 
-        inline decltype(auto) operator""_qt(char const* hmsf, size_t /*len*/) noexcept
+        inline decltype(auto) operator"" _qt(char const* hmsf, size_t /*len*/) noexcept
         { return TypeTraits<kTime>::parse(hmsf); }
-        inline decltype(auto) operator""_qt(unsigned long long int hhmmssf3) noexcept
+        inline decltype(auto) operator"" _qt(unsigned long long int hhmmssf3) noexcept
         { return TypeTraits<kTime>::parse(static_cast<int>(hhmmssf3)); }
 
     }//inline namespace q::literals

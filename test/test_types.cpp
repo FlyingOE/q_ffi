@@ -226,7 +226,7 @@ OPS_TEST_SET(q::kTimestamp) = {
     { "2000.01.01D00:00:00.000000000"_qp, "2000.01.01D00:00:00.000000000"s },
     { "2020/9/10"_qp, "2020.09.10D00:00:00.000000000"s },
     { "1997-11-28D12:34"_qp, "1997.11.28D12:34:00.000000000"s },
-//    { 19700101'012345'678901234_qp, "1970.01.01D01:23:45.678901234"s },
+    { 19700101'012345'678901234_qp, "1970.01.01D01:23:45.678901234"s },
     { "1900.1.1D12:34:56.2"_qp, "1900.01.01D12:34:56.200000000"s },
     { q::TypeTraits<q::kTimestamp>::null(), "0Np"s },
     { q::TypeTraits<q::kTimestamp>::inf(), "0Wp"s },
@@ -247,7 +247,7 @@ OPS_TEST_SET(q::kDate) = {
     { "2020/9/10"_qd, "2020.09.10"s },
     { "1997-11-28"_qd, "1997.11.28"s },
     { 19700101_qd, "1970.01.01"s },
-    { "1900.1.1"_qd, "1900.01.01"s },
+    { "19000101"_qd, "1900.01.01"s },
     { q::TypeTraits<q::kDate>::null(), "0Nd"s },
     { q::TypeTraits<q::kDate>::inf(), "0Wd"s },
     { -q::TypeTraits<q::kDate>::inf(), "-0Wd"s }
@@ -348,16 +348,16 @@ TYPED_TEST(TypeTraitsOpsTests, listAndIndex)
     using traits = q::TypeTraits<TypeParam::type_id>;
 
     std::vector<typename TypeParam::value_type> values(samples_.size());
-    std::transform(std::cbegin(samples_), std::cend(samples_), std::begin(values),
+    std::transform(samples_.cbegin(), samples_.cend(), values.begin(),
         [](auto const& sample) { return sample.first; });
 
-    q::K_ptr k{ traits::list(std::cbegin(values), std::cend(values)) };
+    q::K_ptr k{ traits::list(values.cbegin(), values.cend()) };
     ASSERT_NE(k.get(), q::Nil);
     EXPECT_EQ(q::type_of(k.get()), TypeParam::type_id);
     ASSERT_EQ(q::count_of(k.get()), values.size());
 
-    auto s = std::cbegin(values);
-    auto const e = std::cend(values);
+    auto s = values.cbegin();
+    auto const e = values.cend();
     auto p = traits::index(k.get());
     ASSERT_NE(p, nullptr);
     for (; s != e; ++p, ++s) expect_equal(*p, *s);
@@ -397,7 +397,7 @@ TEST(TypeTraitsOpsTests, kSymbolList)
     };
     size_t const length = sample.size();
 
-    q::K_ptr k{ traits::list(std::cbegin(sample), std::cend(sample)) };
+    q::K_ptr k{ traits::list(sample.cbegin(), sample.cend()) };
     ASSERT_NE(k.get(), q::Nil);
     EXPECT_EQ(q::type_of(k.get()), traits::type_id);
     ASSERT_EQ(q::count_of(k.get()), length);
