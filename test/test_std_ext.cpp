@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 #include "std_ext.hpp"
 
-class stdextTests : public ::testing::Test
+#pragma region std_ext::can_apply<..> test suite
+
+class canApplyTests : public ::testing::Test
 {
 protected:
 
@@ -49,7 +51,7 @@ protected:
     using has_member_overload = std_ext::can_apply<member_overload_t, T, R>;
 };
 
-TEST_F(stdextTests, canApplyFunction)
+TEST_F(canApplyTests, canApplyFunction)
 {
     class no_to_string {};
 
@@ -60,7 +62,7 @@ TEST_F(stdextTests, canApplyFunction)
     EXPECT_FALSE(can_to_string<no_to_string>::value);
 }
 
-TEST_F(stdextTests, canApplyMemberFunction)
+TEST_F(canApplyTests, canApplyMemberFunction)
 {
     struct const_c_str { char const* c_str() const; };
     struct nonconst_c_str { char const* c_str(); };
@@ -73,7 +75,7 @@ TEST_F(stdextTests, canApplyMemberFunction)
     EXPECT_FALSE(has_c_str<nonconst_c_str const>::value);
 }
 
-TEST_F(stdextTests, canApplyMemberVariable)
+TEST_F(canApplyTests, canApplyMemberVariable)
 {
     class public_value { public: bool value; };
     class private_value { private: bool value; };
@@ -82,7 +84,7 @@ TEST_F(stdextTests, canApplyMemberVariable)
     EXPECT_FALSE(has_value<private_value>::value);
 }
 
-TEST_F(stdextTests, canApplyStaticMember)
+TEST_F(canApplyTests, canApplyStaticMember)
 {
     struct static_member
     {
@@ -106,7 +108,7 @@ TEST_F(stdextTests, canApplyStaticMember)
     EXPECT_FALSE(has_static_member1a<nonstatic_member>::value);
 }
 
-TEST_F(stdextTests, canApplyMemberOverload)
+TEST_F(canApplyTests, canApplyMemberOverload)
 {
     struct member_overloads
     {
@@ -118,4 +120,29 @@ TEST_F(stdextTests, canApplyMemberOverload)
     EXPECT_TRUE((has_member_overload<member_overloads, float>::value));
     EXPECT_FALSE((has_member_overload<member_overloads, char const*>::value));
     EXPECT_FALSE((has_member_overload<member_overloads, double>::value));
+}
+
+#pragma endregion
+
+TEST(stdextTests, sgn)
+{
+    EXPECT_EQ(std_ext::sgn(+1),  1);
+    EXPECT_EQ(std_ext::sgn(-1), -1);
+    EXPECT_EQ(std_ext::sgn(-0),  0);
+    EXPECT_EQ(std_ext::sgn(std::numeric_limits<long long>::max()),  1);
+    EXPECT_EQ(std_ext::sgn(std::numeric_limits<long long>::min()), -1);
+
+    EXPECT_EQ(std_ext::sgn(+1.),  1);
+    EXPECT_EQ(std_ext::sgn(-1.), -1);
+    EXPECT_EQ(std_ext::sgn(-0.),  0);
+    EXPECT_EQ(std_ext::sgn(std::numeric_limits<double>::max()),  1);
+    EXPECT_EQ(std_ext::sgn(std::numeric_limits<double>::min()),  0);
+    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::max()), -1);
+    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::min()),  0);
+    EXPECT_EQ(std_ext::sgn( std::numeric_limits<double>::infinity()),  1);
+    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::infinity()), -1);
+    EXPECT_EQ(std_ext::sgn( std::numeric_limits<double>::epsilon()),  0);
+    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::epsilon()),  0);
+    EXPECT_EQ(std_ext::sgn( std::numeric_limits<double>::epsilon() * 2),  1);
+    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::epsilon() * 2), -1);
 }
