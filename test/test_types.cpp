@@ -222,7 +222,16 @@ OPS_TEST_SET(q::kSymbol) = {
     { "测试", "测试"s },
     { q::TypeTraits<q::kSymbol>::null(), ""s }
 };
-
+OPS_TEST_SET(q::kTimestamp) = {
+    { "2000.01.01D00:00:00.000000000"_qp, "2000.01.01D00:00:00.000000000"s },
+    { "2020/9/10"_qp, "2020.09.10D00:00:00.000000000"s },
+    { "1997-11-28D12:34"_qp, "1997.11.28D12:34:00.000000000"s },
+//    { 19700101'012345'678901234_qp, "1970.01.01D01:23:45.678901234"s },
+    { "1900.1.1D12:34:56.2"_qp, "1900.01.01D12:34:56.200000000"s },
+    { q::TypeTraits<q::kTimestamp>::null(), "0Np"s },
+    { q::TypeTraits<q::kTimestamp>::inf(), "0Wp"s },
+    { -q::TypeTraits<q::kTimestamp>::inf(), "-0Wp"s }
+};
 OPS_TEST_SET(q::kMonth) = {
     { "2000.01m"_qm, "2000.01m"s },
     { "2020/9"_qm, "2020.09m"s },
@@ -243,6 +252,60 @@ OPS_TEST_SET(q::kDate) = {
     { q::TypeTraits<q::kDate>::inf(), "0Wd"s },
     { -q::TypeTraits<q::kDate>::inf(), "-0Wd"s }
 };
+OPS_TEST_SET(q::kDatetime) = {
+    { "2000.01.01T00:00:00.000"_qz, "2000.01.01T00:00:00.000"s },
+    { "2020/9/10"_qz, "2020.09.10T00:00:00.000"s },
+    { "1997-11-28T12:34"_qz, "1997.11.28T12:34:00.000"s },
+    { 19700101012345678_qz, "1970.01.01T01:23:45.678"s },
+    { "1900.1.1T12:34:56.2"_qz, "1900.01.01T12:34:56.200"s },
+    { q::TypeTraits<q::kDatetime>::null(), "0Nz"s },
+    { q::TypeTraits<q::kDatetime>::inf(), "0Wz"s },
+    { -q::TypeTraits<q::kDatetime>::inf(), "-0Wz"s }
+};
+OPS_TEST_SET(q::kTimespan) = {
+    { "00:00:00"_qn, "0D00:00:00.000000000"s },
+    { "100D15:7:1.1"_qn, "100D15:07:01.100000000"s },
+    { "-9:59:59.999999999n"_qn, "-0D09:59:59.999999999"s },
+    { 93000'001000000_qn, "0D09:30:00.001000000"s },
+    { -135959'123456789_qn, "-0D13:59:59.123456789"s },
+    { "-42:01:60.012"_qn, "-1D18:02:00.012000000"s },
+    { q::TypeTraits<q::kTimespan>::null(), "0Nn"s },
+    { q::TypeTraits<q::kTimespan>::inf(), "0Wn"s },
+    { -q::TypeTraits<q::kTimespan>::inf(), "-0Wn"s }
+};
+OPS_TEST_SET(q::kMinute) = {
+    { "00:00"_qu, "00:00"s },
+    { "15:7"_qu, "15:07"s },
+    { "-9:59u"_qu, "-09:59"s },
+    { 930_qu, "09:30"s },
+    { -1359_qu, "-13:59"s },
+    { "-42:01"_qu, "-42:01"s },
+    { q::TypeTraits<q::kMinute>::null(), "0Nu"s },
+    { q::TypeTraits<q::kMinute>::inf(), "0Wu"s },
+    { -q::TypeTraits<q::kMinute>::inf(), "-0Wu"s }
+};
+OPS_TEST_SET(q::kSecond) = {
+    { "00:00:00"_qv, "00:00:00"s },
+    { "15:7:1"_qv, "15:07:01"s },
+    { "-9:59:59v"_qv, "-09:59:59"s },
+    { 93000_qv, "09:30:00"s },
+    { -135959_qv, "-13:59:59"s },
+    { "-42:01:60"_qv, "-42:02:00"s },
+    { q::TypeTraits<q::kSecond>::null(), "0Nv"s },
+    { q::TypeTraits<q::kSecond>::inf(), "0Wv"s },
+    { -q::TypeTraits<q::kSecond>::inf(), "-0Wv"s }
+};
+OPS_TEST_SET(q::kTime) = {
+    { "00:00:00"_qt, "00:00:00.000"s },
+    { "15:7:1.1"_qt, "15:07:01.100"s },
+    { "-9:59:59.999t"_qt, "-09:59:59.999"s },
+    { 93000001_qt, "09:30:00.001"s },
+    { -135959123_qt, "-13:59:59.123"s },
+    { "-42:01:60.012"_qt, "-42:02:00.012"s },
+    { q::TypeTraits<q::kTime>::null(), "0Nt"s },
+    { q::TypeTraits<q::kTime>::inf(), "0Wt"s },
+    { -q::TypeTraits<q::kTime>::inf(), "-0Wt"s }
+};
 
 using TraitsOpsTestTypes = ::testing::Types<
     q::TypeTraits<q::kBoolean>,
@@ -253,15 +316,15 @@ using TraitsOpsTestTypes = ::testing::Types<
     q::TypeTraits<q::kReal>,
     q::TypeTraits<q::kFloat>,
     q::TypeTraits<q::kChar>,
-    q::TypeTraits<q::kSymbol>/*,
-    q::TypeTraits<q::kTimestamp>*/,
+    q::TypeTraits<q::kSymbol>,
+    q::TypeTraits<q::kTimestamp>,
     q::TypeTraits<q::kMonth>,
-    q::TypeTraits<q::kDate>/*,
+    q::TypeTraits<q::kDate>,
     q::TypeTraits<q::kDatetime>,
     q::TypeTraits<q::kTimespan>,
     q::TypeTraits<q::kMinute>,
     q::TypeTraits<q::kSecond>,
-    q::TypeTraits<q::kTime>*/
+    q::TypeTraits<q::kTime>
     //q::TypeTraits<q::kNil>
     //q::TypeTraits<q::kError>
 >;

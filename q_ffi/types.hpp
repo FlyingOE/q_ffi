@@ -60,11 +60,46 @@ namespace q {
 
     q_ffi_API ::K error(char const* msg, bool sys = false) noexcept;
 
-    q_ffi_API ::I parse_month(int year, int month);
-    q_ffi_API ::I parse_month(char const* ym);
-    q_ffi_API ::I decode_month(::I m);
+    q_ffi_API ::J encode_timestamp(long long year, long long month, long long day,
+        long long hour, long long minute, long long second, long long nanos) noexcept;
+    q_ffi_API ::J parse_timestamp(long long yyyymmddhhmmssf9) noexcept;
+    q_ffi_API ::J parse_timestamp(char const* ymdhmsf) noexcept;
 
-    q_ffi_API ::I parse_date(char const* ymd);
+    q_ffi_API ::I encode_month(int year, int month) noexcept;
+    q_ffi_API ::I parse_month(int yyyymm) noexcept;
+    q_ffi_API ::I parse_month(char const* ym) noexcept;
+    q_ffi_API ::I decode_month(::I m) noexcept;
+
+    q_ffi_API ::I encode_date(int year, int month, int day) noexcept;
+    q_ffi_API ::I parse_date(int yyyymmdd) noexcept;
+    q_ffi_API ::I parse_date(char const* ymd) noexcept;
+    q_ffi_API ::I decode_date(::I d) noexcept;
+
+    q_ffi_API ::F encode_datetime(int year, int month, int day,
+        int hour, int minute, int second, int millis) noexcept;
+    q_ffi_API ::F parse_datetime(long long yyyymmddhhmmssf3) noexcept;
+    q_ffi_API ::F parse_datetime(char const* ymdhmsf) noexcept;
+
+    q_ffi_API ::J encode_timespan(long long day,
+        long long hour, long long minute, long long second, long long nanos) noexcept;
+    q_ffi_API ::J parse_timespan(long long hhmmssf9) noexcept;
+    q_ffi_API ::J parse_timespan(char const* dhmsf) noexcept;
+    q_ffi_API ::J decode_timespan(::J n) noexcept;
+
+    q_ffi_API ::I encode_minute(int hour, int minute) noexcept;
+    q_ffi_API ::I parse_minute(int hhmm) noexcept;
+    q_ffi_API ::I parse_minute(char const* hm) noexcept;
+    q_ffi_API ::I decode_minute(::I m) noexcept;
+
+    q_ffi_API ::I encode_second(int hour, int minute, int second) noexcept;
+    q_ffi_API ::I parse_second(int hhmmss) noexcept;
+    q_ffi_API ::I parse_second(char const* hms) noexcept;
+    q_ffi_API ::I decode_second(::I s) noexcept;
+
+    q_ffi_API ::I encode_time(int hour, int minute, int second, int millis) noexcept;
+    q_ffi_API ::I parse_time(int hhmmssf3) noexcept;
+    q_ffi_API ::I parse_time(char const* hmsf) noexcept;
+    q_ffi_API ::I decode_time(::I t) noexcept;
 
 }//namespace q
 
@@ -135,6 +170,14 @@ namespace q
             template<typename Elem, typename ElemTr, typename T>
             static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
             {
+                if (print_special(out, v)) return;
+
+                out << std::to_string(std::forward<T>(v)) << Tr::type_code;
+            }
+
+            template<typename Elem, typename ElemTr, typename T>
+            static bool print_special(std::basic_ostream<Elem, ElemTr>& out, T&& v)
+            {
                 static_assert(sizeof(typename Tr::value_type) == sizeof(v),
                     "<BUG> unexpected specialization w/ differing types");
 
@@ -151,9 +194,10 @@ namespace q
                     out << "-0W";
                 }
                 else {
-                    out << std::to_string(std::forward<T>(v));
+                    return false;   // not a special value, after all
                 }
                 out << Tr::type_code;
+                return true;
             }
         };
 
@@ -484,6 +528,37 @@ namespace q
         constexpr static char type_code = 'p';
  
         inline static ::K atom(value_type p) noexcept { return ::ktj(-type_id, p); }
+
+        inline static value_type encode(long long year, long long month, long long day,
+            long long hour, long long minute, long long second, long long nanos) noexcept
+        { return encode_timestamp(year, month, day, hour, minute, second, nanos); }
+
+        inline static value_type parse(long long yyyymmddhhmmssf9) noexcept
+        { return parse_timestamp(yyyymmddhhmmssf9); }
+
+        inline static value_type parse(char const* ymdhmsf) noexcept
+        { return parse_timestamp(ymdhmsf); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kTimestamp>>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::J date = v / 86400'000'000'000LL;
+            ::J time = v % 86400'000'000'000LL;
+            if (v < 0) {
+                date--;
+                time += 86400'000'000'000LL;
+            }
+            assert(std::numeric_limits<::I>::min() <= date
+                && date <= std::numeric_limits<::I>::max());
+            TypeTraits<kDate>::print(out, static_cast<::I>(date), std::true_type());
+            out << 'D';
+            TypeTraits<kTimespan>::print(out, time, std::true_type(), true);
+        }
     };
 
     template<>
@@ -495,9 +570,14 @@ namespace q
 
         inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
 
-        using TypeTraits<kInt, TypeTraits<kMonth>>::value;
-        inline static value_type value(int year, int month) noexcept { return parse_month(year, month); }
-        inline static value_type value(char const* ym) { return parse_month(ym); }
+        inline static value_type encode(int year, int month) noexcept
+        { return encode_month(year, month); }
+
+        inline static value_type parse(int yyyymm) noexcept
+        { return parse_month(yyyymm); }
+
+        inline static value_type parse(char const* ym) noexcept
+        { return parse_month(ym); }
 
     private:
         friend impl::TypeBase<TypeTraits<kMonth>>;
@@ -508,22 +588,12 @@ namespace q
             static_assert(sizeof(value_type) == sizeof(v),
                 "<BUG> unexpected specialization w/ differing types");
 
-            if (v == null()) {
-                out << "0N";
-            }
-            else if (v == inf()) {
-                out << "0W";
-            }
-            else if (v == -inf()) {
-                out << "-0W";
-            }
-            else {
-                ::I const yyyymm = decode_month(v);
-                out << std::setfill('0')
-                    << std::setw(4) << (yyyymm / 100) << '.'
-                    << std::setw(2) << (yyyymm % 100);
-            }
-            out << type_code;
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::I const yyyymm = decode_month(std::forward<T>(v));
+            out << std::setfill('0')
+                << std::setw(4) << (yyyymm / 100) << '.' << std::setw(2) << (yyyymm % 100)
+                << type_code;
         }
     };
 
@@ -536,35 +606,30 @@ namespace q
 
         inline static ::K atom(value_type d) noexcept { return ::kd(d); }
 
-        using TypeTraits<kInt, TypeTraits<kDate>>::value;
-        inline static value_type value(int year, int month, int day) noexcept { return ::ymd(year, month, day); }
-        inline static value_type value(char const* ymd) { return parse_date(ymd); }
+        inline static value_type encode(int year, int month, int day) noexcept
+        { return encode_date(year, month, day); }
+
+        inline static value_type parse(int yyyymmdd) noexcept
+        { return parse_date(yyyymmdd); }
+
+        inline static value_type parse(char const* ymd) noexcept
+        { return parse_date(ymd); }
 
     private:
         friend impl::TypeBase<TypeTraits<kDate>>;
+        friend TypeTraits<kTimestamp>;
+        friend TypeTraits<kDatetime>;
 
         template<typename Elem, typename ElemTr, typename T>
         static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
         {
-            static_assert(sizeof(value_type) == sizeof(v),
-                "<BUG> unexpected specialization w/ differing types");
+            if (print_special(out, std::forward<T>(v))) return;
 
-            if (v == null()) {
-                out << "0N" << type_code;
-            }
-            else if (v == inf()) {
-                out << "0W" << type_code;
-            }
-            else if (v == -inf()) {
-                out << "-0W" << type_code;
-            }
-            else {
-                ::I const yyyymmdd = ::dj(v);
-                out << std::setfill('0')
-                    << std::setw(4) << (yyyymmdd / 100'00) << '.'
-                    << std::setw(2) << (yyyymmdd % 100'00 / 100) << '.'
-                    << std::setw(2) << (yyyymmdd % 100);
-            }
+            ::I const yyyymmdd = decode_date(std::forward<T>(v));
+            out << std::setfill('0')
+                << std::setw(4) << (yyyymmdd / 100'00) << '.'
+                << std::setw(2) << (yyyymmdd / 100 % 100) << '.'
+                << std::setw(2) << (yyyymmdd % 100);
         }
     };
 
@@ -576,6 +641,35 @@ namespace q
         constexpr static char type_code = 'z';
 
         inline static ::K atom(value_type z) noexcept { return ::kz(z); }
+
+        inline static value_type encode(int year, int month, int day,
+            int hour, int minute, int second, int millis) noexcept
+        { return encode_datetime(year, month, day, hour, minute, second, millis); }
+
+        inline static value_type parse(long long yyyymmddhhmmssf3) noexcept
+        { return parse_datetime(yyyymmddhhmmssf3); }
+
+        inline static value_type parse(char const* ymdhmsf) noexcept
+        { return parse_datetime(ymdhmsf); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kDatetime>>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::I date = static_cast<::I>(v);
+            ::I time = static_cast<::I>(std::round((v - date) * 86400'000.));
+            if (v < 0) {
+                date--;
+                time += 86400'000;
+            }
+            TypeTraits<kDate>::print(out, date, std::true_type());
+            out << 'T';
+            TypeTraits<kTime>::print(out, time, std::true_type());
+        }
     };
 
     template<>
@@ -586,6 +680,42 @@ namespace q
         constexpr static char type_code = 'n';
 
         inline static ::K atom(value_type n) noexcept { return ::ktj(-type_id, n); }
+
+        inline static value_type encode(long long day,
+            long long hour, long long minute, long long second, long long nanos) noexcept
+        { return encode_timespan(day, hour, minute, second, nanos); }
+
+        inline static value_type parse(long long hhmmssf9) noexcept
+        { return parse_timespan(hhmmssf9); }
+
+        inline static value_type parse(char const* dhmsf) noexcept
+        { return parse_timespan(dhmsf); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kTimespan>>;
+        friend TypeTraits<kTimestamp>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/,
+            bool no_day = false)
+        {
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::J dhhmmssf9 = decode_timespan(std::forward<T>(v));
+            auto const sign = std_ext::sgn(dhhmmssf9);
+            dhhmmssf9 *= sign;
+            out << std::setfill('0') << std::internal
+                << (0 <= sign ? "" : "-");
+            if (no_day)
+                out << std::setw(2) << (dhhmmssf9 / 100'00'000'000'000LL);
+            else
+                out << (dhhmmssf9 / 24'00'00'000'000'000LL) << 'D'
+                    << std::setw(2) << (dhhmmssf9 / 100'00'000'000'000LL % 24);
+            out << ':'
+                << std::setw(2) << (dhhmmssf9 / 100'000'000'000LL % 100) << ':'
+                << std::setw(2) << (dhhmmssf9 / 1000'000'000LL % 100) << '.'
+                << std::setw(9) << (dhhmmssf9 % 1000'000'000LL);
+        }
     };
 
     template<>
@@ -596,6 +726,32 @@ namespace q
         constexpr static char type_code = 'u';
 
         inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
+
+        inline static value_type encode(int hour, int minute) noexcept
+        { return encode_minute(hour, minute); }
+
+        inline static value_type parse(int hhmm) noexcept
+        { return parse_minute(hhmm); }
+
+        inline static value_type parse(char const* hm) noexcept
+        { return parse_minute(hm); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kMinute>>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::I hhmm = decode_minute(std::forward<T>(v));
+            auto const sign = std_ext::sgn(hhmm);
+            hhmm *= sign;
+            out << std::setfill('0') << std::internal
+                << (0 <= sign ? "" : "-")
+                << std::setw(2) << (hhmm / 100) << ':'
+                << std::setw(2) << (hhmm % 100);
+        }
     };
 
     template<>
@@ -606,6 +762,33 @@ namespace q
         constexpr static char type_code = 'v';
 
         inline static ::K atom(value_type m) noexcept { return generic_atom<TypeTraits<type_id>>(m); }
+
+        inline static value_type encode(int hour, int minute, int second) noexcept
+        { return encode_second(hour, minute, second); }
+
+        inline static value_type parse(int hhmmss) noexcept
+        { return parse_second(hhmmss); }
+
+        inline static value_type parse(char const* hms) noexcept
+        { return parse_second(hms); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kSecond>>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::I hhmmss = decode_second(std::forward<T>(v));
+            auto const sign = std_ext::sgn(hhmmss);
+            hhmmss *= sign;
+            out << std::setfill('0') << std::internal
+                << (0 <= sign ? "" : "-")
+                << std::setw(2) << (hhmmss / 100'00) << ':'
+                << std::setw(2) << (hhmmss / 100 % 100) << ':'
+                << std::setw(2) << (hhmmss % 100);
+        }
     };
 
     template<>
@@ -616,6 +799,35 @@ namespace q
         constexpr static char type_code = 't';
 
         inline static ::K atom(value_type t) noexcept { return ::kt(t); }
+
+        inline static value_type encode(int hour, int minute, int second, int millis) noexcept
+        { return encode_time(hour, minute, second, millis); }
+
+        inline static value_type parse(int hhmmssf3) noexcept
+        { return parse_time(hhmmssf3); }
+
+        inline static value_type parse(char const* hmsf) noexcept
+        { return parse_time(hmsf); }
+
+    private:
+        friend impl::TypeBase<TypeTraits<kTime>>;
+        friend TypeTraits<kDatetime>;
+
+        template<typename Elem, typename ElemTr, typename T>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, T&& v, std::true_type /*is_numeric*/)
+        {
+            if (print_special(out, std::forward<T>(v))) return;
+
+            ::I hhmmssf3 = decode_time(std::forward<T>(v));
+            auto const sign = std_ext::sgn(hhmmssf3);
+            hhmmssf3 *= sign;
+            out << std::setfill('0') << std::internal
+                << (0 <= sign ? "" : "-")
+                << std::setw(2) << (hhmmssf3 / 100'00'000) << ':'
+                << std::setw(2) << (hhmmssf3 / 100'000 % 100) << ':'
+                << std::setw(2) << (hhmmssf3 / 1000 % 100) << '.'
+                << std::setw(3) << (hhmmssf3 % 1000);
+        }
     };
 
     template<>
@@ -666,28 +878,45 @@ namespace q
 
 #       undef Q_FFI_LITERAL
 
-        inline decltype(auto) operator""_qm(char const* ym, size_t /*len*/)
-        {
-            return TypeTraits<kMonth>::value(ym);
-        }
-        inline decltype(auto) operator""_qm(unsigned long long int yyyymm)
-        {
-            return TypeTraits<kMonth>::value(
-                static_cast<int>(yyyymm / 100),
-                static_cast<int>(yyyymm % 100));
-        }
+        inline decltype(auto) operator""_qp(char const* ymdhmsf, size_t /*len*/) noexcept
+        { return TypeTraits<kTimestamp>::parse(ymdhmsf); }
+        inline decltype(auto) operator""_qp(unsigned long long int yyyymmddhhmmssf9) noexcept
+        { return TypeTraits<kTimestamp>::parse(static_cast<long long>(yyyymmddhhmmssf9)); }
 
-        inline decltype(auto) operator""_qd(char const* ymd, size_t /*len*/)
-        {
-            return TypeTraits<kDate>::value(ymd);
-        }
-        inline decltype(auto) operator""_qd(unsigned long long int yyyymmdd)
-        {
-            return TypeTraits<kDate>::value(
-                static_cast<int>(yyyymmdd / 100'00),
-                static_cast<int>(yyyymmdd % 100'00 / 100),
-                static_cast<int>(yyyymmdd % 100));
-        }
+        inline decltype(auto) operator""_qm(char const* ym, size_t /*len*/) noexcept
+        { return TypeTraits<kMonth>::parse(ym); }
+        inline decltype(auto) operator""_qm(unsigned long long int yyyymm) noexcept
+        { return TypeTraits<kMonth>::parse(static_cast<int>(yyyymm)); }
+
+        inline decltype(auto) operator""_qd(char const* ymd, size_t /*len*/) noexcept
+        { return TypeTraits<kDate>::parse(ymd); }
+        inline decltype(auto) operator""_qd(unsigned long long int yyyymmdd) noexcept
+        { return TypeTraits<kDate>::parse(static_cast<int>(yyyymmdd)); }
+
+        inline decltype(auto) operator""_qz(char const* ymdhmsf, size_t /*len*/) noexcept
+        { return TypeTraits<kDatetime>::parse(ymdhmsf); }
+        inline decltype(auto) operator""_qz(unsigned long long int yyyymmddhhmmssf3) noexcept
+        { return TypeTraits<kDatetime>::parse(static_cast<long long>(yyyymmddhhmmssf3)); }
+
+        inline decltype(auto) operator""_qn(char const* dhmsf, size_t /*len*/) noexcept
+        { return TypeTraits<kTimespan>::parse(dhmsf); }
+        inline decltype(auto) operator""_qn(unsigned long long int hhmmssf9) noexcept
+        { return TypeTraits<kTimespan>::parse(static_cast<long long>(hhmmssf9)); }
+
+        inline decltype(auto) operator""_qu(char const* hm, size_t /*len*/) noexcept
+        { return TypeTraits<kMinute>::parse(hm); }
+        inline decltype(auto) operator""_qu(unsigned long long int hhmm) noexcept
+        { return TypeTraits<kMinute>::parse(static_cast<int>(hhmm)); }
+
+        inline decltype(auto) operator""_qv(char const* hms, size_t /*len*/) noexcept
+        { return TypeTraits<kSecond>::parse(hms); }
+        inline decltype(auto) operator""_qv(unsigned long long int hhmmss) noexcept
+        { return TypeTraits<kSecond>::parse(static_cast<int>(hhmmss)); }
+
+        inline decltype(auto) operator""_qt(char const* hmsf, size_t /*len*/) noexcept
+        { return TypeTraits<kTime>::parse(hmsf); }
+        inline decltype(auto) operator""_qt(unsigned long long int hhmmssf3) noexcept
+        { return TypeTraits<kTime>::parse(static_cast<int>(hhmmssf3)); }
 
     }//inline namespace q::literals
 

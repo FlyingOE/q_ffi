@@ -25,9 +25,9 @@ add_executable(test_q_ffi
     setup.cpp   setup.hpp
     test_std_ext.cpp
     test_types.cpp
+    test_temporals.cpp
     test_pointer.cpp
 )
-
 target_link_libraries(test_q_ffi
     q_ffi
     gtest_main
