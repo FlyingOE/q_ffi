@@ -1,4 +1,4 @@
-### vim: set et noai ts=4 sw=4 :
+# vim: set et noai ts=4 sw=4 :
 
 # Download and unpack googletest at configure time
 configure_file(GoogleTest_CMakeLists.txt.in GoogleTest/download/CMakeLists.txt)

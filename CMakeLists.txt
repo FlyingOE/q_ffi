@@ -1,4 +1,4 @@
-### vim: set et noai ts=4 sw=4 syntax=cmake:
+# vim: set et noai ts=4 sw=4 syntax=cmake:
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 if(POLICY CMP0048)
@@ -79,6 +79,9 @@ elseif(UNIX AND NOT APPLE)
     endif()
     
     add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		add_compile_options(-Wno-unknown-pragmas)	# gcc bails on #pragma region
+	endif()
 
 elseif(APPLE)
     set(k4_SYSTEM "m")

@@ -1,4 +1,4 @@
-### vim: set et noai ts=4 sw=4 syntax=cmake:
+# vim: set et noai ts=4 sw=4 syntax=cmake:
 
 # Build dependencies
 include_directories(
