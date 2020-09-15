@@ -81,6 +81,7 @@ elseif(UNIX AND NOT APPLE)
     add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		add_compile_options(-Wno-unknown-pragmas)	# gcc bails on #pragma region
+		add_compile_options(-fdiagnostics-color=always)
 	endif()
 
 elseif(APPLE)

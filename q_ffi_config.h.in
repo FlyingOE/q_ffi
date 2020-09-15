@@ -26,6 +26,6 @@
 #   endif
 #   define K4_DECL  __cdecl
 #else
-#   define q_ffi_API q_ffi_EXTERN
+#   define q_ffi_API
 #   define K4_DECL
 #endif

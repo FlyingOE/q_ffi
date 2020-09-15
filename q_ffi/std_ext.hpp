@@ -2,6 +2,16 @@
 
 #include <type_traits>  // Need std::void_t from C++17
 
+namespace std {
+
+    template <typename...>
+    using void_t = void;
+
+    template<typename From, typename To>
+    constexpr bool is_convertible_v = is_convertible<From, To>::value;
+
+}//namespace std
+
 namespace std_ext {
 
 #pragma region std_ext::can_apply<...>
