@@ -13,20 +13,24 @@ link_directories(
     ${q_ffi_DEPENDENCIES}/q/${k4_PLATFORM}
 )
 if(k4_SYSTEM STREQUAL "w")
-    link_libraries(c)    # Windows build requires `c.lib'
+    link_libraries(c)       # Windows build requires `c.lib'
+    set(q_ffi_DEPENDENTS )
 #    set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 elseif(k4_SYSTEM STREQUAL "l")
-    link_libraries(c.o)  # Linux build requires `c.o'
+    set(q_ffi_DEPENDENTS    # Linux build requires `c.o'
+        ${q_ffi_DEPENDENCIES}/q/${k4_PLATFORM}/c.o
+    )
 endif()
 
 # Build targets
 add_executable(test_q_ffi
-    setup.cpp   setup.hpp
-    test_std_ext.cpp
-    test_types.cpp
-    test_temporals.cpp
-    test_pointer.cpp
+    "setup.cpp"    "setup.hpp"
+    "test_std_ext.cpp"
+    "test_ktypes.cpp"
+    "test_temporals.cpp"
+    "test_kpointer.cpp"
+    ${q_ffi_DEPENDENTS}
 )
 target_link_libraries(test_q_ffi
     q_ffi

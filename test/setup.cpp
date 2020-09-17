@@ -4,7 +4,7 @@
 /// @ref https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting
 void K_setup::SetUp()
 {
-    ::khp("", -1);
+    ::khp(const_cast<::S>(""), -1);
 }
 
 ::testing::Environment* const init_c_call =

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "types.hpp"
-#include "pointer.hpp"
+#include "ktype_traits.hpp"
+#include "kpointer.hpp"
 #include <map>
 
 #pragma region TypeTraitsTests<> typed test suite
@@ -10,15 +10,15 @@ class TypeTraitsTests : public ::testing::Test
 {
 protected:
     template<typename Tr>
-    void test_type_of(std::true_type /*has_value*/, bool notKError);
+    void test_type(std::true_type /*has_value*/, bool notKError);
     template<typename Tr>
-    void test_type_of(std::false_type /*has_value*/, bool)
+    void test_type(std::false_type /*has_value*/, bool)
     { ASSERT_FALSE(TraitsInfo::has_value); }
 
     template<typename Tr>
-    void test_type_of_list(std::true_type /*can_index*/);
+    void test_list_type(std::true_type /*can_index*/);
     template<typename Tr>
-    void test_type_of_list(std::false_type /*can_index*/)
+    void test_list_type(std::false_type /*can_index*/)
     { ASSERT_FALSE(TraitsInfo::can_index); }
 
     template<typename Tr>
@@ -37,16 +37,16 @@ protected:
 };
 
 template<typename Value,
-    q::Type tid, char code, bool hasValue, bool hasNull, bool canIndex, bool isNumeric>
+    q::TypeId tid, char code, bool hasValue, bool hasNull, bool canIndex, bool isNumeric>
 struct TraitsInfo
 {
     using value_type = Value;
-    constexpr static q::Type type_id = tid;
-    constexpr static char type_code = code;
-    constexpr static bool has_value = hasValue;
-    constexpr static bool has_null = hasNull;
-    constexpr static bool can_index = canIndex;
-    constexpr static bool is_numeric = isNumeric;
+    static constexpr q::TypeId type_id = tid;
+    static constexpr char type_code = code;
+    static constexpr bool has_value = hasValue;
+    static constexpr bool has_null = hasNull;
+    static constexpr bool can_index = canIndex;
+    static constexpr bool is_numeric = isNumeric;
 };
 using TraitsTestTypes = ::testing::Types<
     TraitsInfo<unsigned char, q::kBoolean, 'b', true, false, true, false>,
@@ -66,41 +66,40 @@ using TraitsTestTypes = ::testing::Types<
     TraitsInfo<int32_t, q::kMinute, 'u', true, true, true, true>,
     TraitsInfo<int32_t, q::kSecond, 'v', true, true, true, true>,
     TraitsInfo<int32_t, q::kTime, 't', true, true, true, true>,
-    TraitsInfo<void, q::kNil, ' ', false, false, false, false>,
-    TraitsInfo<char const*, q::kError, ' ', true, false, false, false>
+    TraitsInfo<void, q::kNil, '\0', false, false, false, false>,
+    TraitsInfo<char const*, q::kError, '\0', true, false, false, false>
 >;
 
 TYPED_TEST_SUITE(TypeTraitsTests, TraitsTestTypes);
 
 TYPED_TEST(TypeTraitsTests, qTypeTraits)
 {
-    using traits = q::TypeTraits<TypeParam::type_id>;
+    using Traits = q::TypeTraits<TypeParam::type_id>;
     ASSERT_TRUE((std::is_same_v<
-        typename traits::value_type,
+        typename Traits::value_type,
         typename TypeParam::value_type
     >));
-    EXPECT_EQ(traits::type_id, TypeParam::type_id);
-    EXPECT_EQ(traits::type_code, TypeParam::type_code);
+    EXPECT_EQ(Traits::type_id, q::TypeId{ TypeParam::type_id });
+    EXPECT_EQ(q::TypeCode.at(Traits::type_id), char{ TypeParam::type_code });
 }
 
 TYPED_TEST(TypeTraitsTests, qTypeTraitsQueries)
 {
-    EXPECT_EQ(q::has_value_v<TypeParam::type_id>, TypeParam::has_value);
-    EXPECT_EQ(q::has_null_v<TypeParam::type_id>, TypeParam::has_null);
-    EXPECT_EQ(q::can_index_v<TypeParam::type_id>, TypeParam::can_index);
-    EXPECT_EQ(q::is_numeric_v<TypeParam::type_id>, TypeParam::is_numeric);
+    EXPECT_EQ(q::has_value_v<TypeParam::type_id>, bool{ TypeParam::has_value });
+    EXPECT_EQ(q::has_null_v<TypeParam::type_id>, bool{ TypeParam::has_null });
+    EXPECT_EQ(q::can_index_v<TypeParam::type_id>, bool{ TypeParam::can_index });
+    EXPECT_EQ(q::is_numeric_v<TypeParam::type_id>, bool{ TypeParam::is_numeric });
 }
 
 template<typename TraitsInfo>
 template<typename Tr>
-void TypeTraitsTests<TraitsInfo>::test_type_of(std::true_type /*has_value*/, bool notKError)
+void TypeTraitsTests<TraitsInfo>::test_type(std::true_type /*has_value*/, bool notKError)
 {
-    q::K_ptr k = init_atom<Tr>(std::integral_constant<bool,
-        std::is_convertible_v<char const*, typename Tr::value_type>>());
+    q::K_ptr k = init_atom<Tr>(std::is_convertible<char const*, typename Tr::value_type>());
     if (notKError) {
         ASSERT_NE(k.get(), nullptr)
             << "TypeTraits<" << Tr::type_id << ">::atom() failed";
-        EXPECT_EQ(q::type_of(k.get()), -Tr::type_id);
+        EXPECT_EQ(q::type(k.get()), -Tr::type_id);
     }
     else {
         ASSERT_EQ(k.get(), nullptr)
@@ -110,20 +109,24 @@ void TypeTraitsTests<TraitsInfo>::test_type_of(std::true_type /*has_value*/, boo
 
 template<typename TraitsInfo>
 template<typename Tr>
-void TypeTraitsTests<TraitsInfo>::test_type_of_list(std::true_type /*can_index*/)
+void TypeTraitsTests<TraitsInfo>::test_list_type(std::true_type /*can_index*/)
 {
     q::K_ptr k = init_list<Tr>(std::integral_constant<bool,
         std::is_convertible_v<char const*, typename Tr::value_type>>());
     ASSERT_NE(k.get(), nullptr)
         << "TypeTraits<" << Tr::type_id << ">::list() failed";
-    EXPECT_EQ(q::type_of(k.get()), Tr::type_id);
+    EXPECT_EQ(q::type(k.get()), Tr::type_id);
 }
 
-TYPED_TEST(TypeTraitsTests, qTypeOf)
+TYPED_TEST(TypeTraitsTests, qType)
 {
-    using traits = q::TypeTraits<TypeParam::type_id>;
-    test_type_of<traits>(q::has_value<traits::type_id>(), q::kError != traits::type_id);
-    test_type_of_list<traits>(q::can_index<traits::type_id>());
+    using Traits = q::TypeTraits<TypeParam::type_id>;
+    SCOPED_TRACE("q::type() for atoms");
+    this->template test_type<Traits>(
+        q::has_value<Traits::type_id>(), q::kError != TypeParam::type_id);
+    SCOPED_TRACE("q::type() for lists");
+    this->template test_list_type<Traits>(
+        q::can_index<Traits::type_id>());
 }
 
 #pragma endregion
@@ -176,7 +179,7 @@ OPS_TEST_SET(q::kShort) = {
     { q::TypeTraits<q::kShort>::value_type{ -128 }, "-128h" },
     { q::TypeTraits<q::kShort>::null(), "0Nh" },
     { q::TypeTraits<q::kShort>::inf(), "0Wh" },
-    { q::TypeTraits<q::kShort>::value_type{ -q::TypeTraits<q::kShort>::inf() }, "-0Wh" }
+    { q::TypeTraits<q::kShort>::inf(false), "-0Wh" }
 };
 OPS_TEST_SET(q::kInt) = {
     { 0_qi, "0i" },
@@ -184,7 +187,7 @@ OPS_TEST_SET(q::kInt) = {
     { -32768_qi, "-32768i" },
     { q::TypeTraits<q::kInt>::null(), "0Ni" },
     { q::TypeTraits<q::kInt>::inf(), "0Wi" },
-    { -q::TypeTraits<q::kInt>::inf(), "-0Wi" }
+    { q::TypeTraits<q::kInt>::inf(false), "-0Wi" }
 };
 OPS_TEST_SET(q::kLong) = {
     { 0_qj, "0j" },
@@ -192,7 +195,7 @@ OPS_TEST_SET(q::kLong) = {
     { -2'147'483'648_qj, "-2147483648j" },
     { q::TypeTraits<q::kLong>::null(), "0Nj" },
     { q::TypeTraits<q::kLong>::inf(), "0Wj" },
-    { -q::TypeTraits<q::kLong>::inf(), "-0Wj" }
+    { q::TypeTraits<q::kLong>::inf(false), "-0Wj" }
 };
 OPS_TEST_SET(q::kReal) = {
     { 0._qe, "0.000000e" },
@@ -200,7 +203,7 @@ OPS_TEST_SET(q::kReal) = {
     { -123.456_qe, "-123.456001e" },
     { q::TypeTraits<q::kReal>::null(), "0Ne" },
     { q::TypeTraits<q::kReal>::inf(), "0We" },
-    { -q::TypeTraits<q::kReal>::inf(), "-0We" }
+    { q::TypeTraits<q::kReal>::inf(false), "-0We" }
 };
 OPS_TEST_SET(q::kFloat) = {
     { 0._qf, "0.000000f" },
@@ -208,7 +211,7 @@ OPS_TEST_SET(q::kFloat) = {
     { -123.4567890987_qf, "-123.456789f" },
     { q::TypeTraits<q::kFloat>::null(), "0Nf" },
     { q::TypeTraits<q::kFloat>::inf(), "0Wf" },
-    { -q::TypeTraits<q::kFloat>::inf(), "-0Wf" }
+    { q::TypeTraits<q::kFloat>::inf(false), "-0Wf" }
 };
 OPS_TEST_SET(q::kChar) = {
     { '\0', "\0"s },
@@ -230,7 +233,7 @@ OPS_TEST_SET(q::kTimestamp) = {
     { "1900.1.1D12:34:56.2"_qp, "1900.01.01D12:34:56.200000000"s },
     { q::TypeTraits<q::kTimestamp>::null(), "0Np"s },
     { q::TypeTraits<q::kTimestamp>::inf(), "0Wp"s },
-    { -q::TypeTraits<q::kTimestamp>::inf(), "-0Wp"s }
+    { q::TypeTraits<q::kTimestamp>::inf(false), "-0Wp"s }
 };
 OPS_TEST_SET(q::kMonth) = {
     { "2000.01m"_qm, "2000.01m"s },
@@ -240,7 +243,7 @@ OPS_TEST_SET(q::kMonth) = {
     { "1900.1"_qm, "1900.01m"s },
     { q::TypeTraits<q::kMonth>::null(), "0Nm"s },
     { q::TypeTraits<q::kMonth>::inf(), "0Wm"s },
-    { -q::TypeTraits<q::kMonth>::inf(), "-0Wm"s }
+    { q::TypeTraits<q::kMonth>::inf(false), "-0Wm"s }
 };
 OPS_TEST_SET(q::kDate) = {
     { "2000.01.01"_qd, "2000.01.01"s },
@@ -250,7 +253,7 @@ OPS_TEST_SET(q::kDate) = {
     { "19000101"_qd, "1900.01.01"s },
     { q::TypeTraits<q::kDate>::null(), "0Nd"s },
     { q::TypeTraits<q::kDate>::inf(), "0Wd"s },
-    { -q::TypeTraits<q::kDate>::inf(), "-0Wd"s }
+    { q::TypeTraits<q::kDate>::inf(false), "-0Wd"s }
 };
 OPS_TEST_SET(q::kDatetime) = {
     { "2000.01.01T00:00:00.000"_qz, "2000.01.01T00:00:00.000"s },
@@ -260,7 +263,7 @@ OPS_TEST_SET(q::kDatetime) = {
     { "1900.1.1T12:34:56.2"_qz, "1900.01.01T12:34:56.200"s },
     { q::TypeTraits<q::kDatetime>::null(), "0Nz"s },
     { q::TypeTraits<q::kDatetime>::inf(), "0Wz"s },
-    { -q::TypeTraits<q::kDatetime>::inf(), "-0Wz"s }
+    { q::TypeTraits<q::kDatetime>::inf(false), "-0Wz"s }
 };
 OPS_TEST_SET(q::kTimespan) = {
     { "00:00:00"_qn, "0D00:00:00.000000000"s },
@@ -271,7 +274,7 @@ OPS_TEST_SET(q::kTimespan) = {
     { "-42:01:60.012"_qn, "-1D18:02:00.012000000"s },
     { q::TypeTraits<q::kTimespan>::null(), "0Nn"s },
     { q::TypeTraits<q::kTimespan>::inf(), "0Wn"s },
-    { -q::TypeTraits<q::kTimespan>::inf(), "-0Wn"s }
+    { q::TypeTraits<q::kTimespan>::inf(false), "-0Wn"s }
 };
 OPS_TEST_SET(q::kMinute) = {
     { "00:00"_qu, "00:00"s },
@@ -282,7 +285,7 @@ OPS_TEST_SET(q::kMinute) = {
     { "-42:01"_qu, "-42:01"s },
     { q::TypeTraits<q::kMinute>::null(), "0Nu"s },
     { q::TypeTraits<q::kMinute>::inf(), "0Wu"s },
-    { -q::TypeTraits<q::kMinute>::inf(), "-0Wu"s }
+    { q::TypeTraits<q::kMinute>::inf(false), "-0Wu"s }
 };
 OPS_TEST_SET(q::kSecond) = {
     { "00:00:00"_qv, "00:00:00"s },
@@ -304,7 +307,7 @@ OPS_TEST_SET(q::kTime) = {
     { "-42:01:60.012"_qt, "-42:02:00.012"s },
     { q::TypeTraits<q::kTime>::null(), "0Nt"s },
     { q::TypeTraits<q::kTime>::inf(), "0Wt"s },
-    { -q::TypeTraits<q::kTime>::inf(), "-0Wt"s }
+    { q::TypeTraits<q::kTime>::inf(false), "-0Wt"s }
 };
 
 using TraitsOpsTestTypes = ::testing::Types<
@@ -333,85 +336,89 @@ TYPED_TEST_SUITE(TypeTraitsOpsTests, TraitsOpsTestTypes);
 
 TYPED_TEST(TypeTraitsOpsTests, atomAndValue)
 {
-    using traits = q::TypeTraits<TypeParam::type_id>;
+    using Traits = q::TypeTraits<TypeParam::type_id>;
 
-    for (auto const& sample : samples_) {
-        q::K_ptr k{ traits::atom(sample.first) };
+    for (auto const& sample : this->samples_) {
+        q::K_ptr k{ Traits::atom(sample.first) };
         ASSERT_NE(k.get(), q::Nil);
-        EXPECT_EQ(q::type_of(k.get()), -TypeParam::type_id);
-        expect_equal(traits::value(k.get()), sample.first);
+        EXPECT_EQ(q::type(k.get()), -TypeParam::type_id);
+        SCOPED_TRACE("literal for atom");
+        this->expect_equal(Traits::value(k.get()), sample.first);
     }
 }
 
 TYPED_TEST(TypeTraitsOpsTests, listAndIndex)
 {
-    using traits = q::TypeTraits<TypeParam::type_id>;
+    using Traits = q::TypeTraits<TypeParam::type_id>;
 
-    std::vector<typename TypeParam::value_type> values(samples_.size());
-    std::transform(samples_.cbegin(), samples_.cend(), values.begin(),
+    std::vector<typename TypeParam::value_type> values(this->samples_.size());
+    std::transform(this->samples_.cbegin(), this->samples_.cend(), values.begin(),
         [](auto const& sample) { return sample.first; });
 
-    q::K_ptr k{ traits::list(values.cbegin(), values.cend()) };
+    q::K_ptr k{ Traits::list(values.cbegin(), values.cend()) };
     ASSERT_NE(k.get(), q::Nil);
-    EXPECT_EQ(q::type_of(k.get()), TypeParam::type_id);
-    ASSERT_EQ(q::count_of(k.get()), values.size());
+    EXPECT_EQ(q::type(k.get()), TypeParam::type_id);
+    ASSERT_EQ(q::count(k.get()), values.size());
 
     auto s = values.cbegin();
     auto const e = values.cend();
-    auto p = traits::index(k.get());
+    auto p = Traits::index(k.get());
     ASSERT_NE(p, nullptr);
-    for (; s != e; ++p, ++s) expect_equal(*p, *s);
+    for (; s != e; ++p, ++s) {
+        SCOPED_TRACE("literal list");
+        this->expect_equal(*p, *s);
+    }
 }
 
 TEST(TypeTraitsOpsTests, kCharList)
 {
-    using traits = q::TypeTraits<q::kChar>;
+    using Traits = q::TypeTraits<q::kChar>;
     char const sample[] = "ABC 123 测试\0+-/";
 
-    auto str_check = [&sample](q::K_ptr k, size_t length) {
+    auto str_check = [&sample](q::K_ptr k, std::size_t length) {
         ASSERT_NE(k.get(), q::Nil);
-        EXPECT_EQ(q::type_of(k.get()), traits::type_id);
-        ASSERT_EQ(q::count_of(k.get()), length);
-        for (size_t i = 0; i < length; ++i) {
-            EXPECT_EQ(traits::index(k.get())[i], sample[i]);
+        EXPECT_EQ(q::type(k.get()), Traits::type_id);
+        ASSERT_EQ(q::count(k.get()), length);
+        for (std::size_t i = 0; i < length; ++i) {
+            EXPECT_EQ(Traits::index(k.get())[i], sample[i]);
         }
     };
 
-    size_t const strlen = std::strlen(sample);
-    str_check(q::K_ptr{ traits::list(sample) }, strlen);
+    std::size_t const strlen = std::strlen(sample);
+    str_check(q::K_ptr{ Traits::list(sample) }, strlen);
 
-    size_t const length = std::extent_v<decltype(sample), 0> - 1;   // less trailing '\0'
-    str_check(q::K_ptr{ traits::list(sample, length) }, length);
+    std::size_t const length = std::extent_v<decltype(sample), 0> - 1;   // less trailing '\0'
+    str_check(q::K_ptr{ Traits::list(sample, length) }, length);
 }
 
 TEST(TypeTraitsOpsTests, kSymbolList)
 {
-    using traits = q::TypeTraits<q::kSymbol>;
+    using Traits = q::TypeTraits<q::kSymbol>;
     std::vector<std::string> sample{
         "600000.SH"s,
         "123 abc ABC"s,
         "  abc\0ABC"s,
         "测试"s,
         "\0"s,
-        traits::null()
+        Traits::null()
     };
-    size_t const length = sample.size();
+    std::size_t const length = sample.size();
 
-    q::K_ptr k{ traits::list(sample.cbegin(), sample.cend()) };
+    q::K_ptr k{ Traits::list(sample.cbegin(), sample.cend()) };
     ASSERT_NE(k.get(), q::Nil);
-    EXPECT_EQ(q::type_of(k.get()), traits::type_id);
-    ASSERT_EQ(q::count_of(k.get()), length);
-    for (size_t i = 0; i < length; ++i) {
-        EXPECT_STREQ(traits::index(k.get())[i], sample[i].c_str());
+    EXPECT_EQ(q::type(k.get()), Traits::type_id);
+    ASSERT_EQ(q::count(k.get()), length);
+    for (std::size_t i = 0; i < length; ++i) {
+        EXPECT_STREQ(Traits::index(k.get())[i], sample[i].c_str());
     }
 }
 
 TYPED_TEST(TypeTraitsOpsTests, toStr)
 {
-    using traits = q::TypeTraits<TypeParam::type_id>;
+    using Traits = q::TypeTraits<TypeParam::type_id>;
 
-    for (auto const& sample : samples_) {
-        EXPECT_EQ(traits::to_str(sample.first), sample.second);
+    for (auto const& sample : this->samples_) {
+        EXPECT_EQ(Traits::to_str(sample.first), sample.second);
     }
 }
 

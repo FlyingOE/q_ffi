@@ -1,19 +1,39 @@
 #pragma once
 
-#include <type_traits>  // Need std::void_t from C++17
+#include <limits>
 
-namespace std {
+namespace std
+{
+    // Features from C++17
+    inline namespace ext 
+    {
+        template <typename...>
+        using void_t = void;
 
-    template <typename...>
-    using void_t = void;
+        template<typename T, unsigned N = 0>
+        constexpr std::size_t extent_v = extent<T, N>::value;
 
-    template<typename From, typename To>
-    constexpr bool is_convertible_v = is_convertible<From, To>::value;
+        template<typename Base, typename Derived>
+        constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
+
+        template<typename From, typename To>
+        constexpr bool is_convertible_v = is_convertible<From, To>::value;
+
+        template<typename T1, typename T2>
+        constexpr bool is_same_v = is_same<T1, T2>::value;
+
+    }//inline namespace std::ext
 
 }//namespace std
 
-namespace std_ext {
+#ifdef _MSC_VER
+#   include <type_traits>   // MSVC always includes some C++17 library features
+#else
+namespace std { using namespace ext; }
+#endif
 
+namespace std_ext
+{
 #pragma region std_ext::can_apply<...>
 
     /// @brief Type traits to detect, with SFINAE, if a type can apply call

@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
-#include "types.hpp"
+#include "ktypes.hpp"
 #include <map>
 
+/*
 #pragma region TemporalTraitsTests<> typed test suite
 
 template<typename TraitsInfo>
@@ -164,3 +165,4 @@ TYPED_TEST(TemporalTraitsTests, parsing)
 }
 
 #pragma endregion
+*/

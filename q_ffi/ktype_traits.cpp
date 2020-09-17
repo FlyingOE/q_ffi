@@ -1,11 +1,6 @@
-#include "types.hpp"
+#include "ktype_traits.hpp"
 #include <limits>
 #include <regex>
-
-::K q::error(char const* msg, bool sys) noexcept
-{
-    return TypeTraits<kError>::atom(msg, sys);
-}
 
 #pragma region <kTimestamp> conversions
 
@@ -17,30 +12,30 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 ::J q::encode_timestamp(long long year, long long month, long long day,
     long long hour, long long minute, long long second, long long nanos) noexcept
 {
-    ::I const date = encode_date(
+    auto const date = encode_date(
         static_cast<::I>(year), static_cast<::I>(month), static_cast<::I>(day));
-    ::J const time = encode_timespan(0, hour, minute, second, nanos);
+    auto const time = encode_timespan(0, hour, minute, second, nanos);
     return compose_timestamp(date, time);
 }
 
 ::J parse_raw_timestamp(char const* yyyymmddhhmmssf9) noexcept
 {
-    using traits = typename q::TypeTraits<q::kTimestamp>;
+    using Traits = q::TypeTraits<q::kTimestamp>;
     static std::regex const separator{ "'" };
     static std::regex const pattern{ R"(^(\d{8})(\d{15})$)" };
 
-    if (nullptr == yyyymmddhhmmssf9) return traits::null();
+    if (nullptr == yyyymmddhhmmssf9) return Traits::null();
     std::string const ymdhmsf = std::regex_replace(yyyymmddhhmmssf9, separator, "");
-    if (8 + 6 + 9 != ymdhmsf.length()) return traits::null();
+    if (8 + 6 + 9 != ymdhmsf.length()) return Traits::null();
 
     std::smatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern)) return traits::null();
+    if (!std::regex_match(ymdhmsf, matches, pattern)) return Traits::null();
     assert(1 + 2 == matches.size());
 
     ::I const date = q::parse_date(matches.str(1).c_str());
     ::J const time = q::parse_timespan(std::stoll(matches.str(2)));
     if (q::TypeTraits<q::kDate>::null() == date || q::TypeTraits<q::kTimespan>::null() == time)
-        return traits::null();
+        return Traits::null();
     return compose_timestamp(date, time);
 }
 
@@ -48,18 +43,18 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 {
     if (raw) return parse_raw_timestamp(ymdhmsf);
 
-    using traits = typename TypeTraits<kTimestamp>;
+    using Traits = TypeTraits<kTimestamp>;
     static std::regex const pattern{ R"(^([^D]+)(?:D([^p]+))?p?$)" };
 
-    if (nullptr == ymdhmsf) return traits::null();
+    if (nullptr == ymdhmsf) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern)) return traits::null();
+    if (!std::regex_match(ymdhmsf, matches, pattern)) return Traits::null();
     assert(1 + 2 == matches.size());
 
     ::I const date = parse_date(matches.str(1).c_str());
     ::J const time = 0 < matches.length(2) ? parse_timespan(matches.str(2).c_str()) : 0;
     if (TypeTraits<kDate>::null() == date || TypeTraits<kTimespan>::null() == time)
-        return traits::null();
+        return Traits::null();
     return compose_timestamp(date, time);
 }
 
@@ -79,12 +74,12 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 
 ::I q::parse_month(char const* ym) noexcept
 {
-    using traits = typename TypeTraits<kMonth>;
+    using Traits = TypeTraits<kMonth>;
     static std::regex const pattern{ R"(^(\d{4})[.\-/](\d\d?)m?$)" };
 
-    if (nullptr == ym) return traits::null();
+    if (nullptr == ym) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ym, matches, pattern)) return traits::null();
+    if (!std::regex_match(ym, matches, pattern)) return Traits::null();
     assert(1 + 2 == matches.size());
 
     auto const year = std::stoi(matches.str(1));
@@ -119,12 +114,12 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 
 ::I q::parse_date(char const* ymd) noexcept
 {
-    using traits = typename TypeTraits<kDate>;
+    using Traits = TypeTraits<kDate>;
     static std::regex const pattern{ R"(^(\d{4})([.\-/]?)(\d\d?)\2(\d\d?)d?$)" };
 
-    if (nullptr == ymd) return traits::null();
+    if (nullptr == ymd) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ymd, matches, pattern)) return traits::null();
+    if (!std::regex_match(ymd, matches, pattern)) return Traits::null();
     assert(1 + 3 + 1 == matches.size());
 
     auto const year = std::stoi(matches.str(1));
@@ -164,18 +159,18 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::F q::parse_datetime(char const* ymdhmsf) noexcept
 {
-    using traits = typename TypeTraits<kDatetime>;
+    using Traits = TypeTraits<kDatetime>;
     static std::regex const pattern{ R"(^([^T]+)(?:T([^z]+))?z?$)" };
 
-    if (nullptr == ymdhmsf) return traits::null();
+    if (nullptr == ymdhmsf) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern)) return traits::null();
+    if (!std::regex_match(ymdhmsf, matches, pattern)) return Traits::null();
     assert(1 + 2 == matches.size());
 
     ::I const date = parse_date(matches.str(1).c_str());
     ::I const time = 0 < matches.length(2) ? parse_time(matches.str(2).c_str()) : 0;
     if (TypeTraits<kDate>::null() == date || TypeTraits<kTime>::null() == time)
-        return traits::null();
+        return Traits::null();
     return compose_datetime(date, time);
 }
 
@@ -199,14 +194,14 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::J q::parse_timespan(char const* dhmsf) noexcept
 {
-    using traits = typename TypeTraits<kTimespan>;
+    using Traits = TypeTraits<kTimespan>;
     static std::regex const pattern{
         R"(^(-?)(?:(\d+)D)?(\d+)(?::(\d\d?)(?::(\d\d?)(?:\.(\d{1,9}))?)?)?n?$)"
     };
 
-    if (nullptr == dhmsf) return traits::null();
+    if (nullptr == dhmsf) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(dhmsf, matches, pattern)) return traits::null();
+    if (!std::regex_match(dhmsf, matches, pattern)) return Traits::null();
     assert(1 + 6 == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
@@ -247,12 +242,12 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::I q::parse_minute(char const* hm) noexcept
 {
-    using traits = typename TypeTraits<kMinute>;
+    using Traits = TypeTraits<kMinute>;
     static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)u?$)" };
 
-    if (nullptr == hm) return traits::null();
+    if (nullptr == hm) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(hm, matches, pattern)) return traits::null();
+    if (!std::regex_match(hm, matches, pattern)) return Traits::null();
     assert(1 + 3 == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
@@ -286,12 +281,12 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::I q::parse_second(char const* hms) noexcept
 {
-    using traits = typename TypeTraits<kSecond>;
+    using Traits = TypeTraits<kSecond>;
     static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?))?v?$)" };
 
-    if (nullptr == hms) return traits::null();
+    if (nullptr == hms) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(hms, matches, pattern)) return traits::null();
+    if (!std::regex_match(hms, matches, pattern)) return Traits::null();
     assert(1 + 4 == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
@@ -329,14 +324,14 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::I q::parse_time(char const* hmsf) noexcept
 {
-    using traits = typename TypeTraits<kTime>;
+    using Traits = TypeTraits<kTime>;
     static std::regex const pattern{
         R"(^(-?)(\d+):(\d\d?)(?::(\d\d?)(?:\.(\d{1,3}))?)?t?$)"
     };
 
-    if (nullptr == hmsf) return traits::null();
+    if (nullptr == hmsf) return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(hmsf, matches, pattern)) return traits::null();
+    if (!std::regex_match(hmsf, matches, pattern)) return Traits::null();
     assert(1 + 5 == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
@@ -358,5 +353,34 @@ inline ::F compose_datetime(int date, int time) noexcept
     auto const millis = t % 1000;
     return sign * (hour * 100'00'000 + minute * 100'000 + second * 1000 + millis);
 }
+
+#pragma endregion
+
+#pragma region Type traits constants
+
+constexpr q::TypeId q::TypeTraits<q::kBoolean>::type_id;
+
+constexpr q::TypeId q::TypeTraits<q::kByte>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kShort>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kInt>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kLong>::type_id;
+
+constexpr q::TypeId q::TypeTraits<q::kReal>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kFloat>::type_id;
+
+constexpr q::TypeId q::TypeTraits<q::kChar>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kSymbol>::type_id;
+
+constexpr q::TypeId q::TypeTraits<q::kTimestamp>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kMonth>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kDate>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kDatetime>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kTimespan>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kMinute>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kSecond>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kTime>::type_id;
+
+constexpr q::TypeId q::TypeTraits<q::kNil>::type_id;
+constexpr q::TypeId q::TypeTraits<q::kError>::type_id;
 
 #pragma endregion

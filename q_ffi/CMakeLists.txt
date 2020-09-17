@@ -18,11 +18,12 @@ set(q_ffi_Q_SCRIPTS
     "q_ffi.q"
 )
 set(q_ffi_PUBLIC_HEADERS
+    "${PROJECT_BINARY_DIR}/q_ffi.h"
     "k_compat.h"
     "std_ext.hpp"
-    "${PROJECT_BINARY_DIR}/q_ffi.h"
-    "types.hpp"
-    "pointer.hpp"
+    "ktypes.hpp"
+    "ktype_traits.hpp"
+    "kpointer.hpp"
 )
 set(q_ffi_HEADERS
     "ffi.h"
@@ -30,7 +31,8 @@ set(q_ffi_HEADERS
 )
 set(q_ffi_SOURCES
     "ffi.cpp"
-    "types.cpp"
+    "ktypes.cpp"
+    "ktype_traits.cpp"
 )
 set(q_ffi_ALWAYS_REBUILD
     "version.cpp"

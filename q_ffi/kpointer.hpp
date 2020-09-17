@@ -18,12 +18,6 @@ namespace q {
     /// @remark As @c K is internally reference counted, we need a custom deleter to manage it.
     using K_ptr = std::unique_ptr<std::remove_pointer_t<::K>, K_deleter>;
 
-}//namespace q
-
-#include "types.hpp"
-
-namespace q {
-
     /// @brief Duplicate a @c K_ptr (incrementing its internal reference count)
     inline K_ptr dup_K(K_ptr const& pk) noexcept
     {
