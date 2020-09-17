@@ -296,7 +296,7 @@ OPS_TEST_SET(q::kSecond) = {
     { "-42:01:60"_qv, "-42:02:00"s },
     { q::TypeTraits<q::kSecond>::null(), "0Nv"s },
     { q::TypeTraits<q::kSecond>::inf(), "0Wv"s },
-    { -q::TypeTraits<q::kSecond>::inf(), "-0Wv"s }
+    { q::TypeTraits<q::kSecond>::inf(false), "-0Wv"s }
 };
 OPS_TEST_SET(q::kTime) = {
     { "00:00:00"_qt, "00:00:00.000"s },

@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
-#include "ktypes.hpp"
+#include "ktype_traits.hpp"
 #include <map>
 
-/*
 #pragma region TemporalTraitsTests<> typed test suite
 
 template<typename TraitsInfo>
@@ -156,13 +155,10 @@ TYPED_TEST_SUITE(TemporalTraitsTests, TemporalTraitsTestTypes);
 
 TYPED_TEST(TemporalTraitsTests, parsing)
 {
-    using traits = q::TypeTraits<TypeParam::type_id>;
-
     // Test samples are parsed as user-defined literals
-    for (auto const& sample : temporals_) {
+    for (auto const& sample : this->temporals_) {
         EXPECT_EQ(sample.first, sample.second);
     }
 }
 
 #pragma endregion
-*/

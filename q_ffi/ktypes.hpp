@@ -62,39 +62,39 @@ namespace q
     /// @brief UDLs that are adapted from q literal suffices.
     inline namespace literals
     {
-        ::G operator"" _qb(unsigned long long b) noexcept;
+        q_ffi_API ::G operator"" _qb(unsigned long long b) noexcept;
 
-        ::G operator"" _qx(unsigned long long i8) noexcept;
-        ::H operator"" _qh(unsigned long long i16) noexcept;
-        ::I operator"" _qi(unsigned long long i32) noexcept;
-        ::J operator"" _qj(unsigned long long i64) noexcept;
+        q_ffi_API ::G operator"" _qx(unsigned long long i8) noexcept;
+        q_ffi_API ::H operator"" _qh(unsigned long long i16) noexcept;
+        q_ffi_API ::I operator"" _qi(unsigned long long i32) noexcept;
+        q_ffi_API ::J operator"" _qj(unsigned long long i64) noexcept;
 
-        ::E operator"" _qe(long double f32) noexcept;
-        ::F operator"" _qf(long double f64) noexcept;
+        q_ffi_API ::E operator"" _qe(long double f32) noexcept;
+        q_ffi_API ::F operator"" _qf(long double f64) noexcept;
 
-        ::J operator"" _qp(char const* ymdhmsf, std::size_t len) noexcept;
-        ::J operator"" _qp(char const* yyyymmddhhmmssf9) noexcept;
+        q_ffi_API ::J operator"" _qp(char const* ymdhmsf, std::size_t len) noexcept;
+        q_ffi_API ::J operator"" _qp(char const* yyyymmddhhmmssf9) noexcept;
 
-        ::I operator"" _qm(char const* ym, std::size_t len) noexcept;
-        ::I operator"" _qm(unsigned long long int yyyymm) noexcept;
+        q_ffi_API ::I operator"" _qm(char const* ym, std::size_t len) noexcept;
+        q_ffi_API ::I operator"" _qm(unsigned long long int yyyymm) noexcept;
 
-        ::I operator"" _qd(char const* ymd, std::size_t len) noexcept;
-        ::I operator"" _qd(unsigned long long int yyyymmdd) noexcept;
+        q_ffi_API ::I operator"" _qd(char const* ymd, std::size_t len) noexcept;
+        q_ffi_API ::I operator"" _qd(unsigned long long int yyyymmdd) noexcept;
 
-        ::F operator"" _qz(char const* ymdhmsf, std::size_t len) noexcept;
-        ::F operator"" _qz(unsigned long long int yyyymmddhhmmssf3) noexcept;
+        q_ffi_API ::F operator"" _qz(char const* ymdhmsf, std::size_t len) noexcept;
+        q_ffi_API ::F operator"" _qz(unsigned long long int yyyymmddhhmmssf3) noexcept;
 
-        ::J operator"" _qn(char const* dhmsf, std::size_t len) noexcept;
-        ::J operator"" _qn(unsigned long long int hhmmssf9) noexcept;
+        q_ffi_API ::J operator"" _qn(char const* dhmsf, std::size_t len) noexcept;
+        q_ffi_API ::J operator"" _qn(unsigned long long int hhmmssf9) noexcept;
 
-        ::I operator"" _qu(char const* hm, std::size_t len) noexcept;
-        ::I operator"" _qu(unsigned long long int hhmm) noexcept;
+        q_ffi_API ::I operator"" _qu(char const* hm, std::size_t len) noexcept;
+        q_ffi_API ::I operator"" _qu(unsigned long long int hhmm) noexcept;
 
-        ::I operator"" _qv(char const* hms, std::size_t len) noexcept;
-        ::I operator"" _qv(unsigned long long int hhmmss) noexcept;
+        q_ffi_API ::I operator"" _qv(char const* hms, std::size_t len) noexcept;
+        q_ffi_API ::I operator"" _qv(unsigned long long int hhmmss) noexcept;
 
-        ::I operator"" _qt(char const* hmsf, std::size_t len) noexcept;
-        ::I operator"" _qt(unsigned long long int hhmmssf3) noexcept;
+        q_ffi_API ::I operator"" _qt(char const* hmsf, std::size_t len) noexcept;
+        q_ffi_API ::I operator"" _qt(unsigned long long int hhmmssf3) noexcept;
 
     }//inline namespace q::literals
 
