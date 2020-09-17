@@ -5,7 +5,7 @@
 namespace std
 {
     // Features from C++17
-    inline namespace ext 
+    namespace ext
     {
         template <typename...>
         using void_t = void;

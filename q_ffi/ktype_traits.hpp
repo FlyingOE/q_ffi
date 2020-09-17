@@ -84,11 +84,11 @@ namespace q {
             static std::string to_str(const_reference v)
             {
                 std::ostringstream buffer;
-                Tr::template print<Tr::type_id>(buffer, v);
+                Tr::print(buffer, v);
                 return buffer.str();
             }
 
-            template<TypeId tid, typename Elem, typename ElemTr>
+            template<typename Elem, typename ElemTr>
             static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
             { out << v; }
         };
@@ -147,18 +147,16 @@ namespace q {
                 return 0 == std::memcmp(&v, &i, sizeof(value_type));
             }
 
-            template<TypeId tid, typename Elem, typename ElemTr>
+            template<typename Elem, typename ElemTr>
             static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
             {
-                if (!Tr::template print_special<tid>(out, v))
-                    out << std::to_string(v) << TypeCode.at(tid);
+                if (!Tr::print_special(out, v))
+                    out << std::to_string(v) << TypeCode.at(Tr::type_id);
             }
 
-            template<TypeId tid, typename Elem, typename ElemTr>
+            template<typename Elem, typename ElemTr>
             static bool print_special(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
             {
-                auto const pos = out.tellp();
-
                 if (Tr::is_null(v)) {
                     out << "0N";
                 }
@@ -169,11 +167,10 @@ namespace q {
                     out << "-0W";
                 }
                 else {
-                    out << std::to_string(v);
+                    return false;   // not a special value
                 }
-                out << TypeCode.at(tid);
-
-                return out.tellp() > pos;
+                out << TypeCode.at(Tr::type_id);
+                return true;
             }
         };
 
@@ -210,10 +207,10 @@ namespace q {
         static pointer index(::K k) noexcept
         { return static_cast<pointer>(kG(k)); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            out << static_cast<bool>(v) << TypeCode.at(tid);
+            out << static_cast<bool>(v) << TypeCode.at(TypeTraits::type_id);
         }
     };
 
@@ -246,7 +243,7 @@ namespace q {
         static constexpr value_type null() noexcept
         { return 0x00; }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
             out << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(v);
@@ -575,15 +572,15 @@ namespace q {
         static value_type parse(char const* ym) noexcept
         { return parse_month(ym); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto const yyyymm = decode_month(v);
             out << std::setfill('0')
                 << std::setw(4) << (yyyymm / 100) << '.' << std::setw(2) << (yyyymm % 100)
-                << TypeCode.at(tid);
+                << TypeCode.at(TypeTraits::type_id);
         }
     };
 
@@ -628,10 +625,10 @@ namespace q {
         static value_type parse(char const* ymd) noexcept
         { return parse_date(ymd); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto const yyyymmdd = decode_date(v);
             out << std::setfill('0')
@@ -683,10 +680,10 @@ namespace q {
         static value_type parse(char const* dhmsf) noexcept
         { return parse_timespan(dhmsf); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v, bool no_day = false)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto dhhmmssf9 = decode_timespan(v);
             auto const sign = std_ext::sgn(dhhmmssf9);
@@ -744,10 +741,10 @@ namespace q {
         static value_type parse(char const* ymdhmsf, bool raw = false) noexcept
         { return parse_timestamp(ymdhmsf, raw); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto date = v / 86400'000'000'000LL;
             auto time = v % 86400'000'000'000LL;
@@ -757,9 +754,9 @@ namespace q {
             }
             assert(std::numeric_limits<::I>::min() <= date
                 && date <= std::numeric_limits<::I>::max());
-            TypeTraits<kDate>::template print<tid>(out, static_cast<::I>(date));
+            TypeTraits<kDate>::print(out, static_cast<::I>(date));
             out << 'D';
-            TypeTraits<kTimespan>::template print<tid>(out, time, true);
+            TypeTraits<kTimespan>::print(out, time, true);
         }
     };
 
@@ -804,10 +801,10 @@ namespace q {
         static value_type parse(char const* hmsf) noexcept
         { return parse_time(hmsf); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto hhmmssf3 = decode_time(v);
             auto const sign = std_ext::sgn(hhmmssf3);
@@ -863,10 +860,10 @@ namespace q {
         static value_type parse(char const* ymdhmsf) noexcept
         { return parse_datetime(ymdhmsf); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto date = static_cast<::I>(v);
             auto time = static_cast<::I>(std::round((v - date) * 86400'000.));
@@ -874,9 +871,9 @@ namespace q {
                 date--;
                 time += 86400'000;
             }
-            TypeTraits<kDate>::template print<tid>(out, date);
+            TypeTraits<kDate>::print(out, date);
             out << 'T';
-            TypeTraits<kTime>().template print<tid>(out, time);
+            TypeTraits<kTime>::print(out, time);
         }
     };
 
@@ -921,10 +918,10 @@ namespace q {
         static value_type parse(char const* hm) noexcept
         { return parse_minute(hm); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto hhmm = decode_minute(v);
             auto const sign = std_ext::sgn(hhmm);
@@ -977,10 +974,10 @@ namespace q {
         static value_type parse(char const* hms) noexcept
         { return parse_second(hms); }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::template print_special<tid>(out, v)) return;
+            if (TypeTraits::print_special(out, v)) return;
 
             auto hhmmss = decode_second(v);
             auto const sign = std_ext::sgn(hhmmss);
@@ -1024,7 +1021,7 @@ namespace q {
         static value_type value(::K k) noexcept
         { return k->s; }
 
-        template<TypeId tid, typename Elem, typename ElemTr>
+        template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v)
         {
             out << "<q>'" << v;
