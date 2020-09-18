@@ -518,7 +518,9 @@ namespace q {
         static constexpr value_type null() noexcept
         { return ""; }
 
-        using ValueType::print;
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
+        { out << '`' << v; }
 
     private:
         struct str_getter

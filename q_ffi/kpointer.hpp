@@ -8,9 +8,10 @@ namespace q {
     /// @remark Must be default constructible to avoid the hassle during @c K_ptr construction.
     struct K_deleter
     {
-        inline void operator()(::K k) const noexcept
+        void operator()(::K k) const noexcept
         {
-            if (nullptr != k) ::r0(k);
+            if (nullptr != k)
+                ::r0(k);
         }
     };
 

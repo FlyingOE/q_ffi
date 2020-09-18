@@ -220,10 +220,10 @@ OPS_TEST_SET(q::kChar) = {
     { q::TypeTraits<q::kChar>::null(), " "s }
 };
 OPS_TEST_SET(q::kSymbol) = {
-    { "600000.SH", "600000.SH"s },
-    { "123 abc ABC", "123 abc ABC"s },
-    { "测试", "测试"s },
-    { q::TypeTraits<q::kSymbol>::null(), ""s }
+    { "600000.SH", "`600000.SH"s },
+    { "123 abc ABC", "`123 abc ABC"s },
+    { u8"测试", u8"`测试"s },
+    { q::TypeTraits<q::kSymbol>::null(), "`"s }
 };
 OPS_TEST_SET(q::kTimestamp) = {
     { "2000.01.01D00:00:00.000000000"_qp, "2000.01.01D00:00:00.000000000"s },
@@ -373,7 +373,7 @@ TYPED_TEST(TypeTraitsOpsTests, listAndIndex)
 TEST(TypeTraitsOpsTests, kCharList)
 {
     using Traits = q::TypeTraits<q::kChar>;
-    char const sample[] = "ABC 123 测试\0+-/";
+    char const sample[] = u8"ABC 123 测试\0+-/";
 
     auto str_check = [&sample](q::K_ptr k, std::size_t length) {
         ASSERT_NE(k.get(), q::Nil);
@@ -398,7 +398,7 @@ TEST(TypeTraitsOpsTests, kSymbolList)
         "600000.SH"s,
         "123 abc ABC"s,
         "  abc\0ABC"s,
-        "测试"s,
+        u8"测试"s,
         "\0"s,
         Traits::null()
     };

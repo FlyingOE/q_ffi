@@ -107,7 +107,7 @@ KPTR_TEST_SET(q::kLong) = { 0_qj, 4'294'967'296_qj, -2'147'483'648_qj };
 KPTR_TEST_SET(q::kReal) = { 0._qe, 987.654_qe, -123.456_qe };
 KPTR_TEST_SET(q::kFloat) = { 0._qf, 987.6543210123_qf, -123.4567890987_qf };
 KPTR_TEST_SET(q::kChar) = { '\0', 'Z', '\xFF' };
-KPTR_TEST_SET(q::kSymbol) = { "600000.SH", "123 abc ABC", "测试" };
+KPTR_TEST_SET(q::kSymbol) = { "600000.SH", "123 abc ABC", u8"测试" };
 
 KPTR_TEST_SET(q::kTimestamp) = { "2020.01.01D00:00:00.000000000"_qp,
     "2020/9/10"_qp, "1997-11-23D12:34"_qp, 19700101'012345'678901234_qp,
