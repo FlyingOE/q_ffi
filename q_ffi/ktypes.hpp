@@ -43,14 +43,10 @@ namespace q
     /// @ref q::kNil
     constexpr ::K Nil = static_cast<::K>(nullptr);
 
-    /// @brief Report error into q host.
-    /// @param sys If the error should be prepended with system error message.
-    q_ffi_API ::K error(char const* msg, bool sys = false) noexcept;
-
     /// @brief Inspect type ID of a (potentially null) @c K object.
-    inline TypeId type(::K const k) noexcept
+    inline decltype(auto) type(::K const k) noexcept
     {
-        return nullptr == k ? q::kNil : static_cast<TypeId>(k->t);
+        return static_cast<std::underlying_type_t<TypeId>>(nullptr == k ? q::kNil : k->t);
     }
 
     /// @brief Inspect the element count of a (potentially null) @c K object. Atoms' size is 1.
@@ -58,6 +54,14 @@ namespace q
     {
         return nullptr == k ? 0 : 0 > type(k) ? 1 : static_cast<std::size_t>(k->n);
     }
+
+    /// @brief Report error into q host.
+    /// @param sys If the error should be prepended with system error message.
+    q_ffi_API ::K error(char const* msg, bool sys = false) noexcept;
+
+    /// @brief Stringize any @c K object as much as possible.
+    ///     If the q type is recognized, @c k is converted using the @c to_str method in the respective type traits.
+    q_ffi_API std::string to_string(::K const k);
 
     /// @brief UDLs that are adapted from q literal suffices.
     inline namespace literals
