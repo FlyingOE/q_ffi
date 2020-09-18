@@ -422,4 +422,14 @@ TYPED_TEST(TypeTraitsOpsTests, toStr)
     }
 }
 
+TYPED_TEST(TypeTraitsOpsTests, toString)
+{
+    using Traits = q::TypeTraits<TypeParam::type_id>;
+
+    for (auto const& sample : this->samples_) {
+        q::K_ptr k{ Traits::atom(sample.first) };
+        EXPECT_EQ(q::to_string(k.get()), sample.second);
+    }
+}
+
 #pragma endregion

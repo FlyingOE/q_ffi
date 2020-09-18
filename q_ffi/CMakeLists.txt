@@ -24,15 +24,16 @@ set(q_ffi_PUBLIC_HEADERS
     "ktypes.hpp"
     "ktype_traits.hpp"
     "kpointer.hpp"
+    "kerror.hpp"
 )
 set(q_ffi_HEADERS
-    "ffi.h"
     "version.hpp"
 )
 set(q_ffi_SOURCES
     "ffi.cpp"
     "ktypes.cpp"
     "ktype_traits.cpp"
+    "kerror.cpp"
 )
 set(q_ffi_ALWAYS_REBUILD
     "version.cpp"
