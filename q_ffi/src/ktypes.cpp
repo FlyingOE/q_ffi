@@ -111,14 +111,14 @@ namespace
         if (scalar) {
             auto const bytes = std::max({ sizeof(k->j), sizeof(k->f), sizeof(k->s), sizeof(k->k) });
             auto const p = &q::TypeTraits<q::kByte>::value(k);
-            for (auto i = 0; i < bytes; ++i)
+            for (auto i = 0u; i < bytes; ++i)
                 buffer << q::TypeTraits<q::kByte>::to_str(p[i]);
         }
         else {
             auto const bytes = sizeof(kG(k));
             auto const p = (typename q::TypeTraits<q::kByte>::const_pointer)(&(kG(k)));
             if (!scalar) buffer << '*';
-            for (auto i = 0; i < bytes; ++i)
+            for (auto i = 0u; i < bytes; ++i)
                 buffer << q::TypeTraits<q::kByte>::to_str(p[i]);
             buffer << '[' << q::count(k) << ']';
         }

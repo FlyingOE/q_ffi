@@ -44,9 +44,9 @@ namespace q
     constexpr ::K Nil = static_cast<::K>(nullptr);
 
     /// @brief Inspect type ID of a (potentially null) @c K object.
-    inline decltype(auto) type(::K const k) noexcept
+    inline std::underlying_type_t<TypeId> type(::K const k) noexcept
     {
-        return static_cast<std::underlying_type_t<TypeId>>(nullptr == k ? q::kNil : k->t);
+        return nullptr == k ? q::kNil : static_cast<TypeId>(k->t);
     }
 
     /// @brief Inspect the element count of a (potentially null) @c K object. Atoms' size is 1.

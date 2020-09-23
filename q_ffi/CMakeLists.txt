@@ -97,6 +97,10 @@ elseif(UNIX AND NOT APPLE)
                 -fdiagnostics-color=always
         )
     endif()
+    target_link_libraries(${target_name}
+        INTERFACE
+            dl
+    )
 elseif(APPLE)
     message(FATAL_ERROR "FIXME: macOS not yet supported!")
 else()
