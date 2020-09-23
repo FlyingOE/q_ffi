@@ -35,11 +35,11 @@
 build/
 .vs/
 
-# Build dependencies
-!/depends/**/*.dll
-!/depends/**/*.lib
-!/depends/**/*.so
-!/depends/**/*.o
+# 3rd-party dependencies
+!/external/**/*.dll
+!/external/**/*.lib
+!/external/**/*.so
+!/external/**/*.o
 
 # Distributable directories
 /dist/
