@@ -20,11 +20,11 @@ project(q_ffi
     HOMEPAGE_URL "https://github.com/FlyingOE/q_ffi"
     LANGUAGES    CXX
 )
-option(q_ffi_TESTS "Build unit tests for q_ffi" ON)
 
 # Global environment
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
+include(CTest)
 
 # External dependencies
 add_subdirectory(external)
@@ -33,7 +33,7 @@ add_subdirectory(external)
 add_subdirectory(q_ffi)
 
 # Unit tests
-if(q_ffi_TESTS)
+if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()
