@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "k_compat.h"
+#include <k_compat.h>
 
 namespace q {
 

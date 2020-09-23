@@ -23,11 +23,9 @@ After installation, both q scripts and binary libraries are located in `./dist` 
 Follow the classic CMake Build Procedure&trade;:
 
 ```sh
-mkdir build    # build directory
-cd build
-cmake ..
-make
-make install
+cmake -S . -B build
+cmake --build build
+cmake --build build -t test
 ```
 
 ### Building with Visual Studio (IDE)
@@ -45,16 +43,14 @@ To build from the command line, follow [this document][3] to launch the build en
 
 ```batch
 :: Run in "Developer Command Prompt for VS 2017/2019"
-mkdir build                                    :: build directory
-cd build
-cmake .. -G "Visual Studio 2017 15"            :: VS 2017, default (x86) build
-cmake .. -G "Visual Studio 2017 15 x64"        :: VS 2017, 64-bit (x64) build
-cmake .. -G "Visual Studio 2019 16" -A Win32   :: VS 2019, 32-bit (x86) build
-cmake .. -G "Visual Studio 2019 16" -A x64     :: VS 2019, 64-bit (x64) build
-cmake --build .                                :: default Debug build
-cmake --build . --config ReleaseWithDebInfo    :: Release-With-Debug-Info build
-cmake --build . --config Release               :: stripped Release build
-cmake --build . --target install
+cmake -S . -B build -G "Visual Studio 2017 15"           :: VS 2017, default (x86) build
+cmake -S . -B build -G "Visual Studio 2017 15 x64"       :: VS 2017, 64-bit (x64) build
+cmake -S . -B build -G "Visual Studio 2019 16" -A Win32  :: VS 2019, 32-bit (x86) build
+cmake -S . -B build -G "Visual Studio 2019 16" -A x64    :: VS 2019, 64-bit (x64) build
+cmake --build build                                      :: default Debug build
+cmake --build build --config ReleaseWithDebInfo          :: Release-With-Debug-Info build
+cmake --build build --config Release                     :: stripped Release build
+cmake --build build --target install
 ```
 
 [3]: https://docs.microsoft.com/cpp/build/building-on-the-command-line

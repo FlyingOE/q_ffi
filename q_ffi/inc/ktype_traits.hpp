@@ -7,7 +7,7 @@
 #include <iterator>
 #include <sstream>
 #include <iomanip>
-#include "k_compat.h"
+#include <k_compat.h>
 #include "q_ffi.h"
 #include "std_ext.hpp"
 #include "ktypes.hpp"

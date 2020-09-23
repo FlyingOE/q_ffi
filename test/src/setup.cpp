@@ -1,5 +1,5 @@
 #include "setup.hpp"
-#include "k_compat.h"
+#include <k_compat.h>
 
 /// @ref https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting
 void K_setup::SetUp()

@@ -2,7 +2,7 @@
 
 #include "q_ffi.h"
 #include <unordered_map>
-#include "k_compat.h"
+#include <k_compat.h>
 
 namespace q
 {
