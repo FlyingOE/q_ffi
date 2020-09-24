@@ -70,6 +70,18 @@ target_link_libraries(${target_name}
         kdb::C
 )
 
+# dlfcn-win32 to emulate dlopen/dlsym
+if(WIN32)
+    target_include_directories(${target_name}
+        PRIVATE
+            dlfcn-win32::dl
+    )
+    target_link_libraries(${target_name}
+        PRIVATE
+            dlfcn-win32::dl
+    )
+endif()
+
 if(WIN32)
     # 1) Remove offending default compiler options
     remove_definitions(_MBCS)
