@@ -4,9 +4,11 @@ cmake_minimum_required(VERSION 3.15)
 include(CMakePrintHelpers)
 
 ########################################
-project(External_kdb.q)
-set(VERSION 3.0)
-set(DESCRIPTION "kdb+ 3.x C API")
+project(External_kdb.q
+    VERSION 3.0
+    DESCRIPTION "kdb+ 3.x C API"
+    HOMEPAGE_URL "https://github.com/KxSystems/kdb"
+)
 
 # Platform detection
 if(WIN32)
