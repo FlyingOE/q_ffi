@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "kpointer.hpp"
 #include "ktype_traits.hpp"
+#include "kpointer.hpp"
 
 TEST(KptrTests, refCount)
 {

@@ -58,20 +58,25 @@ target_compile_features(${target_name}
     PUBLIC
         cxx_std_14
 )
+target_compile_definitions(${target_name}
+    PUBLIC
+        k4_SYSTEM=${k4_SYSTEM}
+        k4_PLATFORM=${k4_PLATFORM}
+)
 target_include_directories(${target_name}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target_header_dir}>
         $<INSTALL_INTERFACE:${target_header_dir}>
-        kdb::C
+        kdb::C-dll
 )
 target_link_libraries(${target_name}
     PUBLIC
-        kdb::C
+        kdb::C-dll
 )
 
 # dlfcn-win32 to emulate dlopen/dlsym
-if(WIN32)
+if(k4_SYSTEM STREQUAL "w")
     target_include_directories(${target_name}
         PRIVATE
             dlfcn-win32::dl

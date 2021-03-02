@@ -18,6 +18,8 @@ The new FFI in k9 avoids the above problems by allowing direct specification of 
 
 After installation, both q scripts and binary libraries are located in `./dist` directory.
 
+[1]: https://rix0r.nl/blog/2015/08/13/cmake-guide/
+
 ### Building on Linux-like environment
 
 Follow the classic CMake Build Procedure&trade;:
@@ -43,10 +45,10 @@ To build from the command line, follow [this document][3] to launch the build en
 
 ```batch
 :: Run in "Developer Command Prompt for VS 2017/2019"
-cmake -S . -B build -G "Visual Studio 2017 15"           :: VS 2017, default (x86) build
-cmake -S . -B build -G "Visual Studio 2017 15 x64"       :: VS 2017, 64-bit (x64) build
-cmake -S . -B build -G "Visual Studio 2019 16" -A Win32  :: VS 2019, 32-bit (x86) build
-cmake -S . -B build -G "Visual Studio 2019 16" -A x64    :: VS 2019, 64-bit (x64) build
+cmake -S . -B build -G "Visual Studio 15 2017"           :: VS 2017, default (x86) build
+cmake -S . -B build -G "Visual Studio 15 2017 x64"       :: VS 2017, 64-bit (x64) build
+cmake -S . -B build -G "Visual Studio 16 2019" -A Win32  :: VS 2019, 32-bit (x86) build
+cmake -S . -B build -G "Visual Studio 16 2019" -A x64    :: VS 2019, 64-bit (x64) build
 cmake --build build                                      :: default Debug build
 cmake --build build --config ReleaseWithDebInfo          :: Release-With-Debug-Info build
 cmake --build build --config Release                     :: stripped Release build
