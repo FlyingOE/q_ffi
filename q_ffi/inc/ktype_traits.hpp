@@ -7,8 +7,8 @@
 #include <iterator>
 #include <sstream>
 #include <iomanip>
-#include <k_compat.h>
 #include "q_ffi.h"
+#include <k_compat.h>
 #include "std_ext.hpp"
 #include "ktypes.hpp"
 #include "kpointer.hpp"
@@ -1025,9 +1025,7 @@ namespace q {
 
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v)
-        {
-            out << "<q>'" << v;
-        }
+        { out << "<q>'" << v; }
     };
 
 #pragma endregion

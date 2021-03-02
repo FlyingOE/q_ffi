@@ -9,7 +9,7 @@ set(GTEST_VERSION 1.10.0)
 include(FetchContent)
 
 FetchContent_Declare(${GTEST_NAME}
-    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_REPOSITORY http://github.com/google/googletest.git
     GIT_TAG        release-${GTEST_VERSION}
 )
 
@@ -18,11 +18,12 @@ set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 set(BUILD_GTEST ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(${GTEST_NAME})
+
 #[===[
 FetchContent_GetProperties(${GTEST_NAME})
 string(TOLOWER "${GTEST_NAME}" lcname)
 if(NOT ${lcname}_POPULATED)
     FetchContent_Populate(${GTEST_NAME})
-      add_subdirectory(${${lcname}_SOURCE_DIR} ${${lcname}_BINARY_DIR})
+    add_subdirectory(${${lcname}_SOURCE_DIR} ${${lcname}_BINARY_DIR})
 endif()
 #]===]

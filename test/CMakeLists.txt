@@ -35,15 +35,15 @@ add_custom_command(
         copy_if_different $<TARGET_FILE:CapitalEdge::q_ffi> $<TARGET_FILE_DIR:${target_name}>
     COMMENT "Copy all dependent DLLs to the test directory."
 )
-if(WIN32)
-    add_custom_command(
-        TARGET ${target_name}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:kdb::C> $<TARGET_FILE_DIR:${target_name}>
-        COMMENT "Copy kdb+ DLL to the test directory."
-    )
-endif()
+#if(WIN32)
+#    add_custom_command(
+#        TARGET ${target_name}
+#        POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E
+#            copy_if_different $<TARGET_FILE:kdb::C> $<TARGET_FILE_DIR:${target_name}>
+#        COMMENT "Copy kdb+ DLL to the test directory."
+#    )
+#endif()
 
 # Test cases
 add_test(

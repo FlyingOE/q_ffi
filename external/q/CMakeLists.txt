@@ -40,28 +40,37 @@ else()
 endif()
 
 # Library contents
-cmake_print_variables(k4_SYSTEM)
-cmake_print_variables(k4_PLATFORM)
-
 set(target_name kdb_C_API)
+set(target_type INTERFACE CACHE STRING "Target link type (INTERFACE=q extension|SHARED=C client)")
+set_property(CACHE target_type PROPERTY STRINGS INTERFACE SHARED)
 if(k4_SYSTEM STREQUAL "w")
-    add_library(${target_name} SHARED IMPORTED GLOBAL)
+    add_library(${target_name} ${target_type} IMPORTED GLOBAL)
     target_include_directories(${target_name}
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    set_target_properties(${target_name} PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.dll
-        IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.lib
-    )
+    if(target_type STREQUAL INTERFACE)
+        target_link_libraries(${target_name}
+            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/q.lib
+        )
+    elseif(target_type STREQUAL SHARED)
+        set_target_properties(${target_name} PROPERTIES
+            IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.dll
+            IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.lib
+        )
+    endif()
 elseif(k4_SYSTEM STREQUAL "l")
     add_library(${target_name} OBJECT IMPORTED GLOBAL)
     target_include_directories(${target_name}
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    set_target_properties(${target_name} PROPERTIES
-        #IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.o
-        IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/e.o
-    )
+    if(target_type STREQUAL STATIC)
+        # Nothing
+    else()
+        set_target_properties(${target_name} PROPERTIES
+            #IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.o
+            IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/e.o
+        )
+    endif()
 elseif(k4_SYSTEM STREQUAL "m")
     # FIXME
 else()
@@ -71,11 +80,15 @@ endif()
 # Alias for export
 add_library(kdb::C ALIAS ${target_name})
 
-cmake_print_properties(
-    TARGETS kdb::C
-    PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES
-        IMPORTED_LOCATION
-        IMPORTED_IMPLIB
-        IMPORTED_OBJECTS
-)
+set(k4_SYSTEM "${k4_SYSTEM}" CACHE INTERNAL "w|l|m")
+set(k4_PLATFORM "${k4_PLATFORM}" CACHE INTERNAL "(w|l|m)(32|64)")
+cmake_print_variables(k4_SYSTEM k4_PLATFORM)
+message("kdb+ library mode = \"${target_type}\"")
+#cmake_print_properties(
+#    TARGETS kdb::C
+#    PROPERTIES
+#        INTERFACE_INCLUDE_DIRECTORIES
+#        IMPORTED_LOCATION
+#        IMPORTED_IMPLIB
+#        IMPORTED_OBJECTS
+#)
