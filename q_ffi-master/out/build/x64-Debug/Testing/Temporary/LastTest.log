@@ -1,0 +1,541 @@
+Start testing: Mar 02 18:39 中国标准时间
+----------------------------------------------------------
+1/1 Testing: q_ffi_Tests
+1/1 Test: q_ffi_Tests
+Command: "E:/q_ffi-master/q_ffi-master/out/build/x64-Debug/test/test_q_ffi.exe"
+Directory: E:/q_ffi-master/q_ffi-master/out/build/x64-Debug/test/.
+"q_ffi_Tests" start time: Mar 02 18:39 中国标准时间
+Output:
+----------------------------------------------------------
+Running main() from _deps\googletest-src\googletest\src\gtest_main.cc
+[==========] Running 161 tests from 65 test suites.
+[----------] Global test environment set-up.
+[----------] 5 tests from canApplyTests
+[ RUN      ] canApplyTests.canApplyFunction
+[       OK ] canApplyTests.canApplyFunction (0 ms)
+[ RUN      ] canApplyTests.canApplyMemberFunction
+[       OK ] canApplyTests.canApplyMemberFunction (0 ms)
+[ RUN      ] canApplyTests.canApplyMemberVariable
+[       OK ] canApplyTests.canApplyMemberVariable (0 ms)
+[ RUN      ] canApplyTests.canApplyStaticMember
+[       OK ] canApplyTests.canApplyStaticMember (0 ms)
+[ RUN      ] canApplyTests.canApplyMemberOverload
+[       OK ] canApplyTests.canApplyMemberOverload (0 ms)
+[----------] 5 tests from canApplyTests (0 ms total)
+
+[----------] 1 test from stdextTests
+[ RUN      ] stdextTests.sgn
+[       OK ] stdextTests.sgn (0 ms)
+[----------] 1 test from stdextTests (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/0, where TypeParam = struct TraitsInfo<unsigned char,1,98,1,0,1,0>
+[ RUN      ] TypeTraitsTests/0.qTypeTraits
+[       OK ] TypeTraitsTests/0.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/0.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/0.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/0.qType
+[       OK ] TypeTraitsTests/0.qType (1 ms)
+[----------] 3 tests from TypeTraitsTests/0 (1 ms total)
+
+[----------] 3 tests from TypeTraitsTests/1, where TypeParam = struct TraitsInfo<unsigned char,4,120,1,1,1,0>
+[ RUN      ] TypeTraitsTests/1.qTypeTraits
+[       OK ] TypeTraitsTests/1.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/1.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/1.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/1.qType
+[       OK ] TypeTraitsTests/1.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/1 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/2, where TypeParam = struct TraitsInfo<short,5,104,1,1,1,1>
+[ RUN      ] TypeTraitsTests/2.qTypeTraits
+[       OK ] TypeTraitsTests/2.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/2.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/2.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/2.qType
+[       OK ] TypeTraitsTests/2.qType (1 ms)
+[----------] 3 tests from TypeTraitsTests/2 (1 ms total)
+
+[----------] 3 tests from TypeTraitsTests/3, where TypeParam = struct TraitsInfo<int,6,105,1,1,1,1>
+[ RUN      ] TypeTraitsTests/3.qTypeTraits
+[       OK ] TypeTraitsTests/3.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/3.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/3.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/3.qType
+[       OK ] TypeTraitsTests/3.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/3 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/4, where TypeParam = struct TraitsInfo<__int64,7,106,1,1,1,1>
+[ RUN      ] TypeTraitsTests/4.qTypeTraits
+[       OK ] TypeTraitsTests/4.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/4.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/4.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/4.qType
+[       OK ] TypeTraitsTests/4.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/4 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/5, where TypeParam = struct TraitsInfo<float,8,101,1,1,1,1>
+[ RUN      ] TypeTraitsTests/5.qTypeTraits
+[       OK ] TypeTraitsTests/5.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/5.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/5.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/5.qType
+[       OK ] TypeTraitsTests/5.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/5 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/6, where TypeParam = struct TraitsInfo<double,9,102,1,1,1,1>
+[ RUN      ] TypeTraitsTests/6.qTypeTraits
+[       OK ] TypeTraitsTests/6.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/6.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/6.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/6.qType
+[       OK ] TypeTraitsTests/6.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/6 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/7, where TypeParam = struct TraitsInfo<char,10,99,1,1,1,0>
+[ RUN      ] TypeTraitsTests/7.qTypeTraits
+[       OK ] TypeTraitsTests/7.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/7.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/7.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/7.qType
+[       OK ] TypeTraitsTests/7.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/7 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/8, where TypeParam = struct TraitsInfo<char const * __ptr64,11,115,1,1,1,0>
+[ RUN      ] TypeTraitsTests/8.qTypeTraits
+[       OK ] TypeTraitsTests/8.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/8.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/8.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/8.qType
+[       OK ] TypeTraitsTests/8.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/8 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/9, where TypeParam = struct TraitsInfo<__int64,12,112,1,1,1,1>
+[ RUN      ] TypeTraitsTests/9.qTypeTraits
+[       OK ] TypeTraitsTests/9.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/9.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/9.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/9.qType
+[       OK ] TypeTraitsTests/9.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/9 (1 ms total)
+
+[----------] 3 tests from TypeTraitsTests/10, where TypeParam = struct TraitsInfo<int,13,109,1,1,1,1>
+[ RUN      ] TypeTraitsTests/10.qTypeTraits
+[       OK ] TypeTraitsTests/10.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/10.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/10.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/10.qType
+[       OK ] TypeTraitsTests/10.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/10 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/11, where TypeParam = struct TraitsInfo<int,14,100,1,1,1,1>
+[ RUN      ] TypeTraitsTests/11.qTypeTraits
+[       OK ] TypeTraitsTests/11.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/11.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/11.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/11.qType
+[       OK ] TypeTraitsTests/11.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/11 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/12, where TypeParam = struct TraitsInfo<double,15,122,1,1,1,1>
+[ RUN      ] TypeTraitsTests/12.qTypeTraits
+[       OK ] TypeTraitsTests/12.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/12.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/12.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/12.qType
+[       OK ] TypeTraitsTests/12.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/12 (1 ms total)
+
+[----------] 3 tests from TypeTraitsTests/13, where TypeParam = struct TraitsInfo<__int64,16,110,1,1,1,1>
+[ RUN      ] TypeTraitsTests/13.qTypeTraits
+[       OK ] TypeTraitsTests/13.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/13.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/13.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/13.qType
+[       OK ] TypeTraitsTests/13.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/13 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/14, where TypeParam = struct TraitsInfo<int,17,117,1,1,1,1>
+[ RUN      ] TypeTraitsTests/14.qTypeTraits
+[       OK ] TypeTraitsTests/14.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/14.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/14.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/14.qType
+[       OK ] TypeTraitsTests/14.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/14 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/15, where TypeParam = struct TraitsInfo<int,18,118,1,1,1,1>
+[ RUN      ] TypeTraitsTests/15.qTypeTraits
+[       OK ] TypeTraitsTests/15.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/15.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/15.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/15.qType
+[       OK ] TypeTraitsTests/15.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/15 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/16, where TypeParam = struct TraitsInfo<int,19,116,1,1,1,1>
+[ RUN      ] TypeTraitsTests/16.qTypeTraits
+[       OK ] TypeTraitsTests/16.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/16.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/16.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/16.qType
+[       OK ] TypeTraitsTests/16.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/16 (0 ms total)
+
+[----------] 3 tests from TypeTraitsTests/17, where TypeParam = struct TraitsInfo<void,101,0,0,0,0,0>
+[ RUN      ] TypeTraitsTests/17.qTypeTraits
+[       OK ] TypeTraitsTests/17.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/17.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/17.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/17.qType
+[       OK ] TypeTraitsTests/17.qType (1 ms)
+[----------] 3 tests from TypeTraitsTests/17 (1 ms total)
+
+[----------] 3 tests from TypeTraitsTests/18, where TypeParam = struct TraitsInfo<char const * __ptr64,-128,0,1,0,0,0>
+[ RUN      ] TypeTraitsTests/18.qTypeTraits
+[       OK ] TypeTraitsTests/18.qTypeTraits (0 ms)
+[ RUN      ] TypeTraitsTests/18.qTypeTraitsQueries
+[       OK ] TypeTraitsTests/18.qTypeTraitsQueries (0 ms)
+[ RUN      ] TypeTraitsTests/18.qType
+[       OK ] TypeTraitsTests/18.qType (0 ms)
+[----------] 3 tests from TypeTraitsTests/18 (0 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/0, where TypeParam = struct q::TypeTraits<1>
+[ RUN      ] TypeTraitsOpsTests/0.atomAndValue
+[       OK ] TypeTraitsOpsTests/0.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/0.listAndIndex
+[       OK ] TypeTraitsOpsTests/0.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/0.toStr
+[       OK ] TypeTraitsOpsTests/0.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/0.toString
+[       OK ] TypeTraitsOpsTests/0.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/0 (0 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/1, where TypeParam = struct q::TypeTraits<4>
+[ RUN      ] TypeTraitsOpsTests/1.atomAndValue
+[       OK ] TypeTraitsOpsTests/1.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/1.listAndIndex
+[       OK ] TypeTraitsOpsTests/1.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/1.toStr
+[       OK ] TypeTraitsOpsTests/1.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/1.toString
+[       OK ] TypeTraitsOpsTests/1.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/1 (0 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/2, where TypeParam = struct q::TypeTraits<5>
+[ RUN      ] TypeTraitsOpsTests/2.atomAndValue
+[       OK ] TypeTraitsOpsTests/2.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/2.listAndIndex
+[       OK ] TypeTraitsOpsTests/2.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/2.toStr
+[       OK ] TypeTraitsOpsTests/2.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/2.toString
+[       OK ] TypeTraitsOpsTests/2.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/2 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/3, where TypeParam = struct q::TypeTraits<6>
+[ RUN      ] TypeTraitsOpsTests/3.atomAndValue
+[       OK ] TypeTraitsOpsTests/3.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/3.listAndIndex
+[       OK ] TypeTraitsOpsTests/3.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/3.toStr
+[       OK ] TypeTraitsOpsTests/3.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/3.toString
+[       OK ] TypeTraitsOpsTests/3.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/3 (0 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/4, where TypeParam = struct q::TypeTraits<7>
+[ RUN      ] TypeTraitsOpsTests/4.atomAndValue
+[       OK ] TypeTraitsOpsTests/4.atomAndValue (1 ms)
+[ RUN      ] TypeTraitsOpsTests/4.listAndIndex
+[       OK ] TypeTraitsOpsTests/4.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/4.toStr
+[       OK ] TypeTraitsOpsTests/4.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/4.toString
+[       OK ] TypeTraitsOpsTests/4.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/4 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/5, where TypeParam = struct q::TypeTraits<8>
+[ RUN      ] TypeTraitsOpsTests/5.atomAndValue
+[       OK ] TypeTraitsOpsTests/5.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/5.listAndIndex
+[       OK ] TypeTraitsOpsTests/5.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/5.toStr
+[       OK ] TypeTraitsOpsTests/5.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/5.toString
+[       OK ] TypeTraitsOpsTests/5.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/5 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/6, where TypeParam = struct q::TypeTraits<9>
+[ RUN      ] TypeTraitsOpsTests/6.atomAndValue
+[       OK ] TypeTraitsOpsTests/6.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/6.listAndIndex
+[       OK ] TypeTraitsOpsTests/6.listAndIndex (1 ms)
+[ RUN      ] TypeTraitsOpsTests/6.toStr
+[       OK ] TypeTraitsOpsTests/6.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/6.toString
+[       OK ] TypeTraitsOpsTests/6.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/6 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/7, where TypeParam = struct q::TypeTraits<10>
+[ RUN      ] TypeTraitsOpsTests/7.atomAndValue
+[       OK ] TypeTraitsOpsTests/7.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/7.listAndIndex
+[       OK ] TypeTraitsOpsTests/7.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/7.toStr
+[       OK ] TypeTraitsOpsTests/7.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/7.toString
+[       OK ] TypeTraitsOpsTests/7.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/7 (0 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/8, where TypeParam = struct q::TypeTraits<11>
+[ RUN      ] TypeTraitsOpsTests/8.atomAndValue
+[       OK ] TypeTraitsOpsTests/8.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/8.listAndIndex
+[       OK ] TypeTraitsOpsTests/8.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/8.toStr
+[       OK ] TypeTraitsOpsTests/8.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/8.toString
+[       OK ] TypeTraitsOpsTests/8.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/8 (0 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/9, where TypeParam = struct q::TypeTraits<12>
+[ RUN      ] TypeTraitsOpsTests/9.atomAndValue
+[       OK ] TypeTraitsOpsTests/9.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/9.listAndIndex
+[       OK ] TypeTraitsOpsTests/9.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/9.toStr
+[       OK ] TypeTraitsOpsTests/9.toStr (1 ms)
+[ RUN      ] TypeTraitsOpsTests/9.toString
+[       OK ] TypeTraitsOpsTests/9.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/9 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/10, where TypeParam = struct q::TypeTraits<13>
+[ RUN      ] TypeTraitsOpsTests/10.atomAndValue
+[       OK ] TypeTraitsOpsTests/10.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/10.listAndIndex
+[       OK ] TypeTraitsOpsTests/10.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/10.toStr
+[       OK ] TypeTraitsOpsTests/10.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/10.toString
+[       OK ] TypeTraitsOpsTests/10.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/10 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/11, where TypeParam = struct q::TypeTraits<14>
+[ RUN      ] TypeTraitsOpsTests/11.atomAndValue
+[       OK ] TypeTraitsOpsTests/11.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/11.listAndIndex
+[       OK ] TypeTraitsOpsTests/11.listAndIndex (1 ms)
+[ RUN      ] TypeTraitsOpsTests/11.toStr
+[       OK ] TypeTraitsOpsTests/11.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/11.toString
+[       OK ] TypeTraitsOpsTests/11.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/11 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/12, where TypeParam = struct q::TypeTraits<15>
+[ RUN      ] TypeTraitsOpsTests/12.atomAndValue
+[       OK ] TypeTraitsOpsTests/12.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/12.listAndIndex
+[       OK ] TypeTraitsOpsTests/12.listAndIndex (1 ms)
+[ RUN      ] TypeTraitsOpsTests/12.toStr
+[       OK ] TypeTraitsOpsTests/12.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/12.toString
+[       OK ] TypeTraitsOpsTests/12.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/12 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/13, where TypeParam = struct q::TypeTraits<16>
+[ RUN      ] TypeTraitsOpsTests/13.atomAndValue
+[       OK ] TypeTraitsOpsTests/13.atomAndValue (1 ms)
+[ RUN      ] TypeTraitsOpsTests/13.listAndIndex
+[       OK ] TypeTraitsOpsTests/13.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/13.toStr
+[       OK ] TypeTraitsOpsTests/13.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/13.toString
+[       OK ] TypeTraitsOpsTests/13.toString (1 ms)
+[----------] 4 tests from TypeTraitsOpsTests/13 (2 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/14, where TypeParam = struct q::TypeTraits<17>
+[ RUN      ] TypeTraitsOpsTests/14.atomAndValue
+[       OK ] TypeTraitsOpsTests/14.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/14.listAndIndex
+[       OK ] TypeTraitsOpsTests/14.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/14.toStr
+[       OK ] TypeTraitsOpsTests/14.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/14.toString
+[       OK ] TypeTraitsOpsTests/14.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/14 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/15, where TypeParam = struct q::TypeTraits<18>
+[ RUN      ] TypeTraitsOpsTests/15.atomAndValue
+[       OK ] TypeTraitsOpsTests/15.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/15.listAndIndex
+[       OK ] TypeTraitsOpsTests/15.listAndIndex (0 ms)
+[ RUN      ] TypeTraitsOpsTests/15.toStr
+[       OK ] TypeTraitsOpsTests/15.toStr (1 ms)
+[ RUN      ] TypeTraitsOpsTests/15.toString
+[       OK ] TypeTraitsOpsTests/15.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/15 (1 ms total)
+
+[----------] 4 tests from TypeTraitsOpsTests/16, where TypeParam = struct q::TypeTraits<19>
+[ RUN      ] TypeTraitsOpsTests/16.atomAndValue
+[       OK ] TypeTraitsOpsTests/16.atomAndValue (0 ms)
+[ RUN      ] TypeTraitsOpsTests/16.listAndIndex
+[       OK ] TypeTraitsOpsTests/16.listAndIndex (1 ms)
+[ RUN      ] TypeTraitsOpsTests/16.toStr
+[       OK ] TypeTraitsOpsTests/16.toStr (0 ms)
+[ RUN      ] TypeTraitsOpsTests/16.toString
+[       OK ] TypeTraitsOpsTests/16.toString (0 ms)
+[----------] 4 tests from TypeTraitsOpsTests/16 (1 ms total)
+
+[----------] 2 tests from TypeTraitsOpsTests
+[ RUN      ] TypeTraitsOpsTests.kCharList
+[       OK ] TypeTraitsOpsTests.kCharList (0 ms)
+[ RUN      ] TypeTraitsOpsTests.kSymbolList
+[       OK ] TypeTraitsOpsTests.kSymbolList (1 ms)
+[----------] 2 tests from TypeTraitsOpsTests (1 ms total)
+
+[----------] 1 test from TemporalTraitsTests/0, where TypeParam = struct q::TypeTraits<12>
+[ RUN      ] TemporalTraitsTests/0.parsing
+[       OK ] TemporalTraitsTests/0.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/0 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/1, where TypeParam = struct q::TypeTraits<13>
+[ RUN      ] TemporalTraitsTests/1.parsing
+[       OK ] TemporalTraitsTests/1.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/1 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/2, where TypeParam = struct q::TypeTraits<14>
+[ RUN      ] TemporalTraitsTests/2.parsing
+[       OK ] TemporalTraitsTests/2.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/2 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/3, where TypeParam = struct q::TypeTraits<15>
+[ RUN      ] TemporalTraitsTests/3.parsing
+[       OK ] TemporalTraitsTests/3.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/3 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/4, where TypeParam = struct q::TypeTraits<16>
+[ RUN      ] TemporalTraitsTests/4.parsing
+[       OK ] TemporalTraitsTests/4.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/4 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/5, where TypeParam = struct q::TypeTraits<17>
+[ RUN      ] TemporalTraitsTests/5.parsing
+[       OK ] TemporalTraitsTests/5.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/5 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/6, where TypeParam = struct q::TypeTraits<18>
+[ RUN      ] TemporalTraitsTests/6.parsing
+[       OK ] TemporalTraitsTests/6.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/6 (0 ms total)
+
+[----------] 1 test from TemporalTraitsTests/7, where TypeParam = struct q::TypeTraits<19>
+[ RUN      ] TemporalTraitsTests/7.parsing
+[       OK ] TemporalTraitsTests/7.parsing (0 ms)
+[----------] 1 test from TemporalTraitsTests/7 (0 ms total)
+
+[----------] 3 tests from KptrTests
+[ RUN      ] KptrTests.refCount
+[       OK ] KptrTests.refCount (0 ms)
+[ RUN      ] KptrTests.dupK
+[       OK ] KptrTests.dupK (0 ms)
+[ RUN      ] KptrTests.dupKNil
+[       OK ] KptrTests.dupKNil (0 ms)
+[----------] 3 tests from KptrTests (1 ms total)
+
+[----------] 1 test from KptrTests/0, where TypeParam = struct q::TypeTraits<1>
+[ RUN      ] KptrTests/0.makeK
+[       OK ] KptrTests/0.makeK (0 ms)
+[----------] 1 test from KptrTests/0 (0 ms total)
+
+[----------] 1 test from KptrTests/1, where TypeParam = struct q::TypeTraits<4>
+[ RUN      ] KptrTests/1.makeK
+[       OK ] KptrTests/1.makeK (0 ms)
+[----------] 1 test from KptrTests/1 (0 ms total)
+
+[----------] 1 test from KptrTests/2, where TypeParam = struct q::TypeTraits<5>
+[ RUN      ] KptrTests/2.makeK
+[       OK ] KptrTests/2.makeK (1 ms)
+[----------] 1 test from KptrTests/2 (1 ms total)
+
+[----------] 1 test from KptrTests/3, where TypeParam = struct q::TypeTraits<6>
+[ RUN      ] KptrTests/3.makeK
+[       OK ] KptrTests/3.makeK (0 ms)
+[----------] 1 test from KptrTests/3 (0 ms total)
+
+[----------] 1 test from KptrTests/4, where TypeParam = struct q::TypeTraits<7>
+[ RUN      ] KptrTests/4.makeK
+[       OK ] KptrTests/4.makeK (0 ms)
+[----------] 1 test from KptrTests/4 (0 ms total)
+
+[----------] 1 test from KptrTests/5, where TypeParam = struct q::TypeTraits<8>
+[ RUN      ] KptrTests/5.makeK
+[       OK ] KptrTests/5.makeK (0 ms)
+[----------] 1 test from KptrTests/5 (0 ms total)
+
+[----------] 1 test from KptrTests/6, where TypeParam = struct q::TypeTraits<9>
+[ RUN      ] KptrTests/6.makeK
+[       OK ] KptrTests/6.makeK (0 ms)
+[----------] 1 test from KptrTests/6 (0 ms total)
+
+[----------] 1 test from KptrTests/7, where TypeParam = struct q::TypeTraits<10>
+[ RUN      ] KptrTests/7.makeK
+[       OK ] KptrTests/7.makeK (1 ms)
+[----------] 1 test from KptrTests/7 (1 ms total)
+
+[----------] 1 test from KptrTests/8, where TypeParam = struct q::TypeTraits<11>
+[ RUN      ] KptrTests/8.makeK
+[       OK ] KptrTests/8.makeK (0 ms)
+[----------] 1 test from KptrTests/8 (0 ms total)
+
+[----------] 1 test from KptrTests/9, where TypeParam = struct q::TypeTraits<12>
+[ RUN      ] KptrTests/9.makeK
+[       OK ] KptrTests/9.makeK (0 ms)
+[----------] 1 test from KptrTests/9 (0 ms total)
+
+[----------] 1 test from KptrTests/10, where TypeParam = struct q::TypeTraits<13>
+[ RUN      ] KptrTests/10.makeK
+[       OK ] KptrTests/10.makeK (0 ms)
+[----------] 1 test from KptrTests/10 (0 ms total)
+
+[----------] 1 test from KptrTests/11, where TypeParam = struct q::TypeTraits<14>
+[ RUN      ] KptrTests/11.makeK
+[       OK ] KptrTests/11.makeK (0 ms)
+[----------] 1 test from KptrTests/11 (0 ms total)
+
+[----------] 1 test from KptrTests/12, where TypeParam = struct q::TypeTraits<15>
+[ RUN      ] KptrTests/12.makeK
+[       OK ] KptrTests/12.makeK (0 ms)
+[----------] 1 test from KptrTests/12 (0 ms total)
+
+[----------] 1 test from KptrTests/13, where TypeParam = struct q::TypeTraits<16>
+[ RUN      ] KptrTests/13.makeK
+[       OK ] KptrTests/13.makeK (1 ms)
+[----------] 1 test from KptrTests/13 (1 ms total)
+
+[----------] 1 test from KptrTests/14, where TypeParam = struct q::TypeTraits<17>
+[ RUN      ] KptrTests/14.makeK
+[       OK ] KptrTests/14.makeK (0 ms)
+[----------] 1 test from KptrTests/14 (0 ms total)
+
+[----------] 1 test from KptrTests/15, where TypeParam = struct q::TypeTraits<18>
+[ RUN      ] KptrTests/15.makeK
+[       OK ] KptrTests/15.makeK (0 ms)
+[----------] 1 test from KptrTests/15 (0 ms total)
+
+[----------] 1 test from KptrTests/16, where TypeParam = struct q::TypeTraits<19>
+[ RUN      ] KptrTests/16.makeK
+[       OK ] KptrTests/16.makeK (1 ms)
+[----------] 1 test from KptrTests/16 (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 161 tests from 65 test suites ran. (36 ms total)
+[  PASSED  ] 161 tests.
+<end of output>
+Test time =   0.49 sec
+----------------------------------------------------------
+Test Passed.
+"q_ffi_Tests" end time: Mar 02 18:39 中国标准时间
+"q_ffi_Tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Mar 02 18:39 中国标准时间
