@@ -9,7 +9,7 @@ set(GTEST_VERSION 1.10.0)
 include(FetchContent)
 
 FetchContent_Declare(${GTEST_NAME}
-    GIT_REPOSITORY http://github.com/google/googletest.git
+    GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG        release-${GTEST_VERSION}
 )
 

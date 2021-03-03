@@ -3,6 +3,8 @@ set(target_name "test_q_ffi")
 set(target_source_dir src)
 set(target_header_dir inc)
 
+# GTest
+enable_testing()
 include(GoogleTest)
 
 # Unit test implementation
@@ -18,14 +20,15 @@ target_sources(${target_name}
 target_include_directories(${target_name}
     PRIVATE
         ${target_header_dir}
+        kdb::C-exe
         CapitalEdge::q_ffi
 )
 target_link_libraries(${target_name}
     PRIVATE
+        kdb::C-exe
         CapitalEdge::q_ffi
         gtest
         gtest_main
-        kdb::C-exe
 )
 
 # Copy test dependencies
@@ -36,15 +39,15 @@ add_custom_command(
         copy_if_different $<TARGET_FILE:CapitalEdge::q_ffi> $<TARGET_FILE_DIR:${target_name}>
     COMMENT "Copy all dependent DLLs to the test directory."
 )
-#if(WIN32)
-#    add_custom_command(
-#        TARGET ${target_name}
-#        POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E
-#            copy_if_different $<TARGET_FILE:kdb::C> $<TARGET_FILE_DIR:${target_name}>
-#        COMMENT "Copy kdb+ DLL to the test directory."
-#    )
-#endif()
+if(WIN32)
+    add_custom_command(
+        TARGET ${target_name}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:kdb::C-exe> $<TARGET_FILE_DIR:${target_name}>
+        COMMENT "Copy kdb+ DLL to the test directory."
+    )
+endif()
 
 # Test cases
 add_test(

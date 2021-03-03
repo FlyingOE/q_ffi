@@ -40,43 +40,44 @@ else()
 endif()
 
 # Library contents
+cmake_print_variables(k4_SYSTEM)
+cmake_print_variables(k4_PLATFORM)
+
 if(k4_SYSTEM STREQUAL "w")
-    # A DLL callable from q
-    add_library(kdb_C_API_DLL INTERFACE IMPORTED GLOBAL)
-    target_include_directories(kdb_C_API_DLL
+    # DLL to be loaded into q.exe
+    add_library(kdb_C_DLL STATIC IMPORTED GLOBAL)
+    target_include_directories(kdb_C_DLL
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    target_link_libraries(kdb_C_API_DLL
-        INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/q.lib
+    set_target_properties(kdb_C_DLL PROPERTIES
+        IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/q.lib
     )
 
-    # A stand-alone EXE
-    add_library(kdb_C_API_EXE SHARED IMPORTED GLOBAL)
-    target_include_directories(kdb_C_API_EXE
+    # stand-alone EXE
+    add_library(kdb_C_EXE SHARED IMPORTED GLOBAL)
+    target_include_directories(kdb_C_EXE
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    set_target_properties(kdb_C_API_EXE PROPERTIES
+    set_target_properties(kdb_C_EXE PROPERTIES
         IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.dll
-        IMPORTED_IMPLIB ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.lib
+        IMPORTED_IMPLIB   ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.lib
     )
 
 elseif(k4_SYSTEM STREQUAL "l")
-    # An SO callable from q
-    add_library(kdb_C_API_DLL OBJECT IMPORTED GLOBAL)
-    target_include_directories(kdb_C_API_DLL
+    # SO to be loaded into q
+    add_library(kdb_C_DLL INTERFACE IMPORTED GLOBAL)
+    target_include_directories(kdb_C_DLL
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-    set_target_properties(kdb_C_API_EXE PROPERTIES
-        IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.o
     )
 
-    # An stand-alone EXE
-    add_library(kdb_C_API_EXE OBJECT IMPORTED GLOBAL)
-    target_include_directories(kdb_C_API_EXE
+    # stand-alone ELF
+    add_library(kdb_C_EXE OBJECT IMPORTED GLOBAL)
+    target_include_directories(kdb_C_EXE
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    set_target_properties(kdb_C_API_EXE PROPERTIES
-        IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/e.o
+    set_target_properties(kdb_C_EXE PROPERTIES
+        IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/c.o
+        #IMPORTED_OBJECTS ${CMAKE_CURRENT_SOURCE_DIR}/${k4_PLATFORM}/e.o
     )
 
 elseif(k4_SYSTEM STREQUAL "m")
@@ -86,17 +87,22 @@ else()
 endif()
 
 # Alias for export
-add_library(kdb::C-dll ALIAS kdb_C_API_DLL)
-add_library(kdb::C-exe ALIAS kdb_C_API_EXE)
+add_library(kdb::C-dll ALIAS kdb_C_DLL)
+add_library(kdb::C-exe ALIAS kdb_C_EXE)
 
-set(k4_SYSTEM "${k4_SYSTEM}" CACHE INTERNAL "w|l|m")
-set(k4_PLATFORM "${k4_PLATFORM}" CACHE INTERNAL "(w|l|m)(32|64)")
-cmake_print_variables(k4_SYSTEM k4_PLATFORM)
-#cmake_print_properties(
-#    TARGETS kdb::C
-#    PROPERTIES
-#        INTERFACE_INCLUDE_DIRECTORIES
-#        IMPORTED_LOCATION
-#        IMPORTED_IMPLIB
-#        IMPORTED_OBJECTS
-#)
+cmake_print_properties(
+    TARGETS kdb::C-dll
+    PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        IMPORTED_LOCATION
+        IMPORTED_IMPLIB
+        IMPORTED_OBJECTS
+)
+cmake_print_properties(
+    TARGETS kdb::C-exe
+    PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        IMPORTED_LOCATION
+        IMPORTED_IMPLIB
+        IMPORTED_OBJECTS
+)
