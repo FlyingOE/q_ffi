@@ -216,7 +216,7 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::J q::decode_timespan(::J n) noexcept
 {
-    auto const sign = std_ext::sgn(n);
+    auto const sign = std_ext::signum(n);
     n *= sign;
     auto const hour = n / 3600'000'000'000LL;
     auto const minute = n / 60'000'000'000LL % 60;
@@ -258,7 +258,7 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::I q::decode_minute(::I m) noexcept
 {
-    auto const sign = std_ext::sgn(m);
+    auto const sign = std_ext::signum(m);
     m *= sign;
     auto const hour = m / 60;
     auto const minute = m % 60;
@@ -298,7 +298,7 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::I q::decode_second(::I s) noexcept
 {
-    auto const sign = std_ext::sgn(s);
+    auto const sign = std_ext::signum(s);
     s *= sign;
     auto const hour = s / 3600;
     auto const minute = s / 60 % 60;
@@ -345,7 +345,7 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 ::I q::decode_time(::I t) noexcept
 {
-    auto const sign = std_ext::sgn(t);
+    auto const sign = std_ext::signum(t);
     t *= sign;
     auto const hour = t / 3600'000;
     auto const minute = t / 60'000 % 60;

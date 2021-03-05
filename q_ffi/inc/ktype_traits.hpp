@@ -688,7 +688,7 @@ namespace q {
             if (TypeTraits::print_special(out, v)) return;
 
             auto dhhmmssf9 = decode_timespan(v);
-            auto const sign = std_ext::sgn(dhhmmssf9);
+            auto const sign = std_ext::signum(dhhmmssf9);
             dhhmmssf9 *= sign;
             out << std::setfill('0') << std::internal
                 << (0 <= sign ? "" : "-");
@@ -809,7 +809,7 @@ namespace q {
             if (TypeTraits::print_special(out, v)) return;
 
             auto hhmmssf3 = decode_time(v);
-            auto const sign = std_ext::sgn(hhmmssf3);
+            auto const sign = std_ext::signum(hhmmssf3);
             hhmmssf3 *= sign;
             out << std::setfill('0') << std::internal
                 << (0 <= sign ? "" : "-")
@@ -926,7 +926,7 @@ namespace q {
             if (TypeTraits::print_special(out, v)) return;
 
             auto hhmm = decode_minute(v);
-            auto const sign = std_ext::sgn(hhmm);
+            auto const sign = std_ext::signum(hhmm);
             hhmm *= sign;
             out << std::setfill('0') << std::internal
                 << (0 <= sign ? "" : "-")
@@ -982,7 +982,7 @@ namespace q {
             if (TypeTraits::print_special(out, v)) return;
 
             auto hhmmss = decode_second(v);
-            auto const sign = std_ext::sgn(hhmmss);
+            auto const sign = std_ext::signum(hhmmss);
             hhmmss *= sign;
             out << std::setfill('0') << std::internal
                 << (0 <= sign ? "" : "-")

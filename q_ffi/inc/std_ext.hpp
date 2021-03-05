@@ -53,11 +53,23 @@ namespace std_ext
 
 #pragma endregion
 
+    /// @ref https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
     template<typename Num>
-    inline auto sgn(Num v) noexcept
+    inline constexpr int signum(Num x, std::false_type) noexcept
     {
-        constexpr auto e = std::numeric_limits<Num>::epsilon();
-        return -e > v ? -1 : v > e;
+        return Num(x) < x;
+    }
+
+    template<typename Num>
+    inline constexpr int signum(Num x, std::true_type) noexcept
+    {
+        return (Num(0) < x) - (x < Num(0));
+    }
+
+    template<typename Num>
+    inline constexpr int signum(Num const& x) noexcept
+    {
+        return signum(x, std::is_signed<Num>());
     }
 
 }//namespace std_ext
