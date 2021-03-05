@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include "std_ext.hpp"
 
+namespace std_ext
+{
+
 #pragma region std_ext::can_apply<..> test suite
 
 class canApplyTests : public ::testing::Test
@@ -12,43 +15,43 @@ protected:
     template<typename T>
     using to_string_t = decltype(std::to_string(std::declval<T>()));
     template<typename T>
-    using can_to_string = std_ext::can_apply<to_string_t, T>;
+    using can_to_string = can_apply<to_string_t, T>;
 
     /// @brief Check if <code>t.c_str()</code> is valid, where @code t is of type @code T
     template<typename T>
     using member_c_str_t = decltype(std::declval<T>().c_str());
     template<typename T>
-    using has_c_str = std_ext::can_apply<member_c_str_t, T>;
+    using has_c_str = can_apply<member_c_str_t, T>;
 
     /// @brief Check if <code>t.value</code> is valid, where @code t is of type @code T
     template<typename T>
     using member_value_t = decltype(std::declval<T>().value);
     template<typename T>
-    using has_value = std_ext::can_apply<member_value_t, T>;
+    using has_value = can_apply<member_value_t, T>;
 
     /// @brief Check if <code>T.fun()</code> is valid
     template<typename T>
     using static_member_t = decltype(T::fun());
     template<typename T>
-    using has_static_member = std_ext::can_apply<static_member_t, T>;
+    using has_static_member = can_apply<static_member_t, T>;
 
     /// @brief Check if <code>T.fun1(str)</code> is valid, where @c str is of type <code>std::string</code>
     template<typename T>
     using static_member1_t = decltype(T::fun1(std::declval<std::string>()));
     template<typename T>
-    using has_static_member1 = std_ext::can_apply<static_member1_t, T>;
+    using has_static_member1 = can_apply<static_member1_t, T>;
 
     /// @brief Check if <code>T.fun1a(str)</code> is valid, where @c str is of type <code>std::string</code>
     template<typename T>
     using static_member1a_t = decltype(T::fun1a(std::declval<std::string>()));
     template<typename T>
-    using has_static_member1a = std_ext::can_apply<static_member1a_t, T>;
+    using has_static_member1a = can_apply<static_member1a_t, T>;
 
     /// @brief Check if <code>T::fun(r)</code> is valid, where @c r is of type @c R
     template<typename T, typename R>
     using member_overload_t = decltype(T::fun(std::declval<R>()));
     template<typename T, typename R>
-    using has_member_overload = std_ext::can_apply<member_overload_t, T, R>;
+    using has_member_overload = can_apply<member_overload_t, T, R>;
 };
 
 TEST_F(canApplyTests, canApplyFunction)
@@ -124,25 +127,27 @@ TEST_F(canApplyTests, canApplyMemberOverload)
 
 #pragma endregion
 
-TEST(stdextTests, sgn)
+TEST(stdextTests, signum)
 {
-    EXPECT_EQ(std_ext::sgn(+1),  1);
-    EXPECT_EQ(std_ext::sgn(-1), -1);
-    EXPECT_EQ(std_ext::sgn(-0),  0);
-    EXPECT_EQ(std_ext::sgn(std::numeric_limits<long long>::max()),  1);
-    EXPECT_EQ(std_ext::sgn(std::numeric_limits<long long>::min()), -1);
+    EXPECT_EQ(signum(+1),  1);
+    EXPECT_EQ(signum(-1), -1);
+    EXPECT_EQ(signum(-0),  0);
+    EXPECT_EQ(signum(std::numeric_limits<long long>::max()),  1);
+    EXPECT_EQ(signum(std::numeric_limits<long long>::min()), -1);
 
-    EXPECT_EQ(std_ext::sgn(+1.),  1);
-    EXPECT_EQ(std_ext::sgn(-1.), -1);
-    EXPECT_EQ(std_ext::sgn(-0.),  0);
-    EXPECT_EQ(std_ext::sgn(std::numeric_limits<double>::max()),  1);
-    EXPECT_EQ(std_ext::sgn(std::numeric_limits<double>::min()),  0);
-    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::max()), -1);
-    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::min()),  0);
-    EXPECT_EQ(std_ext::sgn( std::numeric_limits<double>::infinity()),  1);
-    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::infinity()), -1);
-    EXPECT_EQ(std_ext::sgn( std::numeric_limits<double>::epsilon()),  0);
-    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::epsilon()),  0);
-    EXPECT_EQ(std_ext::sgn( std::numeric_limits<double>::epsilon() * 2),  1);
-    EXPECT_EQ(std_ext::sgn(-std::numeric_limits<double>::epsilon() * 2), -1);
+    EXPECT_EQ(signum(+1.),  1);
+    EXPECT_EQ(signum(-1.), -1);
+    EXPECT_EQ(signum(-0.),  0);
+    EXPECT_EQ(signum(std::numeric_limits<double>::max()),  1);
+    EXPECT_EQ(signum(std::numeric_limits<double>::min()),  0);
+    EXPECT_EQ(signum(-std::numeric_limits<double>::max()), -1);
+    EXPECT_EQ(signum(-std::numeric_limits<double>::min()),  0);
+    EXPECT_EQ(signum( std::numeric_limits<double>::infinity()),  1);
+    EXPECT_EQ(signum(-std::numeric_limits<double>::infinity()), -1);
+    EXPECT_EQ(signum( std::numeric_limits<double>::epsilon()),  0);
+    EXPECT_EQ(signum(-std::numeric_limits<double>::epsilon()),  0);
+    EXPECT_EQ(signum( std::numeric_limits<double>::epsilon() * 2),  1);
+    EXPECT_EQ(signum(-std::numeric_limits<double>::epsilon() * 2), -1);
 }
+
+}//namespace std_ext
