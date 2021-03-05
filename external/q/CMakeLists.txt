@@ -40,8 +40,10 @@ else()
 endif()
 
 # Library contents
-cmake_print_variables(k4_SYSTEM)
-cmake_print_variables(k4_PLATFORM)
+foreach(X IN ITEMS k4_SYSTEM k4_PLATFORM)
+    cmake_print_variables(${X})
+    set(ENV{${X}} ${${X}})
+endforeach()
 
 if(k4_SYSTEM STREQUAL "w")
     # DLL to be loaded into q.exe

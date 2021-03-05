@@ -60,8 +60,8 @@ target_compile_features(${target_name}
 )
 target_compile_definitions(${target_name}
     PUBLIC
-        k4_SYSTEM=${k4_SYSTEM}
-        k4_PLATFORM=${k4_PLATFORM}
+        k4_SYSTEM=$ENV{k4_SYSTEM}
+        k4_PLATFORM=$ENV{k4_PLATFORM}
 )
 target_include_directories(${target_name}
     PUBLIC
@@ -76,7 +76,7 @@ target_link_libraries(${target_name}
 )
 
 # dlfcn-win32 to emulate dlopen/dlsym
-if(k4_SYSTEM STREQUAL "w")
+if($ENV{k4_SYSTEM} STREQUAL "w")
     target_include_directories(${target_name}
         PRIVATE
             dlfcn-win32::dl
@@ -140,9 +140,9 @@ add_dependencies(${target_name}
 #[==[
 # Installation steps
 install(TARGETS q_ffi
-    RUNTIME       DESTINATION ${q_ffi_DISTRIBUTABLES}/bin/${k4_PLATFORM}
+    RUNTIME       DESTINATION ${q_ffi_DISTRIBUTABLES}/bin/$ENV{k4_PLATFORM}
     RESOURCE      DESTINATION ${q_ffi_DISTRIBUTABLES}/bin
-    ARCHIVE       DESTINATION ${q_ffi_DISTRIBUTABLES}/lib/${k4_PLATFORM}
+    ARCHIVE       DESTINATION ${q_ffi_DISTRIBUTABLES}/lib/$ENV{k4_PLATFORM}
     PUBLIC_HEADER DESTINATION ${q_ffi_DISTRIBUTABLES}/include
 )
 #]==]

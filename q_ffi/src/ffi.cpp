@@ -1,7 +1,7 @@
 #include "version.hpp"
 #include "ktypes.hpp"
 #include "ffi.h"
-//#include <dlfcn.h>
+#include <dlfcn.h>
 
 #if WIN32
 BOOL APIENTRY DllMain(HMODULE /*hModule*/,
