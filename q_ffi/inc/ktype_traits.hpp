@@ -1018,7 +1018,11 @@ namespace q {
 
         /// @return Always @c Nil (error will be signaled to kdb+ host)
         static ::K atom(value_type msg, bool sys = false) noexcept
-        { return (sys ? ::orr : ::krr)(const_cast<::S>(msg)); }
+        {
+            static thread_local std::string message;
+            message.assign(msg);
+            return (sys ? ::orr : ::krr)(const_cast<::S>(message.c_str()));
+        }
 
         static value_type value(::K k) noexcept
         { return k->s; }
