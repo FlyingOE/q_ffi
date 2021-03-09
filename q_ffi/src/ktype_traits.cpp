@@ -358,6 +358,8 @@ inline ::F compose_datetime(int date, int time) noexcept
 
 #pragma region Type traits constants
 
+constexpr q::TypeId q::TypeTraits<q::kMixed>::type_id;
+
 constexpr q::TypeId q::TypeTraits<q::kBoolean>::type_id;
 
 constexpr q::TypeId q::TypeTraits<q::kByte>::type_id;

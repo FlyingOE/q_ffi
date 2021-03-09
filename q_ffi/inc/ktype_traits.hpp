@@ -12,6 +12,7 @@
 #include "std_ext.hpp"
 #include "ktypes.hpp"
 #include "kpointer.hpp"
+#include "kerror.hpp"
 
 namespace q {
 
@@ -181,6 +182,30 @@ namespace q {
     struct TypeTraits;
 
 #pragma region Type traits implementations
+
+    template<>
+    struct TypeTraits<kMixed> : public
+        ValueType<TypeTraits<kMixed>, ::K>,
+        IndexableType<TypeTraits<kMixed>, ::K>
+    {
+        static constexpr TypeId type_id = kMixed;
+        using typename ValueType::value_type;
+        using typename ValueType::reference;
+        using typename ValueType::const_reference;
+        using typename ValueType::pointer;
+        using typename ValueType::const_pointer;
+
+        static ::K atom(::K)
+        { throw K_error("not an atom"); }
+
+        static reference value(::K)
+        { throw K_error("not an atom"); }
+
+        using IndexableType::list;
+
+        static pointer index(::K k) noexcept
+        { return kK(k); }
+    };
 
     template<>
     struct TypeTraits<kBoolean> : public
