@@ -1,30 +1,13 @@
-#include "version.hpp"
-#include "ktypes.hpp"
+#include "ktype_traits.hpp"
 #include "ffi.h"
 #include <dlfcn.h>
-
-#if WIN32
-BOOL APIENTRY DllMain(HMODULE /*hModule*/,
-    DWORD  ul_reason_for_call,
-    LPVOID /*lpReserved*/
-)
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
-#endif
+#include "version.hpp"
 
 #include <iostream>
 ::K K4_DECL load(::K dllSym, ::K fName, ::K resType, ::K parTypes)
 {
-	dllSym++;
+//    auto dll = q::q2Str(dllSym);
+    ++dllSym;
 	fName++;
 	resType++;
 	parTypes++;
@@ -44,5 +27,5 @@ BOOL APIENTRY DllMain(HMODULE /*hModule*/,
 
 ::K K4_DECL version(K)
 {
-	return ::kp(const_cast<::S>(q_ffi::version));
+	return q::TypeTraits<q::kChar>::list(q_ffi::version);
 }
