@@ -16,6 +16,10 @@ namespace q
     public:
         using runtime_error::runtime_error;
 
+        K_error(std::runtime_error const& ex) noexcept
+            : runtime_error(ex)
+        {}
+
         explicit K_error(::K const what)
             : K_error{ details::q2error(what) }
         {}

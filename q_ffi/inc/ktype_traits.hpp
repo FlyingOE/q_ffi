@@ -340,7 +340,7 @@ namespace q {
         { return (ni); }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return sign ? (wi) : -(wh); }
+        { return sign ? (wi) : -(wi); }
 
         using NumericType::print;
     };

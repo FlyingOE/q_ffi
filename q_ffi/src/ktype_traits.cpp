@@ -137,7 +137,7 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 
 #pragma region <kDatetime> conversions
 
-inline ::F compose_datetime(int date, int time) noexcept
+::F compose_datetime(int date, int time) noexcept
 {
     return date + time / 86400'000.;
 }
