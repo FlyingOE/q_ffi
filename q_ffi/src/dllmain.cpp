@@ -3,7 +3,6 @@
 #include <mutex>
 #ifndef NDEBUG
 #   include <iostream>
-#   include <thread>
 #   ifdef WIN32
 #       define q_ffi_DLL "q_ffi.dll"
 #   else
@@ -44,30 +43,6 @@ namespace
         });
     }
 
-    void dllOnThreadEnter() noexcept
-    {
-        static thread_local std::once_flag onThreadEnter;
-        std::call_once(onThreadEnter, []() {
-#       ifndef NDEBUG
-            std::cout << "# <" q_ffi_DLL "> entering thread "
-                << std::this_thread::get_id() << "..." << std::endl;
-#       endif
-        });
-    }
-
-    void dllOnThreadExit() noexcept
-    {
-        static thread_local std::once_flag onThreadExit;
-        // @ref https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting
-        std::call_once(onThreadExit, []() {
-#       ifndef NDEBUG
-            std::cout << "# <" q_ffi_DLL "> exiting thread "
-                << std::this_thread::get_id() << "..." << std::endl;
-#       endif
-            ::m9();
-        });
-    }
-
 }//namespace /*anonymous*/
 
 #if WIN32
@@ -82,10 +57,7 @@ BOOL APIENTRY DllMain(HMODULE /*hModule*/,
         dllOnLoad();
         break;
     case DLL_THREAD_ATTACH:
-        dllOnThreadEnter();
-        break;
     case DLL_THREAD_DETACH:
-        dllOnThreadExit();
         break;
     case DLL_PROCESS_DETACH:
         dllOnUnload();
@@ -95,17 +67,4 @@ BOOL APIENTRY DllMain(HMODULE /*hModule*/,
     }
     return TRUE;
 }
-#else
-namespace
-{
-    class ThreadMonitor
-    {
-    public:
-        ThreadMonitor() { dllOnThreadEnter(); }
-        ~ThreadMonitor() { dllOnThreadExit(); }
-    };
-
-    thread_local ThreadMonitor threadMonitor;
-
-}//namespace /*anonymous*/
 #endif
