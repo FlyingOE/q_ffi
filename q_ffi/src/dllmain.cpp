@@ -49,21 +49,21 @@ namespace
 BOOL APIENTRY DllMain(HMODULE /*hModule*/,
     DWORD  ul_reason_for_call,
     LPVOID /*lpReserved*/
-)
-{
+) {
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
         dllOnLoad();
         break;
     case DLL_THREAD_ATTACH:
+        /*fallthrough*/
     case DLL_THREAD_DETACH:
         break;
     case DLL_PROCESS_DETACH:
         dllOnUnload();
         break;
     default:
-        assert(false);
+        assert(!"Unexpected ul_reason_for_call in DllMain");
     }
     return TRUE;
 }

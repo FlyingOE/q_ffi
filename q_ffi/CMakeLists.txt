@@ -26,6 +26,7 @@ set(q_ffi_HEADERS
     ${target_header_dir}/version.hpp
 )
 set(q_ffi_SOURCES
+    ${target_source_dir}/dllmain.cpp
     ${target_source_dir}/ffi.cpp
     ${target_source_dir}/ktypes.cpp
     ${target_source_dir}/ktype_traits.cpp
@@ -56,7 +57,7 @@ set_target_properties(q_ffi PROPERTIES
 )
 target_compile_features(${target_name}
     PUBLIC
-        cxx_std_14
+        cxx_std_17
 )
 target_compile_definitions(${target_name}
     PUBLIC
@@ -99,6 +100,7 @@ if(WIN32)
         PUBLIC
             /utf-8      # source file encoding
             /MP         # multi-threaded build
+            /EHsc       # standard C++ exception handling
         PRIVATE
             /W4 /WX     # warning level - compulsory
     )

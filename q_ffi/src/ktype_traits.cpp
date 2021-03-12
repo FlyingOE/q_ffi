@@ -6,7 +6,7 @@
 
 inline ::J compose_timestamp(long long date, long long time) noexcept
 {
-    return date * 86400'000'000'000LL + time;
+    return date * 86400'000'000'000uLL + time;
 }
 
 ::J q::encode_timestamp(long long year, long long month, long long day,
@@ -353,36 +353,5 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     auto const millis = t % 1000;
     return sign * (hour * 100'00'000 + minute * 100'000 + second * 1000 + millis);
 }
-
-#pragma endregion
-
-#pragma region Type traits constants
-
-constexpr q::TypeId q::TypeTraits<q::kMixed>::type_id;
-
-constexpr q::TypeId q::TypeTraits<q::kBoolean>::type_id;
-
-constexpr q::TypeId q::TypeTraits<q::kByte>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kShort>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kInt>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kLong>::type_id;
-
-constexpr q::TypeId q::TypeTraits<q::kReal>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kFloat>::type_id;
-
-constexpr q::TypeId q::TypeTraits<q::kChar>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kSymbol>::type_id;
-
-constexpr q::TypeId q::TypeTraits<q::kTimestamp>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kMonth>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kDate>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kDatetime>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kTimespan>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kMinute>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kSecond>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kTime>::type_id;
-
-constexpr q::TypeId q::TypeTraits<q::kNil>::type_id;
-constexpr q::TypeId q::TypeTraits<q::kError>::type_id;
 
 #pragma endregion
