@@ -74,6 +74,7 @@ target_include_directories(${target_name}
 target_link_libraries(${target_name}
     PUBLIC
         kdb::C-dll
+        date::date
 )
 
 # dlfcn-win32 to emulate dlopen/dlsym
@@ -95,7 +96,9 @@ if(WIN32)
     # 2) Add desired compiler options
     target_compile_definitions(${target_name}
         PUBLIC
-            _UNICODE )
+            _UNICODE
+            _SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING
+    )
     target_compile_options(${target_name}
         PUBLIC
             /utf-8      # source file encoding
@@ -111,8 +114,10 @@ elseif(UNIX AND NOT APPLE)
     )
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(${target_name}
+            PUBLIC
+                -Wno-unknown-pragmas         # g++ bails upon `#pragma region'
+                -Wno-deprecated-declarations # std::uncaught_exception deprecated
             PRIVATE
-                -Wno-unknown-pragmas    # gcc bails upon `#pragma region'
                 -fdiagnostics-color=always
         )
     endif()

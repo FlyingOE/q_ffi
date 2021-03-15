@@ -6,7 +6,7 @@
 namespace q
 {
 
-#   pragma region TypeTraitsTests<> typed test suite
+#pragma region TypeTraitsTests<> typed test suite
 
     template<typename TraitsInfo>
     class TypeTraitsTests : public ::testing::Test
@@ -132,9 +132,9 @@ namespace q
             can_index<Traits::type_id>());
     }
 
-#   pragma endregion
+#pragma endregion
 
-#   pragma region TypeTraitsOpsTests<> typed test suite
+#pragma region TypeTraitsOpsTests<> typed test suite
 
     template<typename TraitsInfo>
     class TypeTraitsOpsTests : public ::testing::Test
@@ -244,6 +244,7 @@ namespace q
         { "1997-11"_qm, "1997.11m"s },
         { 197001_qm, "1970.01m"s },
         { "1900.1"_qm, "1900.01m"s },
+        { "2038.2"_qm, "2038.02m"s },
         { TypeTraits<kMonth>::null(), "0Nm"s },
         { TypeTraits<kMonth>::inf(), "0Wm"s },
         { TypeTraits<kMonth>::inf(false), "-0Wm"s }
@@ -435,6 +436,6 @@ namespace q
         }
     }
 
-#   pragma endregion
+#pragma endregion
 
 }//namespace q

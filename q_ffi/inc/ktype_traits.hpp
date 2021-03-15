@@ -12,7 +12,6 @@
 #include "std_ext.hpp"
 #include "ktypes.hpp"
 #include "kpointer.hpp"
-#include "kerror.hpp"
 
 namespace q {
 
@@ -20,21 +19,23 @@ namespace q {
     {
         q_ffi_API ::J encode_timestamp(long long year, long long month, long long day,
             long long hour, long long minute, long long second, long long nanos) noexcept;
+        q_ffi_API ::J encode_timestamp(TimePoint const& t) noexcept;
         /// @param raw If @c ymdhmsf is a "raw literal" string
         q_ffi_API ::J parse_timestamp(char const* ymdhmsf, bool raw = false) noexcept;
 
         q_ffi_API ::I encode_month(int year, int month) noexcept;
         q_ffi_API ::I parse_month(int yyyymm) noexcept;
         q_ffi_API ::I parse_month(char const* ym) noexcept;
-        q_ffi_API ::I decode_month(::I m) noexcept;
+        q_ffi_API date::year_month decode_month(::I m) noexcept;
 
         q_ffi_API ::I encode_date(int year, int month, int day) noexcept;
         q_ffi_API ::I parse_date(int yyyymmdd) noexcept;
         q_ffi_API ::I parse_date(char const* ymd) noexcept;
-        q_ffi_API ::I decode_date(::I d) noexcept;
+        q_ffi_API date::year_month_day decode_date(::I d) noexcept;
 
         q_ffi_API ::F encode_datetime(int year, int month, int day,
             int hour, int minute, int second, int millis) noexcept;
+        q_ffi_API ::F encode_datetime(TimePoint const& t) noexcept;
         q_ffi_API ::F parse_datetime(long long yyyymmddhhmmssf3) noexcept;
         q_ffi_API ::F parse_datetime(char const* ymdhmsf) noexcept;
 
@@ -42,7 +43,6 @@ namespace q {
             long long hour, long long minute, long long second, long long nanos) noexcept;
         q_ffi_API ::J parse_timespan(long long hhmmssf9) noexcept;
         q_ffi_API ::J parse_timespan(char const* dhmsf) noexcept;
-        q_ffi_API ::J decode_timespan(::J n) noexcept;
 
         q_ffi_API ::I encode_minute(int hour, int minute) noexcept;
         q_ffi_API ::I parse_minute(int hhmm) noexcept;
@@ -57,7 +57,6 @@ namespace q {
         q_ffi_API ::I encode_time(int hour, int minute, int second, int millis) noexcept;
         q_ffi_API ::I parse_time(int hhmmssf3) noexcept;
         q_ffi_API ::I parse_time(char const* hmsf) noexcept;
-        q_ffi_API ::I decode_time(::I t) noexcept;
 
     }//inline namespace q::temporal
 
@@ -105,7 +104,7 @@ namespace q {
 
             static bool is_null(const_reference v) noexcept
             {
-                auto const n = Tr::null();
+                static const auto n = Tr::null();
                 return 0 == std::memcmp(&v, &n, sizeof(value_type));
             }
         };
@@ -175,6 +174,17 @@ namespace q {
             }
         };
 
+        template<typename Tr, typename Value, typename Temporal>
+        struct TemporalType
+        {
+            using value_type = typename NullableType<Tr, Value>::value_type;
+            using const_reference = typename NullableType<Tr, Value>::const_reference;
+            using temporal = Temporal;
+
+            static value_type encode(temporal const& t) noexcept /*to be defined*/;
+            static temporal decode(const_reference v) noexcept /*to be defined*/;
+        };
+
     }//inline namespace facets
 #pragma endregion
 
@@ -195,11 +205,11 @@ namespace q {
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
 
-        static ::K atom(::K)
-        { throw K_error("not an atom"); }
+        /// Not an atom - intentially not defined!
+        static ::K atom(::K);
 
-        static reference value(::K)
-        { throw K_error("not an atom"); }
+        /// Not an atom - intentially not defined!
+        static reference value(::K);
 
         using IndexableType::list;
 
@@ -274,6 +284,8 @@ namespace q {
             out << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(v);
         }
     };
+
+#pragma region Decimal types
 
     template<>
     struct TypeTraits<kShort> : public
@@ -381,6 +393,10 @@ namespace q {
         using NumericType::print;
     };
 
+#pragma endregion
+
+#pragma region Floating-point types
+
     template<>
     struct TypeTraits<kReal> : public
         ValueType<TypeTraits<kReal>, float>,
@@ -413,7 +429,7 @@ namespace q {
         static value_type null() noexcept
         { return static_cast<value_type>((nf)); }
 
-        static value_type inf(bool sign = true) noexcept
+        static constexpr value_type inf(bool sign = true) noexcept
         { return static_cast<value_type>(sign ? (wf) : -(wf)); }
 
         using NumericType::print;
@@ -451,11 +467,15 @@ namespace q {
         static value_type null() noexcept
         { return (nf); }
 
-        static value_type inf(bool sign = true) noexcept
+        static constexpr value_type inf(bool sign = true) noexcept
         { return sign ? (wf) : -(wf); }
 
         using NumericType::print;
     };
+
+#pragma endregion
+
+#pragma region Character/string types
 
     template<>
     struct TypeTraits<kChar> : public
@@ -558,12 +578,17 @@ namespace q {
         };
     };
 
+#pragma endregion
+
+#pragma region Temporal types
+
     template<>
     struct TypeTraits<kMonth> : public
         ValueType<TypeTraits<kMonth>, int32_t>,
         IndexableType<TypeTraits<kMonth>, int32_t>,
         NullableType<TypeTraits<kMonth>, int32_t>,
-        NumericType<TypeTraits<kMonth>, int32_t>
+        NumericType<TypeTraits<kMonth>, int32_t>,
+        TemporalType<TypeTraits<kMonth>, int32_t, date::year_month>
     {
         static constexpr TypeId type_id = kMonth;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -572,6 +597,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type m) noexcept
         { return ValueType::atom(type_id, m); }
@@ -593,6 +619,12 @@ namespace q {
         static value_type encode(int year, int month) noexcept
         { return encode_month(year, month); }
 
+        static value_type encode(temporal const& t) noexcept
+        { return encode_month(int(t.year()), unsigned(t.month())); }
+
+        static temporal decode(const_reference m) noexcept
+        { return decode_month(m); }
+
         static value_type parse(int yyyymm) noexcept
         { return parse_month(yyyymm); }
 
@@ -602,11 +634,13 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (TypeTraits::print_special(out, v))
+                return;
 
-            auto const yyyymm = decode_month(v);
+            auto const t = decode(v);
             out << std::setfill('0')
-                << std::setw(4) << (yyyymm / 100) << '.' << std::setw(2) << (yyyymm % 100)
+                << std::setw(4) << int(t.year()) << '.'
+                << std::setw(2) << unsigned(t.month())
                 << TypeCode.at(TypeTraits::type_id);
         }
     };
@@ -616,7 +650,8 @@ namespace q {
         ValueType<TypeTraits<kDate>, int32_t>,
         IndexableType<TypeTraits<kDate>, int32_t>,
         NullableType<TypeTraits<kDate>, int32_t>,
-        NumericType<TypeTraits<kDate>, int32_t>
+        NumericType<TypeTraits<kDate>, int32_t>,
+        TemporalType<TypeTraits<kDate>, int32_t, date::year_month_day>
     {
         static constexpr TypeId type_id = kDate;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -625,6 +660,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type d) noexcept
         { return ::kd(d); }
@@ -646,6 +682,12 @@ namespace q {
         static value_type encode(int year, int month, int day) noexcept
         { return encode_date(year, month, day); }
 
+        static value_type encode(temporal const& t) noexcept
+        { return encode_date(int(t.year()), unsigned(t.month()), unsigned(t.day())); }
+
+        static temporal decode(const_reference d) noexcept
+        { return decode_date(d); }
+
         static value_type parse(int yyyymmdd) noexcept
         { return parse_date(yyyymmdd); }
 
@@ -655,13 +697,17 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (!TypeTraits::print_special(out, v))
+                print(out, decode(v));
+        }
 
-            auto const yyyymmdd = decode_date(v);
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, temporal const& t)
+        {
             out << std::setfill('0')
-                << std::setw(4) << (yyyymmdd / 100'00) << '.'
-                << std::setw(2) << (yyyymmdd / 100 % 100) << '.'
-                << std::setw(2) << (yyyymmdd % 100);
+                << std::setw(4) << int(t.year()) << '.'
+                << std::setw(2) << unsigned(t.month()) << '.'
+                << std::setw(2) << unsigned(t.day());
         }
     };
 
@@ -670,7 +716,8 @@ namespace q {
         ValueType<TypeTraits<kTimespan>, int64_t>,
         IndexableType<TypeTraits<kTimespan>, int64_t>,
         NullableType<TypeTraits<kTimespan>, int64_t>,
-        NumericType<TypeTraits<kTimespan>, int64_t>
+        NumericType<TypeTraits<kTimespan>, int64_t>,
+        TemporalType<TypeTraits<kTimespan>, int64_t, TimeSpan>
     {
         static constexpr TypeId type_id = kTimespan;
         using BaseTypeTraits = TypeTraits<kLong>;
@@ -679,6 +726,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type n) noexcept
         { return ::ktj(-type_id, n); }
@@ -701,6 +749,12 @@ namespace q {
             long long hour, long long minute, long long second, long long nanos) noexcept
         { return encode_timespan(day, hour, minute, second, nanos); }
 
+        static value_type encode(temporal const& t) noexcept
+        { return t.to_duration().count(); }
+
+        static temporal decode(const_reference n) noexcept
+        { return TimeSpan{ std::chrono::nanoseconds{ n } }; }
+
         static value_type parse(long long hhmmssf9) noexcept
         { return parse_timespan(hhmmssf9); }
 
@@ -708,24 +762,22 @@ namespace q {
         { return parse_timespan(dhmsf); }
 
         template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v, bool no_day = false)
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (TypeTraits::print_special(out, v))
+                return;
 
-            auto dhhmmssf9 = decode_timespan(v);
-            auto const sign = std_ext::signum(dhhmmssf9);
-            dhhmmssf9 *= sign;
-            out << std::setfill('0') << std::internal
-                << (0 <= sign ? "" : "-");
-            if (no_day)
-                out << std::setw(2) << (dhhmmssf9 / 100'00'000'000'000LL);
-            else
-                out << (dhhmmssf9 / 24'00'00'000'000'000LL) << 'D'
-                    << std::setw(2) << (dhhmmssf9 / 100'00'000'000'000LL % 24);
-            out << ':'
-                << std::setw(2) << (dhhmmssf9 / 100'000'000'000LL % 100) << ':'
-                << std::setw(2) << (dhhmmssf9 / 1000'000'000LL % 100) << '.'
-                << std::setw(9) << (dhhmmssf9 % 1000'000'000LL);
+            auto const t = decode(v);
+            auto const h = t.hours().count();
+            out << std::internal;
+            if (t.is_negative())
+                out << '-';
+            out << std::setfill('0')
+                << (h / ratio<std::chrono::hours, date::days>()) << 'D'
+                << std::setw(2) << (h % ratio<std::chrono::hours, date::days>()) << ':'
+                << std::setw(2) << t.minutes().count() << ':'
+                << std::setw(2) << t.seconds().count() << '.'
+                << std::setw(9) << t.subseconds().count();
         }
     };
 
@@ -734,7 +786,8 @@ namespace q {
         ValueType<TypeTraits<kTimestamp>, int64_t>,
         IndexableType<TypeTraits<kTimestamp>, int64_t>,
         NullableType<TypeTraits<kTimestamp>, int64_t>,
-        NumericType<TypeTraits<kTimestamp>, int64_t>
+        NumericType<TypeTraits<kTimestamp>, int64_t>,
+        TemporalType<TypeTraits<kTimestamp>, int64_t, TimePoint>
     {
         static constexpr TypeId type_id = kTimestamp;
         using BaseTypeTraits = TypeTraits<kLong>;
@@ -743,6 +796,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type p) noexcept
         { return ::ktj(-type_id, p); }
@@ -765,25 +819,25 @@ namespace q {
             long long hour, long long minute, long long second, long long nanos) noexcept
         { return encode_timestamp(year, month, day, hour, minute, second, nanos); }
 
+        static value_type encode(temporal const& t) noexcept
+        { return encode_timestamp(t); }
+
+        static temporal decode(const_reference p) noexcept
+        { return TimePoint{ date::sys_days{ Epoch } } + std::chrono::nanoseconds{ p }; }
+
         static value_type parse(char const* ymdhmsf, bool raw = false) noexcept
         { return parse_timestamp(ymdhmsf, raw); }
 
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (TypeTraits::print_special(out, v))
+                return;
 
-            auto date = v / 86400'000'000'000LL;
-            auto time = v % 86400'000'000'000LL;
-            if (v < 0) {
-                date--;
-                time += 86400'000'000'000LL;
-            }
-            assert(std::numeric_limits<::I>::min() <= date
-                && date <= std::numeric_limits<::I>::max());
-            TypeTraits<kDate>::print(out, static_cast<::I>(date));
-            out << 'D';
-            TypeTraits<kTimespan>::print(out, time, true);
+            auto const t = decode(v);
+            auto const d = std::chrono::floor<date::days>(t);
+            TypeTraits<kDate>::print(out, date::year_month_day{ d });
+            out << 'D' << date::make_time(t - d);
         }
     };
 
@@ -792,7 +846,8 @@ namespace q {
         ValueType<TypeTraits<kTime>, int32_t>,
         IndexableType<TypeTraits<kTime>, int32_t>,
         NullableType<TypeTraits<kTime>, int32_t>,
-        NumericType<TypeTraits<kTime>, int32_t>
+        NumericType<TypeTraits<kTime>, int32_t>,
+        TemporalType<TypeTraits<kTime>, int32_t, Time>
     {
         static constexpr TypeId type_id = kTime;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -801,6 +856,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type t) noexcept
         { return ::kt(t); }
@@ -822,6 +878,16 @@ namespace q {
         static value_type encode(int hour, int minute, int second, int millis) noexcept
         { return encode_time(hour, minute, second, millis); }
 
+        static value_type encode(temporal const& t) noexcept
+        {
+            return (t.is_negative() ? -1 : 1)
+                * encode_time(t.hours().count(), t.minutes().count(),
+                    int(t.seconds().count()), int(t.subseconds().count()));
+        }
+
+        static temporal decode(const_reference t) noexcept
+        { return temporal{ std::chrono::milliseconds{ t } }; }
+
         static value_type parse(int hhmmssf3) noexcept
         { return parse_time(hhmmssf3); }
 
@@ -831,17 +897,8 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
-
-            auto hhmmssf3 = decode_time(v);
-            auto const sign = std_ext::signum(hhmmssf3);
-            hhmmssf3 *= sign;
-            out << std::setfill('0') << std::internal
-                << (0 <= sign ? "" : "-")
-                << std::setw(2) << (hhmmssf3 / 100'00'000) << ':'
-                << std::setw(2) << (hhmmssf3 / 100'000 % 100) << ':'
-                << std::setw(2) << (hhmmssf3 / 1000 % 100) << '.'
-                << std::setw(3) << (hhmmssf3 % 1000);
+            if (!TypeTraits::print_special(out, v))
+                out << decode(v);
         }
     };
 
@@ -850,7 +907,8 @@ namespace q {
         ValueType<TypeTraits<kDatetime>, double>,
         IndexableType<TypeTraits<kDatetime>, double>,
         NullableType<TypeTraits<kDatetime>, double>,
-        NumericType<TypeTraits<kDatetime>, double>
+        NumericType<TypeTraits<kDatetime>, double>,
+        TemporalType<TypeTraits<kDatetime>, double, TimePoint>
     {
         static constexpr TypeId type_id = kDatetime;
         using BaseTypeTraits = TypeTraits<kFloat>;
@@ -859,6 +917,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type z) noexcept
         { return ::kz(z); }
@@ -874,12 +933,22 @@ namespace q {
         static value_type null() noexcept
         { return BaseTypeTraits::null(); }
 
-        static value_type inf(bool sign = true) noexcept
+        static constexpr value_type inf(bool sign = true) noexcept
         { return BaseTypeTraits::inf(sign); }
 
         static value_type encode(int year, int month, int day,
             int hour, int minute, int second, int millis) noexcept
         { return encode_datetime(year, month, day, hour, minute, second, millis); }
+
+        static value_type encode(temporal const& t) noexcept
+        { return encode_datetime(t); }
+
+        static temporal decode(const_reference t) noexcept
+        {
+            return TimePoint{ date::sys_days{ Epoch } } + std::chrono::milliseconds{
+                long long(t * ratio<std::chrono::milliseconds, date::days>())
+            };
+        }
 
         static value_type parse(long long yyyymmddhhmmssf3) noexcept
         { return parse_datetime(yyyymmddhhmmssf3); }
@@ -890,17 +959,14 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (TypeTraits::print_special(out, v))
+                return;
 
-            auto date = static_cast<::I>(v);
-            auto time = static_cast<::I>(std::round((v - date) * 86400'000.));
-            if (v < 0) {
-                date--;
-                time += 86400'000;
-            }
-            TypeTraits<kDate>::print(out, date);
-            out << 'T';
-            TypeTraits<kTime>::print(out, time);
+            auto const t = decode(v);
+            auto const d = std::chrono::floor<date::days>(t);
+            TypeTraits<kDate>::print(out, date::year_month_day{ d });
+            out << 'T' << date::make_time(
+                std::chrono::duration_cast<std::chrono::milliseconds>(t - d));
         }
     };
 
@@ -909,7 +975,8 @@ namespace q {
         ValueType<TypeTraits<kMinute>, int32_t>,
         IndexableType<TypeTraits<kMinute>, int32_t>,
         NullableType<TypeTraits<kMinute>, int32_t>,
-        NumericType<TypeTraits<kMinute>, int32_t>
+        NumericType<TypeTraits<kMinute>, int32_t>,
+        TemporalType<TypeTraits<kMinute>, int32_t, Time>
     {
         static constexpr TypeId type_id = kMinute;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -918,6 +985,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type m) noexcept
         { return ValueType::atom(type_id, m); }
@@ -939,6 +1007,15 @@ namespace q {
         static value_type encode(int hour, int minute) noexcept
         { return encode_minute(hour, minute); }
 
+        static value_type encode(temporal const& t) noexcept
+        {
+            return (t.is_negative() ? -1 : 1)
+                * encode_minute(t.hours().count(), t.minutes().count());
+        }
+
+        static temporal decode(const_reference t) noexcept
+        { return temporal{ std::chrono::minutes{ t } }; }
+
         static value_type parse(int hhmm) noexcept
         { return parse_minute(hhmm); }
 
@@ -948,15 +1025,16 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (TypeTraits::print_special(out, v))
+                return;
 
-            auto hhmm = decode_minute(v);
-            auto const sign = std_ext::signum(hhmm);
-            hhmm *= sign;
-            out << std::setfill('0') << std::internal
-                << (0 <= sign ? "" : "-")
-                << std::setw(2) << (hhmm / 100) << ':'
-                << std::setw(2) << (hhmm % 100);
+            auto const t = decode(v);
+            out << std::internal;
+            if (t.is_negative())
+                out << '-';
+            out << std::setfill('0')
+                << std::setw(2) << t.hours().count() << ':'
+                << std::setw(2) << t.minutes().count();
         }
     };
 
@@ -965,7 +1043,8 @@ namespace q {
         ValueType<TypeTraits<kSecond>, int32_t>,
         IndexableType<TypeTraits<kSecond>, int32_t>,
         NullableType<TypeTraits<kSecond>, int32_t>,
-        NumericType<TypeTraits<kSecond>, int32_t>
+        NumericType<TypeTraits<kSecond>, int32_t>,
+        TemporalType<TypeTraits<kSecond>, int32_t, Time>
     {
         static constexpr TypeId type_id = kSecond;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -974,6 +1053,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
+        using typename TemporalType::temporal;
 
         static ::K atom(value_type s) noexcept
         { return ValueType::atom(type_id, s); }
@@ -995,6 +1075,16 @@ namespace q {
         static value_type encode(int hour, int minute, int second) noexcept
         { return encode_second(hour, minute, second); }
 
+        static value_type encode(temporal const& t) noexcept
+        {
+            return (t.is_negative() ? -1 : 1)
+                * encode_second(t.hours().count(), t.minutes().count(),
+                    int(t.seconds().count()));
+        }
+
+        static temporal decode(const_reference t) noexcept
+        { return temporal{ std::chrono::seconds{ t} }; }
+
         static value_type parse(int hhmmss) noexcept
         { return parse_second(hhmmss); }
 
@@ -1004,18 +1094,17 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (TypeTraits::print_special(out, v)) return;
+            if (TypeTraits::print_special(out, v))
+                return;
 
-            auto hhmmss = decode_second(v);
-            auto const sign = std_ext::signum(hhmmss);
-            hhmmss *= sign;
-            out << std::setfill('0') << std::internal
-                << (0 <= sign ? "" : "-")
-                << std::setw(2) << (hhmmss / 100'00) << ':'
-                << std::setw(2) << (hhmmss / 100 % 100) << ':'
-                << std::setw(2) << (hhmmss % 100);
+            using Precision = std::chrono::seconds;
+            auto const t = decode(v);
+            out << date::hh_mm_ss<Precision>{
+                std::chrono::duration_cast<Precision>(t.to_duration()) };
         }
     };
+
+#pragma endregion
 
     template<>
     struct TypeTraits<kNil>

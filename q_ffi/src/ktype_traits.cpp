@@ -1,15 +1,48 @@
 #include "ktype_traits.hpp"
-#include <limits>
 #include <regex>
+#include "kerror.hpp"
+
+using namespace std::chrono;
 
 #pragma region <kTimestamp> conversions
 
-inline ::J compose_timestamp(long long date, long long time) noexcept
+namespace
 {
-    return date * 86400'000'000'000uLL + time;
-}
+    ::J compose_timestamp(long long date, long long time) noexcept
+    {
+        return date * q::ratio<nanoseconds, date::days>() + time;
+    }
 
-::J q::encode_timestamp(long long year, long long month, long long day,
+    ::J parse_raw_timestamp(char const* yyyymmddhhmmssf9) noexcept
+    {
+        using Traits = q::TypeTraits<q::kTimestamp>;
+
+        static const std::regex separator{ "'" };
+        static const std::regex pattern{ R"(^(\d{8})(\d{6}\d{9})$)" };
+        static constexpr auto PATTERN_LEN = 8 + 6 + 9;
+        static constexpr auto PATTERN_CAPS = 1 + 1;
+
+        if (nullptr == yyyymmddhhmmssf9)
+            return Traits::null();
+        auto const ymdhmsf = std::regex_replace(yyyymmddhhmmssf9, separator, "");
+        if (PATTERN_LEN != ymdhmsf.length())
+            return Traits::null();
+
+        std::smatch matches;
+        if (!std::regex_match(ymdhmsf, matches, pattern))
+            return Traits::null();
+        assert(1 + PATTERN_CAPS == matches.size());
+
+        auto const date = q::parse_date(matches.str(1).c_str());
+        auto const time = q::parse_timespan(std::stoll(matches.str(2)));
+        if (q::TypeTraits<q::kDate>::null() == date || q::TypeTraits<q::kTimespan>::null() == time)
+            return Traits::null();
+        return compose_timestamp(date, time);
+    }
+
+}//namespace /*anonymous*/
+
+::J q::temporal::encode_timestamp(long long year, long long month, long long day,
     long long hour, long long minute, long long second, long long nanos) noexcept
 {
     auto const date = encode_date(
@@ -18,41 +51,39 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     return compose_timestamp(date, time);
 }
 
-::J parse_raw_timestamp(char const* yyyymmddhhmmssf9) noexcept
+::J q::temporal::encode_timestamp(q::TimePoint const& t) noexcept
 {
-    using Traits = q::TypeTraits<q::kTimestamp>;
-    static std::regex const separator{ "'" };
-    static std::regex const pattern{ R"(^(\d{8})(\d{15})$)" };
+    auto const d = floor<date::days>(t);
+    date::year_month_day const ymd{ d };
+    auto const hmsn = date::make_time(t - d);
 
-    if (nullptr == yyyymmddhhmmssf9) return Traits::null();
-    std::string const ymdhmsf = std::regex_replace(yyyymmddhhmmssf9, separator, "");
-    if (8 + 6 + 9 != ymdhmsf.length()) return Traits::null();
-
-    std::smatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern)) return Traits::null();
-    assert(1 + 2 == matches.size());
-
-    ::I const date = q::parse_date(matches.str(1).c_str());
-    ::J const time = q::parse_timespan(std::stoll(matches.str(2)));
-    if (q::TypeTraits<q::kDate>::null() == date || q::TypeTraits<q::kTimespan>::null() == time)
-        return Traits::null();
+    auto const date = encode_date(
+        int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()));
+    auto const time = encode_timespan(0,
+        hmsn.hours().count(), hmsn.minutes().count(), hmsn.seconds().count(),
+        hmsn.subseconds().count());
     return compose_timestamp(date, time);
 }
 
-::J q::parse_timestamp(char const* ymdhmsf, bool raw) noexcept
+::J q::temporal::parse_timestamp(char const* ymdhmsf, bool raw) noexcept
 {
-    if (raw) return parse_raw_timestamp(ymdhmsf);
-
     using Traits = TypeTraits<kTimestamp>;
-    static std::regex const pattern{ R"(^([^D]+)(?:D([^p]+))?p?$)" };
 
-    if (nullptr == ymdhmsf) return Traits::null();
+    if (raw)
+        return parse_raw_timestamp(ymdhmsf);
+
+    static const std::regex pattern{ R"(^([^D]+)(?:D([^p]+))?p?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1;
+
+    if (nullptr == ymdhmsf)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern)) return Traits::null();
-    assert(1 + 2 == matches.size());
+    if (!std::regex_match(ymdhmsf, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
-    ::I const date = parse_date(matches.str(1).c_str());
-    ::J const time = 0 < matches.length(2) ? parse_timespan(matches.str(2).c_str()) : 0;
+    auto const date = parse_date(matches.str(1).c_str());
+    auto const time = 0 < matches.length(2) ? parse_timespan(matches.str(2).c_str()) : 0;
     if (TypeTraits<kDate>::null() == date || TypeTraits<kTimespan>::null() == time)
         return Traits::null();
     return compose_timestamp(date, time);
@@ -62,65 +93,74 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 
 #pragma region <kMonth> conversions
 
-::I q::encode_month(int year, int month) noexcept
+::I q::temporal::encode_month(int year, int month) noexcept
 {
-    return (year - 2000) * 12 + (month - 1);
+    return (year - int(Epoch.year())) * ratio<date::months, date::years>()
+        + month - 1;
 }
 
-::I q::parse_month(int yyyymm) noexcept
+::I q::temporal::parse_month(int yyyymm) noexcept
 {
     return encode_month(yyyymm / 100, yyyymm % 100);
 }
 
-::I q::parse_month(char const* ym) noexcept
+::I q::temporal::parse_month(char const* ym) noexcept
 {
     using Traits = TypeTraits<kMonth>;
-    static std::regex const pattern{ R"(^(\d{4})[.\-/](\d\d?)m?$)" };
 
-    if (nullptr == ym) return Traits::null();
+    static std::regex const pattern{ R"(^(\d{4})[.\-/](\d\d?)m?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1;
+
+    if (nullptr == ym)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ym, matches, pattern)) return Traits::null();
-    assert(1 + 2 == matches.size());
+    if (!std::regex_match(ym, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
     auto const year = std::stoi(matches.str(1));
     auto const month = std::stoi(matches.str(2));
     return encode_month(year, month);
 }
 
-::I q::decode_month(::I m) noexcept
+date::year_month q::temporal::decode_month(::I m) noexcept
 {
-    auto year = (m + 1) / 12 + 2000;
-    auto month = (m + 1) % 12;
-    if (month <= 0) {
-        month += 12;
-        year--;
+    auto yyyy = (m + 1) / ratio<date::months, date::years>() + int(Epoch.year());
+    auto mm = (m + 1) % ratio<date::months, date::years>();
+    if (mm <= 0) {
+        mm += ratio<date::months, date::years>();
+        yyyy--;
     }
-    return year * 100 + month;
+    return date::year{ yyyy } / mm;
 }
 
 #pragma endregion
 
 #pragma region <kDate> conversions
 
-::I q::encode_date(int year, int month, int day) noexcept
+::I q::temporal::encode_date(int year, int month, int day) noexcept
 {
     return ::ymd(year, month, day);
 }
 
-::I q::parse_date(int yyyymmdd) noexcept
+::I q::temporal::parse_date(int yyyymmdd) noexcept
 {
     return encode_date(yyyymmdd / 100'00, yyyymmdd / 100 % 100, yyyymmdd % 100);
 }
 
-::I q::parse_date(char const* ymd) noexcept
+::I q::temporal::parse_date(char const* ymd) noexcept
 {
     using Traits = TypeTraits<kDate>;
-    static std::regex const pattern{ R"(^(\d{4})([.\-/]?)(\d\d?)\2(\d\d?)d?$)" };
 
-    if (nullptr == ymd) return Traits::null();
+    static std::regex const pattern{ R"(^(\d{4})([.\-/]?)(\d\d?)\2(\d\d?)d?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1;
+
+    if (nullptr == ymd)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ymd, matches, pattern)) return Traits::null();
-    assert(1 + 3 + 1 == matches.size());
+    if (!std::regex_match(ymd, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
     auto const year = std::stoi(matches.str(1));
     auto const month = std::stoi(matches.str(3));
@@ -128,21 +168,29 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     return encode_date(year, month, day);
 }
 
-::I q::decode_date(::I d) noexcept
+date::year_month_day q::temporal::decode_date(::I d) noexcept
 {
-    return ::dj(d);
+    auto yyyymmdd = ::dj(d);
+    auto const y = yyyymmdd / 100'00;
+    yyyymmdd %= 100'00;
+    return date::year{ y } / (yyyymmdd / 100) / (yyyymmdd % 100);
 }
 
 #pragma endregion
 
 #pragma region <kDatetime> conversions
 
-::F compose_datetime(int date, int time) noexcept
+namespace
 {
-    return date + time / 86400'000.;
-}
+    ::F compose_datetime(int date, int time) noexcept
+    {
+        return date + time
+            / ::F(q::ratio<std::chrono::milliseconds, date::days>());
+    }
 
-::F q::encode_datetime(int year, int month, int day,
+}//namespace /*anonymous*/
+
+::F q::temporal::encode_datetime(int year, int month, int day,
     int hour, int minute, int second, int millis) noexcept
 {
     ::I const date = encode_date(year, month, day);
@@ -150,25 +198,42 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     return compose_datetime(date, time);
 }
 
-::F q::parse_datetime(long long yyyymmddhhmmssf3) noexcept
+::F q::temporal::encode_datetime(q::TimePoint const& t) noexcept
+{
+    auto const d = floor<date::days>(t);
+    date::year_month_day const ymd{ d };
+    auto const hmsf = date::make_time(t - d);
+
+    auto const date = encode_date(
+        int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()));
+    auto const time = encode_time(
+        hmsf.hours().count(), hmsf.minutes().count(), int(hmsf.seconds().count()),
+        int(hmsf.subseconds().count() / ratio<nanoseconds, milliseconds>()));
+    return compose_datetime(date, time);
+}
+
+::F q::temporal::parse_datetime(long long yyyymmddhhmmssf3) noexcept
 {
     ::I const date = parse_date(static_cast<::I>(yyyymmddhhmmssf3 / 100'00'00'000LL));
     ::I const time = parse_time(static_cast<::I>(yyyymmddhhmmssf3 % 100'00'00'000LL));
     return compose_datetime(date, time);
 }
 
-::F q::parse_datetime(char const* ymdhmsf) noexcept
+::F q::temporal::parse_datetime(char const* ymdhmsf) noexcept
 {
     using Traits = TypeTraits<kDatetime>;
-    static std::regex const pattern{ R"(^([^T]+)(?:T([^z]+))?z?$)" };
+    static const std::regex pattern{ R"(^([^T]+)(?:T([^z]+))?z?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1;
 
-    if (nullptr == ymdhmsf) return Traits::null();
+    if (nullptr == ymdhmsf)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern)) return Traits::null();
-    assert(1 + 2 == matches.size());
+    if (!std::regex_match(ymdhmsf, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
-    ::I const date = parse_date(matches.str(1).c_str());
-    ::I const time = 0 < matches.length(2) ? parse_time(matches.str(2).c_str()) : 0;
+    auto const date = parse_date(matches.str(1).c_str());
+    auto const time = 0 < matches.length(2) ? parse_time(matches.str(2).c_str()) : 0;
     if (TypeTraits<kDate>::null() == date || TypeTraits<kTime>::null() == time)
         return Traits::null();
     return compose_datetime(date, time);
@@ -178,31 +243,36 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 
 #pragma region <kTimespan> conversions
 
-::J q::encode_timespan(long long day,
+::J q::temporal::encode_timespan(long long day,
     long long hour, long long minute, long long second, long long nanos) noexcept
 {
-    return day * 86400'000'000'000LL
-        + hour * 3600'000'000'000LL + minute * 60'000'000'000LL +second * 1000'000'000LL + nanos;
+    return (((day * ratio<hours, date::days>() + hour
+                ) * ratio<minutes, hours>() + minute
+            ) * ratio<seconds, minutes>() + second
+        ) * ratio<nanoseconds, seconds>() + nanos;
 }
 
-::J q::parse_timespan(long long hhmmssf9) noexcept
+::J q::temporal::parse_timespan(long long hhmmssf9) noexcept
 {
-    return encode_timespan(0,
-        hhmmssf9 / 100'00'000'000'000LL, hhmmssf9 / 100'000'000'000LL % 100,
-        hhmmssf9 / 1000'000'000LL % 100, hhmmssf9 % 1000'000'000LL);
+    auto const nanos = hhmmssf9 % 1000'000'000uLL;
+    auto const hhmmss = hhmmssf9 / 1000'000'000uLL;
+    return encode_timespan(0, hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100, nanos);
 }
 
-::J q::parse_timespan(char const* dhmsf) noexcept
+::J q::temporal::parse_timespan(char const* dhmsf) noexcept
 {
     using Traits = TypeTraits<kTimespan>;
-    static std::regex const pattern{
-        R"(^(-?)(?:(\d+)D)?(\d+)(?::(\d\d?)(?::(\d\d?)(?:\.(\d{1,9}))?)?)?n?$)"
-    };
 
-    if (nullptr == dhmsf) return Traits::null();
+    static const std::regex
+        pattern{ R"(^(-?)(?:(\d+)D)?(\d+)(?::(\d\d?)(?::(\d\d?)(?:\.(\d{1,9}))?)?)?n?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1 + 1 + 1;
+
+    if (nullptr == dhmsf)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(dhmsf, matches, pattern)) return Traits::null();
-    assert(1 + 6 == matches.size());
+    if (!std::regex_match(dhmsf, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
     auto const day = 0 < matches.length(2) ? std::stoll(matches.str(2)) : 0;
@@ -210,45 +280,36 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     auto const minute = 0 < matches.length(4) ? std::stoll(matches.str(4)) : 0;
     auto const second = 0 < matches.length(5) ? std::stoll(matches.str(5)) : 0;
     auto const nanos = 0 < matches.length(6) ?
-        static_cast<long long>(std::stold("0." + matches.str(6)) * 1000'000'000LL) : 0;
+        static_cast<long long>(std::stold("0." + matches.str(6)) * 1e9) : 0;
     return sign * encode_timespan(day, hour, minute, second, nanos);
-}
-
-::J q::decode_timespan(::J n) noexcept
-{
-    auto const sign = std_ext::signum(n);
-    n *= sign;
-    auto const hour = n / 3600'000'000'000LL;
-    auto const minute = n / 60'000'000'000LL % 60;
-    auto const second = n / 1000'000'000LL % 60;
-    auto const nanos = n % 1000'000'000LL;
-    return sign * (hour * 100'00'000'000'000LL
-        + minute * 100'000'000'000LL + second * 1000'000'000LL + nanos);
 }
 
 #pragma endregion
 
 #pragma region <kMinute> conversions
 
-::I q::encode_minute(int hour, int minute) noexcept
+::I q::temporal::encode_minute(int hour, int minute) noexcept
 {
-    return hour * 60 + minute;
+    return hour * ratio<minutes, hours>() + minute;
 }
 
-::I q::parse_minute(int hhmm) noexcept
+::I q::temporal::parse_minute(int hhmm) noexcept
 {
     return encode_minute(hhmm / 100, hhmm % 100);
 }
 
-::I q::parse_minute(char const* hm) noexcept
+::I q::temporal::parse_minute(char const* hm) noexcept
 {
     using Traits = TypeTraits<kMinute>;
     static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)u?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1 + 1;
 
-    if (nullptr == hm) return Traits::null();
+    if (nullptr == hm)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(hm, matches, pattern)) return Traits::null();
-    assert(1 + 3 == matches.size());
+    if (!std::regex_match(hm, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
     auto const hour = std::stoi(matches.str(2));
@@ -256,12 +317,12 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     return sign * encode_minute(hour, minute);
 }
 
-::I q::decode_minute(::I m) noexcept
+::I q::temporal::decode_minute(::I m) noexcept
 {
     auto const sign = std_ext::signum(m);
     m *= sign;
-    auto const hour = m / 60;
-    auto const minute = m % 60;
+    auto const hour = m / ratio<minutes, hours>();
+    auto const minute = m % ratio<minutes, hours>();
     return sign * (hour * 100 + minute);
 }
 
@@ -284,9 +345,11 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     using Traits = TypeTraits<kSecond>;
     static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?))?v?$)" };
 
-    if (nullptr == hms) return Traits::null();
+    if (nullptr == hms)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(hms, matches, pattern)) return Traits::null();
+    if (!std::regex_match(hms, matches, pattern))
+        return Traits::null();
     assert(1 + 4 == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
@@ -310,29 +373,36 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
 
 #pragma region <kTime> conversions
 
-::I q::encode_time(int hour, int minute, int second, int millis) noexcept
+::I q::temporal::encode_time(int hour, int minute, int second, int millis) noexcept
 {
-    return hour * 3600'000 + minute * 60'000 + second * 1000 + millis;
+    auto const t = ((hour * ratio<minutes, hours>() + minute
+            ) * ratio<seconds, minutes>() + second
+        ) * ratio<milliseconds, seconds>() + millis;
+    assert(std::numeric_limits<::I>::min() <= t && t <= std::numeric_limits<::I>::max());
+    return static_cast<::I>(t);
 }
 
-::I q::parse_time(int hhmmssf3) noexcept
+::I q::temporal::parse_time(int hhmmssf3) noexcept
 {
-    return encode_time(
-        hhmmssf3 / 100'00'000, hhmmssf3 / 100'000 % 100,
-        hhmmssf3 / 1000 % 100, hhmmssf3 % 1000);
+    auto const millis = hhmmssf3 % 1000;
+    auto const hhmmss = hhmmssf3 / 1000;
+    return encode_time(hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100, millis);
 }
 
-::I q::parse_time(char const* hmsf) noexcept
+::I q::temporal::parse_time(char const* hmsf) noexcept
 {
     using Traits = TypeTraits<kTime>;
-    static std::regex const pattern{
-        R"(^(-?)(\d+):(\d\d?)(?::(\d\d?)(?:\.(\d{1,3}))?)?t?$)"
-    };
 
-    if (nullptr == hmsf) return Traits::null();
+    static std::regex const
+        pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?)(?:\.(\d{1,3}))?)?t?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1 + 1;
+
+    if (nullptr == hmsf)
+        return Traits::null();
     std::cmatch matches;
-    if (!std::regex_match(hmsf, matches, pattern)) return Traits::null();
-    assert(1 + 5 == matches.size());
+    if (!std::regex_match(hmsf, matches, pattern))
+        return Traits::null();
+    assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
     auto const hour = std::stoi(matches.str(2));
@@ -341,17 +411,6 @@ inline ::J compose_timestamp(long long date, long long time) noexcept
     auto const millis = 0 < matches.length(5) ?
         static_cast<int>(std::stof("0." + matches.str(5)) * 1000) : 0;
     return sign * encode_time(hour, minute, second, millis);
-}
-
-::I q::decode_time(::I t) noexcept
-{
-    auto const sign = std_ext::signum(t);
-    t *= sign;
-    auto const hour = t / 3600'000;
-    auto const minute = t / 60'000 % 60;
-    auto const second = t / 1000 % 60;
-    auto const millis = t % 1000;
-    return sign * (hour * 100'00'000 + minute * 100'000 + second * 1000 + millis);
 }
 
 #pragma endregion

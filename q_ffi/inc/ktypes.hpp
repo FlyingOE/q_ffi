@@ -2,6 +2,7 @@
 
 #include "q_ffi.h"
 #include <unordered_map>
+#include <date/date.h>
 #include <k_compat.h>
 
 namespace q
@@ -102,4 +103,57 @@ namespace q
 
     }//inline namespace q::literals
 
+    /// (Time units) number of A per unit of B
+    template<typename A, typename B>
+    constexpr auto ratio() noexcept
+    {
+        return std::chrono::duration_cast<A>(B{ 1 }).count();
+    }
+
+    /// @brief kdb+ high-res time point.
+    using TimePoint = std::chrono::time_point<
+        std::chrono::system_clock, std::chrono::nanoseconds>;
+
+    /// @brief kdb+ low-res time point.
+    using DateTime = std::chrono::time_point<
+        std::chrono::system_clock, std::chrono::duration<double, std::milli>>;
+
+    /// @brief kdb+ low-res time.
+    using Time = date::hh_mm_ss<std::chrono::duration<int32_t, std::milli>>;
+
+    /// @brief kdb+ high-res timespan.
+    using TimeSpan = date::hh_mm_ss<std::chrono::nanoseconds>;
+
+    /// @brief kdb+ epoch.
+    constexpr auto Epoch{ date::January / 1 / 2000 };
+
 }//namespace q
+
+#pragma region Put q::TimeSpan comparisons back into namespace to allow ADL to work.
+
+namespace date
+{
+#define DEFINE_Q_TIME_BINOP(TimeType, op)    \
+    constexpr bool     \
+    operator op(TimeType const& lhs, TimeType const& rhs) noexcept  \
+    { return lhs.to_duration() op rhs.to_duration(); }
+
+    DEFINE_Q_TIME_BINOP(q::Time, ==);
+    DEFINE_Q_TIME_BINOP(q::Time, !=);
+    DEFINE_Q_TIME_BINOP(q::Time, > );
+    DEFINE_Q_TIME_BINOP(q::Time, >=);
+    DEFINE_Q_TIME_BINOP(q::Time, < );
+    DEFINE_Q_TIME_BINOP(q::Time, <=);
+
+    DEFINE_Q_TIME_BINOP(q::TimeSpan, ==);
+    DEFINE_Q_TIME_BINOP(q::TimeSpan, !=);
+    DEFINE_Q_TIME_BINOP(q::TimeSpan, > );
+    DEFINE_Q_TIME_BINOP(q::TimeSpan, >=);
+    DEFINE_Q_TIME_BINOP(q::TimeSpan, < );
+    DEFINE_Q_TIME_BINOP(q::TimeSpan, <=);
+
+#undef DEFINE_Q_TIMESPAN_BINOP
+
+}//namespace date
+
+#pragma endregion
