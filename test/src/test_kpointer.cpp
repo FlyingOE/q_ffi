@@ -4,43 +4,37 @@
 
 namespace q
 {
-
     TEST(KptrTests, refCount)
     {
         K_ptr pk{ TypeTraits<kSymbol>::atom(test_info_->name()) };
         ASSERT_NE(pk.get(), Nil) << "fail to create K object";
 
         K k = pk.get();
-        auto refCount = k->r;
-        EXPECT_EQ(refCount, 0) << "different initial ref count vs documentation?";
+        EXPECT_EQ(k->r, 0) << "ref count should start with 0";
 
         K_ptr pk1{ k };
-        EXPECT_EQ(k->r, refCount);
+        EXPECT_EQ(k->r, 0) << "taking ownership from raw K doesn't affect ref count";
 
-        for (auto i : { 1, 1 }) {
-            r1(k);
-            refCount += i;
-        }
-        EXPECT_EQ(k->r, refCount);
+        r1(k);
+        r1(k);
+        EXPECT_EQ(k->r, 2) << "manually incremented ref count thrice";
         {
             K_ptr pk2;
             EXPECT_EQ(pk2.get(), Nil);
             pk2.reset(k);
-            EXPECT_EQ(k->r, refCount);
+            EXPECT_EQ(k->r, 2) << "taking ownership from K doesn't impact ref count";
             pk2.release();
-            EXPECT_EQ(k->r, refCount);
+            EXPECT_EQ(k->r, 2) << "releasing ownership doesn't impact ref count";
             pk2.reset(k);
-            EXPECT_EQ(k->r, refCount);
+            EXPECT_EQ(k->r, 2) << "retaking ownership doesn't impact ref count";
             pk2.reset();
-            --refCount;
-            EXPECT_EQ(k->r, refCount);
+            EXPECT_EQ(k->r, 1) << "manually released ownership once";
 
             pk2.reset(k);
             K_ptr pk3 = std::move(pk2);
-            EXPECT_EQ(k->r, refCount);
+            EXPECT_EQ(k->r, 1) << "moved ownership doesn't impact ref count";
         }
-        --refCount;
-        EXPECT_EQ(k->r, refCount);
+        EXPECT_EQ(k->r, 0) << "last remaining ref";
     }
 
 #   pragma region KptrTests<> typed test suite
@@ -183,19 +177,18 @@ namespace q
         ASSERT_NE(pk.get(), Nil) << "fail to create K object";
 
         K k = pk.get();
-        auto refCount = k->r;
-        EXPECT_EQ(refCount, 0) << "different initial ref count vs documentation?";
+        EXPECT_EQ(k->r, 0) << "different initial ref count vs documentation?";
 
         K_ptr pk1{ k };
-        EXPECT_EQ(k->r, refCount);
+        EXPECT_EQ(k->r, 0);
         EXPECT_EQ(pk1.get(), k);
 
         K_ptr pk2 = dup_K(pk1);
-        ++refCount;
-        EXPECT_EQ(k->r, refCount);
+        EXPECT_EQ(k->r, 1);
         EXPECT_EQ(pk2.get(), pk1.get());
 
-        pk1.reset(); --refCount; EXPECT_EQ(k->r, refCount);
+        pk1.reset();
+        EXPECT_EQ(k->r, 0);
         EXPECT_EQ(pk2.get(), k);
 
         K_ptr pk3;
