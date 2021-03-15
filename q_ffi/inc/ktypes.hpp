@@ -64,6 +64,21 @@ namespace q
     ///     If the q type is recognized, @c k is converted using the @c to_str method in the respective type traits.
     q_ffi_API std::string to_string(::K const k);
 
+    /// @brief kdb+ date/month.
+    using Days = date::sys_days;
+
+    /// @brief kdb+ minute/second.
+    using Seconds = date::sys_seconds;
+
+    /// @brief kdb+ time/datetime.
+    using Milliseconds = date::sys_time<std::chrono::milliseconds>;
+
+    /// @brief kdb+ timespan/timestamp.
+    using Nanoseconds = date::sys_time<std::chrono::nanoseconds>;
+
+    /// @brief kdb+ epoch.
+    static constexpr auto Epoch = date::January / 1 / 2000;
+
     /// @brief UDLs that are adapted from q literal suffices.
     inline namespace literals
     {
@@ -103,57 +118,17 @@ namespace q
 
     }//inline namespace q::literals
 
-    /// (Time units) number of A per unit of B
-    template<typename A, typename B>
-    constexpr auto ratio() noexcept
+    /// (Time units) number of Num per unit of Denom
+    template<typename Num, typename Denom>
+    struct time_scale
     {
-        return std::chrono::duration_cast<A>(B{ 1 }).count();
-    }
+        static constexpr auto value =
+            std::chrono::duration_cast<Num>(Denom{ 1 }).count();
+    };
 
-    /// @brief kdb+ high-res time point.
-    using TimePoint = std::chrono::time_point<
-        std::chrono::system_clock, std::chrono::nanoseconds>;
-
-    /// @brief kdb+ low-res time point.
-    using DateTime = std::chrono::time_point<
-        std::chrono::system_clock, std::chrono::duration<double, std::milli>>;
-
-    /// @brief kdb+ low-res time.
-    using Time = date::hh_mm_ss<std::chrono::duration<int32_t, std::milli>>;
-
-    /// @brief kdb+ high-res timespan.
-    using TimeSpan = date::hh_mm_ss<std::chrono::nanoseconds>;
-
-    /// @brief kdb+ epoch.
-    constexpr auto Epoch{ date::January / 1 / 2000 };
+    template<typename Num, typename Denom>
+    inline constexpr auto time_scale_v = time_scale<Num, Denom>::value;
 
 }//namespace q
-
-#pragma region Put q::TimeSpan comparisons back into namespace to allow ADL to work.
-
-namespace date
-{
-#define DEFINE_Q_TIME_BINOP(TimeType, op)    \
-    constexpr bool     \
-    operator op(TimeType const& lhs, TimeType const& rhs) noexcept  \
-    { return lhs.to_duration() op rhs.to_duration(); }
-
-    DEFINE_Q_TIME_BINOP(q::Time, ==);
-    DEFINE_Q_TIME_BINOP(q::Time, !=);
-    DEFINE_Q_TIME_BINOP(q::Time, > );
-    DEFINE_Q_TIME_BINOP(q::Time, >=);
-    DEFINE_Q_TIME_BINOP(q::Time, < );
-    DEFINE_Q_TIME_BINOP(q::Time, <=);
-
-    DEFINE_Q_TIME_BINOP(q::TimeSpan, ==);
-    DEFINE_Q_TIME_BINOP(q::TimeSpan, !=);
-    DEFINE_Q_TIME_BINOP(q::TimeSpan, > );
-    DEFINE_Q_TIME_BINOP(q::TimeSpan, >=);
-    DEFINE_Q_TIME_BINOP(q::TimeSpan, < );
-    DEFINE_Q_TIME_BINOP(q::TimeSpan, <=);
-
-#undef DEFINE_Q_TIMESPAN_BINOP
-
-}//namespace date
 
 #pragma endregion

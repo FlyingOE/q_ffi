@@ -19,42 +19,50 @@ namespace q {
     {
         q_ffi_API ::J encode_timestamp(long long year, long long month, long long day,
             long long hour, long long minute, long long second, long long nanos) noexcept;
-        q_ffi_API ::J encode_timestamp(TimePoint const& t) noexcept;
+        q_ffi_API ::J encode_timestamp(Nanoseconds const& t) noexcept;
+        q_ffi_API Nanoseconds decode_timestamp(::J p) noexcept;
         /// @param raw If @c ymdhmsf is a "raw literal" string
         q_ffi_API ::J parse_timestamp(char const* ymdhmsf, bool raw = false) noexcept;
 
         q_ffi_API ::I encode_month(int year, int month) noexcept;
+        q_ffi_API ::I encode_month(Days const& d) noexcept;
+        q_ffi_API Days decode_month(::I m) noexcept;
         q_ffi_API ::I parse_month(int yyyymm) noexcept;
         q_ffi_API ::I parse_month(char const* ym) noexcept;
-        q_ffi_API date::year_month decode_month(::I m) noexcept;
 
         q_ffi_API ::I encode_date(int year, int month, int day) noexcept;
+        q_ffi_API ::I encode_date(Days const& d) noexcept;
+        q_ffi_API Days decode_date(::I d) noexcept;
         q_ffi_API ::I parse_date(int yyyymmdd) noexcept;
         q_ffi_API ::I parse_date(char const* ymd) noexcept;
-        q_ffi_API date::year_month_day decode_date(::I d) noexcept;
 
         q_ffi_API ::F encode_datetime(int year, int month, int day,
             int hour, int minute, int second, int millis) noexcept;
-        q_ffi_API ::F encode_datetime(TimePoint const& t) noexcept;
+        q_ffi_API ::F encode_datetime(Milliseconds const& t) noexcept;
+        q_ffi_API Milliseconds decode_datetime(::F z) noexcept;
         q_ffi_API ::F parse_datetime(long long yyyymmddhhmmssf3) noexcept;
         q_ffi_API ::F parse_datetime(char const* ymdhmsf) noexcept;
 
         q_ffi_API ::J encode_timespan(long long day,
             long long hour, long long minute, long long second, long long nanos) noexcept;
+        q_ffi_API ::J encode_timespan(Nanoseconds const& n) noexcept;
         q_ffi_API ::J parse_timespan(long long hhmmssf9) noexcept;
         q_ffi_API ::J parse_timespan(char const* dhmsf) noexcept;
 
         q_ffi_API ::I encode_minute(int hour, int minute) noexcept;
+        q_ffi_API ::I encode_minute(Seconds const& m) noexcept;
+        q_ffi_API ::I decode_minute(::I m) noexcept;
         q_ffi_API ::I parse_minute(int hhmm) noexcept;
         q_ffi_API ::I parse_minute(char const* hm) noexcept;
-        q_ffi_API ::I decode_minute(::I m) noexcept;
 
         q_ffi_API ::I encode_second(int hour, int minute, int second) noexcept;
+        q_ffi_API ::I encode_second(Seconds const& m) noexcept;
+        q_ffi_API ::I decode_second(::I s) noexcept;
         q_ffi_API ::I parse_second(int hhmmss) noexcept;
         q_ffi_API ::I parse_second(char const* hms) noexcept;
-        q_ffi_API ::I decode_second(::I s) noexcept;
 
         q_ffi_API ::I encode_time(int hour, int minute, int second, int millis) noexcept;
+        q_ffi_API ::I encode_time(Milliseconds const& t) noexcept;
         q_ffi_API ::I parse_time(int hhmmssf3) noexcept;
         q_ffi_API ::I parse_time(char const* hmsf) noexcept;
 
@@ -588,7 +596,7 @@ namespace q {
         IndexableType<TypeTraits<kMonth>, int32_t>,
         NullableType<TypeTraits<kMonth>, int32_t>,
         NumericType<TypeTraits<kMonth>, int32_t>,
-        TemporalType<TypeTraits<kMonth>, int32_t, date::year_month>
+        TemporalType<TypeTraits<kMonth>, int32_t, Days>
     {
         static constexpr TypeId type_id = kMonth;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -619,8 +627,8 @@ namespace q {
         static value_type encode(int year, int month) noexcept
         { return encode_month(year, month); }
 
-        static value_type encode(temporal const& t) noexcept
-        { return encode_month(int(t.year()), unsigned(t.month())); }
+        static value_type encode(temporal const& d) noexcept
+        { return encode_month(d); }
 
         static temporal decode(const_reference m) noexcept
         { return decode_month(m); }
@@ -637,10 +645,10 @@ namespace q {
             if (TypeTraits::print_special(out, v))
                 return;
 
-            auto const t = decode(v);
+            date::year_month_day const ymd{ decode(v) };
             out << std::setfill('0')
-                << std::setw(4) << int(t.year()) << '.'
-                << std::setw(2) << unsigned(t.month())
+                << std::setw(4) << int(ymd.year()) << '.'
+                << std::setw(2) << unsigned(ymd.month())
                 << TypeCode.at(TypeTraits::type_id);
         }
     };
@@ -651,7 +659,7 @@ namespace q {
         IndexableType<TypeTraits<kDate>, int32_t>,
         NullableType<TypeTraits<kDate>, int32_t>,
         NumericType<TypeTraits<kDate>, int32_t>,
-        TemporalType<TypeTraits<kDate>, int32_t, date::year_month_day>
+        TemporalType<TypeTraits<kDate>, int32_t, Days>
     {
         static constexpr TypeId type_id = kDate;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -682,8 +690,8 @@ namespace q {
         static value_type encode(int year, int month, int day) noexcept
         { return encode_date(year, month, day); }
 
-        static value_type encode(temporal const& t) noexcept
-        { return encode_date(int(t.year()), unsigned(t.month()), unsigned(t.day())); }
+        static value_type encode(temporal const& d) noexcept
+        { return encode_date(d); }
 
         static temporal decode(const_reference d) noexcept
         { return decode_date(d); }
@@ -704,10 +712,11 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, temporal const& t)
         {
+            date::year_month_day const& ymd{ t };
             out << std::setfill('0')
-                << std::setw(4) << int(t.year()) << '.'
-                << std::setw(2) << unsigned(t.month()) << '.'
-                << std::setw(2) << unsigned(t.day());
+                << std::setw(4) << int(ymd.year()) << '.'
+                << std::setw(2) << unsigned(ymd.month()) << '.'
+                << std::setw(2) << unsigned(ymd.day());
         }
     };
 
@@ -717,7 +726,7 @@ namespace q {
         IndexableType<TypeTraits<kTimespan>, int64_t>,
         NullableType<TypeTraits<kTimespan>, int64_t>,
         NumericType<TypeTraits<kTimespan>, int64_t>,
-        TemporalType<TypeTraits<kTimespan>, int64_t, TimeSpan>
+        TemporalType<TypeTraits<kTimespan>, int64_t, Nanoseconds>
     {
         static constexpr TypeId type_id = kTimespan;
         using BaseTypeTraits = TypeTraits<kLong>;
@@ -749,11 +758,11 @@ namespace q {
             long long hour, long long minute, long long second, long long nanos) noexcept
         { return encode_timespan(day, hour, minute, second, nanos); }
 
-        static value_type encode(temporal const& t) noexcept
-        { return t.to_duration().count(); }
+        static value_type encode(temporal const& n) noexcept
+        { return encode_timespan(n); }
 
         static temporal decode(const_reference n) noexcept
-        { return TimeSpan{ std::chrono::nanoseconds{ n } }; }
+        { return Nanoseconds{ std::chrono::nanoseconds{ n } }; }
 
         static value_type parse(long long hhmmssf9) noexcept
         { return parse_timespan(hhmmssf9); }
@@ -767,14 +776,13 @@ namespace q {
             if (TypeTraits::print_special(out, v))
                 return;
 
-            auto const t = decode(v);
+            date::hh_mm_ss<std::chrono::nanoseconds> const t{ decode(v) - Days{} };
             auto const h = t.hours().count();
-            out << std::internal;
             if (t.is_negative())
                 out << '-';
-            out << std::setfill('0')
-                << (h / ratio<std::chrono::hours, date::days>()) << 'D'
-                << std::setw(2) << (h % ratio<std::chrono::hours, date::days>()) << ':'
+            out << std::setfill('0') << std::internal
+                << (h / time_scale_v<std::chrono::hours, date::days>) << 'D'
+                << std::setw(2) << (h % time_scale_v<std::chrono::hours, date::days>) << ':'
                 << std::setw(2) << t.minutes().count() << ':'
                 << std::setw(2) << t.seconds().count() << '.'
                 << std::setw(9) << t.subseconds().count();
@@ -787,7 +795,7 @@ namespace q {
         IndexableType<TypeTraits<kTimestamp>, int64_t>,
         NullableType<TypeTraits<kTimestamp>, int64_t>,
         NumericType<TypeTraits<kTimestamp>, int64_t>,
-        TemporalType<TypeTraits<kTimestamp>, int64_t, TimePoint>
+        TemporalType<TypeTraits<kTimestamp>, int64_t, Nanoseconds>
     {
         static constexpr TypeId type_id = kTimestamp;
         using BaseTypeTraits = TypeTraits<kLong>;
@@ -823,7 +831,7 @@ namespace q {
         { return encode_timestamp(t); }
 
         static temporal decode(const_reference p) noexcept
-        { return TimePoint{ date::sys_days{ Epoch } } + std::chrono::nanoseconds{ p }; }
+        { return decode_timestamp(p); }
 
         static value_type parse(char const* ymdhmsf, bool raw = false) noexcept
         { return parse_timestamp(ymdhmsf, raw); }
@@ -847,7 +855,7 @@ namespace q {
         IndexableType<TypeTraits<kTime>, int32_t>,
         NullableType<TypeTraits<kTime>, int32_t>,
         NumericType<TypeTraits<kTime>, int32_t>,
-        TemporalType<TypeTraits<kTime>, int32_t, Time>
+        TemporalType<TypeTraits<kTime>, int32_t, Milliseconds>
     {
         static constexpr TypeId type_id = kTime;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -879,11 +887,7 @@ namespace q {
         { return encode_time(hour, minute, second, millis); }
 
         static value_type encode(temporal const& t) noexcept
-        {
-            return (t.is_negative() ? -1 : 1)
-                * encode_time(t.hours().count(), t.minutes().count(),
-                    int(t.seconds().count()), int(t.subseconds().count()));
-        }
+        { return encode_time(t); }
 
         static temporal decode(const_reference t) noexcept
         { return temporal{ std::chrono::milliseconds{ t } }; }
@@ -897,8 +901,11 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            if (!TypeTraits::print_special(out, v))
-                out << decode(v);
+            if (TypeTraits::print_special(out, v))
+                return;
+
+            auto const t = decode(v) - Days{};
+            out << date::hh_mm_ss<std::chrono::milliseconds>{ t };
         }
     };
 
@@ -908,7 +915,7 @@ namespace q {
         IndexableType<TypeTraits<kDatetime>, double>,
         NullableType<TypeTraits<kDatetime>, double>,
         NumericType<TypeTraits<kDatetime>, double>,
-        TemporalType<TypeTraits<kDatetime>, double, TimePoint>
+        TemporalType<TypeTraits<kDatetime>, double, Milliseconds>
     {
         static constexpr TypeId type_id = kDatetime;
         using BaseTypeTraits = TypeTraits<kFloat>;
@@ -943,12 +950,8 @@ namespace q {
         static value_type encode(temporal const& t) noexcept
         { return encode_datetime(t); }
 
-        static temporal decode(const_reference t) noexcept
-        {
-            return TimePoint{ date::sys_days{ Epoch } } + std::chrono::milliseconds{
-                long long(t * ratio<std::chrono::milliseconds, date::days>())
-            };
-        }
+        static temporal decode(const_reference z) noexcept
+        { return decode_datetime(z); }
 
         static value_type parse(long long yyyymmddhhmmssf3) noexcept
         { return parse_datetime(yyyymmddhhmmssf3); }
@@ -976,7 +979,7 @@ namespace q {
         IndexableType<TypeTraits<kMinute>, int32_t>,
         NullableType<TypeTraits<kMinute>, int32_t>,
         NumericType<TypeTraits<kMinute>, int32_t>,
-        TemporalType<TypeTraits<kMinute>, int32_t, Time>
+        TemporalType<TypeTraits<kMinute>, int32_t, Seconds>
     {
         static constexpr TypeId type_id = kMinute;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -1008,10 +1011,7 @@ namespace q {
         { return encode_minute(hour, minute); }
 
         static value_type encode(temporal const& t) noexcept
-        {
-            return (t.is_negative() ? -1 : 1)
-                * encode_minute(t.hours().count(), t.minutes().count());
-        }
+        { return encode_minute(t); }
 
         static temporal decode(const_reference t) noexcept
         { return temporal{ std::chrono::minutes{ t } }; }
@@ -1028,13 +1028,12 @@ namespace q {
             if (TypeTraits::print_special(out, v))
                 return;
 
-            auto const t = decode(v);
-            out << std::internal;
-            if (t.is_negative())
+            date::hh_mm_ss<std::chrono::seconds> const hms{ decode(v) - Days{} };
+            if (hms.is_negative())
                 out << '-';
-            out << std::setfill('0')
-                << std::setw(2) << t.hours().count() << ':'
-                << std::setw(2) << t.minutes().count();
+            out << std::setfill('0') << std::internal
+                << std::setw(2) << hms.hours().count() << ':'
+                << std::setw(2) << hms.minutes().count();
         }
     };
 
@@ -1044,7 +1043,7 @@ namespace q {
         IndexableType<TypeTraits<kSecond>, int32_t>,
         NullableType<TypeTraits<kSecond>, int32_t>,
         NumericType<TypeTraits<kSecond>, int32_t>,
-        TemporalType<TypeTraits<kSecond>, int32_t, Time>
+        TemporalType<TypeTraits<kSecond>, int32_t, Seconds>
     {
         static constexpr TypeId type_id = kSecond;
         using BaseTypeTraits = TypeTraits<kInt>;
@@ -1076,11 +1075,7 @@ namespace q {
         { return encode_second(hour, minute, second); }
 
         static value_type encode(temporal const& t) noexcept
-        {
-            return (t.is_negative() ? -1 : 1)
-                * encode_second(t.hours().count(), t.minutes().count(),
-                    int(t.seconds().count()));
-        }
+        { return encode_second(t); }
 
         static temporal decode(const_reference t) noexcept
         { return temporal{ std::chrono::seconds{ t} }; }
@@ -1097,10 +1092,8 @@ namespace q {
             if (TypeTraits::print_special(out, v))
                 return;
 
-            using Precision = std::chrono::seconds;
-            auto const t = decode(v);
-            out << date::hh_mm_ss<Precision>{
-                std::chrono::duration_cast<Precision>(t.to_duration()) };
+            auto const t = decode(v) - Days{};
+            out << date::hh_mm_ss<std::chrono::seconds>{ t };
         }
     };
 

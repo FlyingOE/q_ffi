@@ -10,7 +10,7 @@ namespace
 {
     ::J compose_timestamp(long long date, long long time) noexcept
     {
-        return date * q::ratio<nanoseconds, date::days>() + time;
+        return date * q::time_scale_v<nanoseconds, date::days> + time;
     }
 
     ::J parse_raw_timestamp(char const* yyyymmddhhmmssf9) noexcept
@@ -51,18 +51,23 @@ namespace
     return compose_timestamp(date, time);
 }
 
-::J q::temporal::encode_timestamp(q::TimePoint const& t) noexcept
+::J q::temporal::encode_timestamp(q::Nanoseconds const& t) noexcept
 {
     auto const d = floor<date::days>(t);
     date::year_month_day const ymd{ d };
-    auto const hmsn = date::make_time(t - d);
+    auto const hmsf = date::make_time(t - d);
 
     auto const date = encode_date(
         int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()));
     auto const time = encode_timespan(0,
-        hmsn.hours().count(), hmsn.minutes().count(), hmsn.seconds().count(),
-        hmsn.subseconds().count());
+        hmsf.hours().count(), hmsf.minutes().count(), hmsf.seconds().count(),
+        hmsf.subseconds().count());
     return compose_timestamp(date, time);
+}
+
+q::Nanoseconds q::temporal::decode_timestamp(::J p) noexcept
+{
+    return Nanoseconds{ Days{ Epoch } } + std::chrono::nanoseconds{ p };
 }
 
 ::J q::temporal::parse_timestamp(char const* ymdhmsf, bool raw) noexcept
@@ -95,8 +100,25 @@ namespace
 
 ::I q::temporal::encode_month(int year, int month) noexcept
 {
-    return (year - int(Epoch.year())) * ratio<date::months, date::years>()
+    return (year - int(Epoch.year())) * time_scale_v<date::months, date::years>
         + month - 1;
+}
+
+::I q::temporal::encode_month(q::Days const& d) noexcept
+{
+    date::year_month_day const ym{ d };
+    return encode_month(int(ym.year()), unsigned(ym.month()));
+}
+
+q::Days q::temporal::decode_month(::I m) noexcept
+{
+    auto yyyy = (m + 1) / time_scale_v<date::months, date::years> + int(Epoch.year());
+    auto mm = (m + 1) % time_scale_v<date::months, date::years>;
+    if (mm <= 0) {
+        mm += time_scale_v<date::months, date::years>;
+        yyyy--;
+    }
+    return Days{ date::year{ yyyy } / mm / 1 };
 }
 
 ::I q::temporal::parse_month(int yyyymm) noexcept
@@ -123,17 +145,6 @@ namespace
     return encode_month(year, month);
 }
 
-date::year_month q::temporal::decode_month(::I m) noexcept
-{
-    auto yyyy = (m + 1) / ratio<date::months, date::years>() + int(Epoch.year());
-    auto mm = (m + 1) % ratio<date::months, date::years>();
-    if (mm <= 0) {
-        mm += ratio<date::months, date::years>();
-        yyyy--;
-    }
-    return date::year{ yyyy } / mm;
-}
-
 #pragma endregion
 
 #pragma region <kDate> conversions
@@ -141,6 +152,20 @@ date::year_month q::temporal::decode_month(::I m) noexcept
 ::I q::temporal::encode_date(int year, int month, int day) noexcept
 {
     return ::ymd(year, month, day);
+}
+
+::I q::temporal::encode_date(Days const& d) noexcept
+{
+    date::year_month_day const ymd{ d };
+    return encode_date(int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()));
+}
+
+q::Days q::temporal::decode_date(::I d) noexcept
+{
+    auto yyyymmdd = ::dj(d);
+    auto const y = yyyymmdd / 100'00;
+    yyyymmdd %= 100'00;
+    return Days{ date::year{ y } / (yyyymmdd / 100) / (yyyymmdd % 100) };
 }
 
 ::I q::temporal::parse_date(int yyyymmdd) noexcept
@@ -168,14 +193,6 @@ date::year_month q::temporal::decode_month(::I m) noexcept
     return encode_date(year, month, day);
 }
 
-date::year_month_day q::temporal::decode_date(::I d) noexcept
-{
-    auto yyyymmdd = ::dj(d);
-    auto const y = yyyymmdd / 100'00;
-    yyyymmdd %= 100'00;
-    return date::year{ y } / (yyyymmdd / 100) / (yyyymmdd % 100);
-}
-
 #pragma endregion
 
 #pragma region <kDatetime> conversions
@@ -185,7 +202,7 @@ namespace
     ::F compose_datetime(int date, int time) noexcept
     {
         return date + time
-            / ::F(q::ratio<std::chrono::milliseconds, date::days>());
+            / ::F(q::time_scale_v<std::chrono::milliseconds, date::days>);
     }
 
 }//namespace /*anonymous*/
@@ -198,7 +215,7 @@ namespace
     return compose_datetime(date, time);
 }
 
-::F q::temporal::encode_datetime(q::TimePoint const& t) noexcept
+::F q::temporal::encode_datetime(q::Milliseconds const& t) noexcept
 {
     auto const d = floor<date::days>(t);
     date::year_month_day const ymd{ d };
@@ -208,8 +225,14 @@ namespace
         int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()));
     auto const time = encode_time(
         hmsf.hours().count(), hmsf.minutes().count(), int(hmsf.seconds().count()),
-        int(hmsf.subseconds().count() / ratio<nanoseconds, milliseconds>()));
+        int(hmsf.subseconds().count() / time_scale_v<nanoseconds, milliseconds>));
     return compose_datetime(date, time);
+}
+
+q::Milliseconds q::temporal::decode_datetime(::F z) noexcept
+{
+    return Milliseconds{ Days{ Epoch } }
+        + milliseconds{ long long(std::round(z * time_scale_v<milliseconds, date::days>)) };
 }
 
 ::F q::temporal::parse_datetime(long long yyyymmddhhmmssf3) noexcept
@@ -246,10 +269,18 @@ namespace
 ::J q::temporal::encode_timespan(long long day,
     long long hour, long long minute, long long second, long long nanos) noexcept
 {
-    return (((day * ratio<hours, date::days>() + hour
-                ) * ratio<minutes, hours>() + minute
-            ) * ratio<seconds, minutes>() + second
-        ) * ratio<nanoseconds, seconds>() + nanos;
+    return (((day * time_scale_v<hours, date::days> + hour
+                ) * time_scale_v<minutes, hours> + minute
+            ) * time_scale_v<seconds, minutes> + second
+        ) * time_scale_v<nanoseconds, seconds> + nanos;
+}
+
+::J q::temporal::encode_timespan(q::Nanoseconds const& n) noexcept
+{
+    date::hh_mm_ss<nanoseconds> const hmsf{ n - Days{} };
+    return (hmsf.is_negative() ? -1 : 1)
+        * encode_timespan(0, hmsf.hours().count(), hmsf.minutes().count(),
+            hmsf.seconds().count(), hmsf.subseconds().count());
 }
 
 ::J q::temporal::parse_timespan(long long hhmmssf9) noexcept
@@ -290,7 +321,14 @@ namespace
 
 ::I q::temporal::encode_minute(int hour, int minute) noexcept
 {
-    return hour * ratio<minutes, hours>() + minute;
+    return hour * time_scale_v<minutes, hours> + minute;
+}
+
+::I q::temporal::encode_minute(q::Seconds const& t) noexcept
+{
+    date::hh_mm_ss<seconds> hms{ t - Days{} };
+    return (hms.is_negative() ? -1 : 1)
+        * encode_minute(hms.hours().count(), hms.minutes().count());
 }
 
 ::I q::temporal::parse_minute(int hhmm) noexcept
@@ -321,8 +359,8 @@ namespace
 {
     auto const sign = std_ext::signum(m);
     m *= sign;
-    auto const hour = m / ratio<minutes, hours>();
-    auto const minute = m % ratio<minutes, hours>();
+    auto const hour = m / time_scale_v<minutes, hours>;
+    auto const minute = m % time_scale_v<minutes, hours>;
     return sign * (hour * 100 + minute);
 }
 
@@ -330,27 +368,48 @@ namespace
 
 #pragma region <kSecond> conversions
 
-::I q::encode_second(int hour, int minute, int second) noexcept
+::I q::temporal::encode_second(int hour, int minute, int second) noexcept
 {
-    return hour * 3600 + minute * 60 + second;
+    return (hour * time_scale_v<minutes, hours> + minute
+        ) * time_scale_v<seconds, minutes> + second;
 }
 
-::I q::parse_second(int hhmmss) noexcept
+::I q::temporal::encode_second(q::Seconds const& t) noexcept
+{
+    date::hh_mm_ss<seconds> const hms{ t - Days{} };
+    return (hms.is_negative() ? -1 : 1)
+        * encode_second(hms.hours().count(), hms.minutes().count(),
+            int(hms.seconds().count()));
+}
+
+::I q::temporal::parse_second(int hhmmss) noexcept
 {
     return encode_second(hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100);
 }
 
-::I q::parse_second(char const* hms) noexcept
+::I q::temporal::decode_second(::I s) noexcept
+{
+    auto const sign = std_ext::signum(s);
+    s *= sign;
+    auto const second = s % time_scale_v<seconds, minutes>;
+    s /= time_scale_v<seconds, minutes>;
+    auto const minute = s % time_scale_v<minutes, hours>;
+    auto const hour = s / time_scale_v<minutes, hours>;
+    return sign * static_cast<::I>(hour * 100'00 + minute * 100 + second);
+}
+
+::I q::temporal::parse_second(char const* hms) noexcept
 {
     using Traits = TypeTraits<kSecond>;
     static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?))?v?$)" };
+    static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1;
 
     if (nullptr == hms)
         return Traits::null();
     std::cmatch matches;
     if (!std::regex_match(hms, matches, pattern))
         return Traits::null();
-    assert(1 + 4 == matches.size());
+    assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
     auto const hour = std::stoi(matches.str(2));
@@ -359,27 +418,25 @@ namespace
     return sign * encode_second(hour, minute, second);
 }
 
-::I q::decode_second(::I s) noexcept
-{
-    auto const sign = std_ext::signum(s);
-    s *= sign;
-    auto const hour = s / 3600;
-    auto const minute = s / 60 % 60;
-    auto const second = s % 60;
-    return sign * (hour * 100'00 + minute * 100 + second);
-}
-
 #pragma endregion
 
 #pragma region <kTime> conversions
 
 ::I q::temporal::encode_time(int hour, int minute, int second, int millis) noexcept
 {
-    auto const t = ((hour * ratio<minutes, hours>() + minute
-            ) * ratio<seconds, minutes>() + second
-        ) * ratio<milliseconds, seconds>() + millis;
+    auto const t = ((hour * time_scale_v<minutes, hours> + minute
+            ) * time_scale_v<seconds, minutes> + second
+        ) * time_scale_v<milliseconds, seconds> + millis;
     assert(std::numeric_limits<::I>::min() <= t && t <= std::numeric_limits<::I>::max());
     return static_cast<::I>(t);
+}
+
+::I q::temporal::encode_time(Milliseconds const& t) noexcept
+{
+    date::hh_mm_ss<milliseconds> hmsf{ t - Days{} };
+    return (hmsf.is_negative() ? -1 : 1)
+        * encode_time(hmsf.hours().count(), hmsf.minutes().count(),
+            int(hmsf.seconds().count()), int(hmsf.subseconds().count()));
 }
 
 ::I q::temporal::parse_time(int hhmmssf3) noexcept
