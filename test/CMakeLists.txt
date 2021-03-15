@@ -16,6 +16,7 @@ target_sources(${target_name}
         ${target_source_dir}/test_ktypes.cpp
         ${target_source_dir}/test_temporals.cpp
         ${target_source_dir}/test_kpointer.cpp
+        ${target_source_dir}/test_type_convert.cpp
 )
 target_include_directories(${target_name}
     PRIVATE

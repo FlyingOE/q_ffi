@@ -20,6 +20,7 @@ set(q_ffi_PUBLIC_API
     ${target_header_dir}/ktype_traits.hpp
     ${target_header_dir}/kerror.hpp
     ${target_header_dir}/kpointer.hpp
+    ${target_header_dir}/type_convert.hpp
 )
 set(q_ffi_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/q_ffi_config.h
@@ -31,6 +32,7 @@ set(q_ffi_SOURCES
     ${target_source_dir}/ktypes.cpp
     ${target_source_dir}/ktype_traits.cpp
     ${target_source_dir}/kerror.cpp
+    ${target_source_dir}/type_convert.cpp
 )
 set(q_ffi_ALWAYS_BUILD
     ${target_source_dir}/version.cpp
