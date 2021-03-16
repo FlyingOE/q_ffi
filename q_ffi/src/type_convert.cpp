@@ -1,24 +1,17 @@
 #include "type_convert.hpp"
-//////////////////>>>>
-#include <cstdio>
-#include <cmath>
-#ifdef _MSC_VER
-#   include <winnt.h>
-#   include <cerrno>
-#endif
-//////////////////<<<<
 #include <algorithm>
 #include <date/date.h>
 #include "ktype_traits.hpp"
 #include "kerror.hpp"
 
-#define GET_VALUE_TYPE(kh, x)  \
-    case -(kh): \
-        return q::TypeTraits<(kh)>::value((x))
+#define GET_VALUE_TYPE(T, x)  \
+    case -(T): \
+        return TypeTraits<(T)>::value((x))
 
-#define GET_VALUE_LIST(kh, x, r)  \
-    case (kh):  \
-        std::copy(q::TypeTraits<(kh)>::index((x)), q::TypeTraits<(kh)>::index((x)) + count((x)), (r).begin());  \
+#define GET_VALUE_LIST(T, x, r)  \
+    case (T):  \
+        std::copy(TypeTraits<(T)>::index((x)), TypeTraits<(T)>::index((x)) + count((x)),    \
+            (r).begin());   \
         break
 
 #pragma region q <==> C++ decimal
@@ -178,6 +171,11 @@ std::vector<std::string> q::q2Strings(K x) noexcept(false)
 #pragma endregion
 
 #pragma region Unix <==> q temporal types
+
+void q::details::signalError(char const* message) noexcept(false)
+{
+    throw K_error(message);
+}
 
 /*
 #ifdef _MSC_VER

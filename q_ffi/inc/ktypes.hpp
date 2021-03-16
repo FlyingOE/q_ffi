@@ -38,9 +38,9 @@ namespace q
         kError = -128
     };
 
-    template<typename Elem, typename ElemTraits>
-    std::basic_ostream<Elem, ElemTraits>& operator<<(
-        std::basic_ostream<Elem, ElemTraits>& os, TypeId tid)
+    template<typename Elem, typename ElemTr>
+    std::basic_ostream<Elem, ElemTr>& operator<<(
+        std::basic_ostream<Elem, ElemTr>& os, TypeId tid)
     {
 #   define Q_TYPEID_OUTPUT(T)  \
         case -(k##T): return os << "{" #T "}";  \
@@ -115,31 +115,6 @@ namespace q
     ///     If the q type is recognized, @c k is converted using the @c to_str method in the respective type traits.
     q_ffi_API std::string to_string(::K const k);
 
-#   pragma region kdb+ temporal type representations
-
-    /// @brief kdb+ date/month (time point).
-    using Date = date::sys_days;
-
-    /// @brief kdb+ minute (time duration).
-    using Minutes = std::chrono::minutes;
-
-    /// @brief kdb+ second (time duration).
-    using Seconds = std::chrono::seconds;
-
-    /// @brief kdb+ time (time duration).
-    using Milliseconds = std::chrono::milliseconds;
-
-    /// @brief kdb+ datetime (time point).
-    using DateTime = date::sys_time<std::chrono::milliseconds>;
-
-    /// @brief kdb+ timespan (time duration).
-    using Nanoseconds = std::chrono::nanoseconds;
-
-    /// @brief kdb+ timestamp (time point).
-    using Timestamp = date::sys_time<std::chrono::nanoseconds>;
-
-#   pragma endregion
-
     /// @brief UDLs that are adapted from q literal suffices.
     inline namespace literals
     {
@@ -179,6 +154,29 @@ namespace q
 
     }//inline namespace q::literals
 
-}//namespace q
+#   pragma region kdb+ temporal type representations
 
-#pragma endregion
+    /// @brief kdb+ date/month (time point).
+    using Date = date::sys_days;
+
+    /// @brief kdb+ minute (time duration).
+    using Minutes = std::chrono::minutes;
+
+    /// @brief kdb+ second (time duration).
+    using Seconds = std::chrono::seconds;
+
+    /// @brief kdb+ time (time duration).
+    using Milliseconds = std::chrono::milliseconds;
+
+    /// @brief kdb+ datetime (time point).
+    using DateTime = date::sys_time<std::chrono::milliseconds>;
+
+    /// @brief kdb+ timespan (time duration).
+    using Nanoseconds = std::chrono::nanoseconds;
+
+    /// @brief kdb+ timestamp (time point).
+    using Timestamp = date::sys_time<std::chrono::nanoseconds>;
+
+#   pragma endregion
+
+}//namespace q
