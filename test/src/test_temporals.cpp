@@ -12,12 +12,13 @@ namespace q
     {
     protected:
         using value_type = typename TraitsInfo::value_type;
+
         static std::map<value_type, value_type> const temporals_;
     };
 
 #   define TEMPORAL_TEST_SET(tid)   \
         template<>  \
-        std::map<typename TypeTraits<(tid)>::value_type, typename TypeTraits<(tid)>::value_type> const  \
+        std::map<TypeTraits<(tid)>::value_type, TypeTraits<(tid)>::value_type> const  \
         TemporalTraitsTests<TypeTraits<(tid)>>::temporals_
 
     using namespace literals;
@@ -177,42 +178,29 @@ namespace q
     class TemporalChronoTests : public ::testing::Test
     {
     protected:
-        static std::map<typename TemporalTraits::value_type, typename TemporalTraits::temporal> const
-            samples_;
+        using value_type = typename TemporalTraits::value_type;
+        using temporal_type = typename TemporalTraits::temporal_type;
+
+        static std::map<value_type, temporal_type> const samples_;
 
     private:
-        static Milliseconds make_time(long long t) noexcept
-        {
-            return Milliseconds{ std::chrono::milliseconds{ t } };
-        }
-
-        static Seconds make_second(int s) noexcept
-        {
-            return Seconds{ std::chrono::seconds{ s } };
-        }
-
         static Seconds make_minute(int m) noexcept
         {
             return Seconds{ std::chrono::minutes{ m } };
         }
 
-        static Milliseconds make_datetime(
+        static DateTime make_datetime(
             int y, unsigned mon, unsigned d, int h, int m, int s, int ms) noexcept
         {
-            return Milliseconds{ Days{ date::year(y) / mon / d } }
+            return DateTime{ Date{ date::year(y) / mon / d } }
                 + std::chrono::hours{ h } + std::chrono::minutes{ m }
                 + std::chrono::seconds{ s } + std::chrono::milliseconds{ ms };
         }
 
-        static Nanoseconds make_timespan(long long nanos) noexcept
+        static Timestamp make_timestamp(int year, unsigned month, unsigned day,
+            int h, int m, int s, long long ns) noexcept
         {
-            return Nanoseconds{ std::chrono::nanoseconds{ nanos } };
-        }
-
-        static Nanoseconds make_timestamp(
-            int y, unsigned mon, unsigned d, int h, int m, int s, long long ns) noexcept
-        {
-            return Nanoseconds{ Days{ date::year{ y } / mon / d } }
+            return Timestamp{ Date{ date::year{ year } / month / day } }
                 + std::chrono::hours(h) + std::chrono::minutes(m)
                 + std::chrono::seconds(s) + std::chrono::nanoseconds(ns);
         }
@@ -223,11 +211,11 @@ namespace q
 
 #   define TEMPORAL_CHRONO_TEST_SET(tid)   \
         template<>  \
-        std::map<typename TypeTraits<(tid)>::value_type, typename TypeTraits<(tid)>::temporal> const \
+        std::map<TypeTraits<(tid)>::value_type, TypeTraits<(tid)>::temporal_type> const \
         TemporalChronoTests<TypeTraits<(tid)>>::samples_
 
     TEMPORAL_CHRONO_TEST_SET(kTimestamp) = {
-        { "2000.01.01D00:00:00.000000000"_qp, Nanoseconds{ Days{ Epoch } } },
+        { "2000.01.01D00:00:00.000000000"_qp, Timestamp{ Date{ Epoch } } },
         { "2020/9/10D15:7:1.012345678"_qp, make_timestamp(2020, 9, 10, 15, 7, 1, 12'345'678LL) },
         { "1997-11-28D9:59:59.1p"_qp, make_timestamp(1997, 11, 28, 9, 59, 59, 100'000'000LL) },
         { 19700101012345678900000_qp, make_timestamp(1970, 1, 1, 1, 23, 45, 678'900'000LL) },
@@ -236,29 +224,29 @@ namespace q
         { "1900-1-1D23:45:7.999999999"_qp, make_timestamp(1900, 1, 1, 23, 45, 7, 999'999'999LL) },
     };
     TEMPORAL_CHRONO_TEST_SET(kMonth) = {
-        { "2000.01m"_qm, date::sys_days{ 2000_y / 1 / 1 } },
-        { "2020/9"_qm, date::sys_days{ 2020_y / 9 / 1 } },
-        { "1997-11"_qm, date::sys_days{ 1997_y / 11 / 1 } },
-        { 197001_qm, date::sys_days{ 1970_y / 1 / 1 } },
-        { 196912_qm, date::sys_days{ 1969_y / 12 / 1 } },
-        { "1900.1"_qm, date::sys_days{ 1900_y / 1 / 1 } },
-        { "1999.12"_qm, date::sys_days{ 1999_y / 12 / 1 } },
-        { "2038.01"_qm, date::sys_days{ 2038_y / 1 / 1 } },
-        { "2038.02"_qm, date::sys_days{ 2038_y / 2 / 1 } },
+        { "2000.01m"_qm, Date{ 2000_y / 1 / 1 } },
+        { "2020/9"_qm, Date{ 2020_y / 9 / 1 } },
+        { "1997-11"_qm, Date{ 1997_y / 11 / 1 } },
+        { 197001_qm, Date{ 1970_y / 1 / 1 } },
+        { 196912_qm, Date{ 1969_y / 12 / 1 } },
+        { "1900.1"_qm, Date{ 1900_y / 1 / 1 } },
+        { "1999.12"_qm, Date{ 1999_y / 12 / 1 } },
+        { "2038.01"_qm, Date{ 2038_y / 1 / 1 } },
+        { "2038.02"_qm, Date{ 2038_y / 2 / 1 } },
     };
     TEMPORAL_CHRONO_TEST_SET(kDate) = {
-        { "2000.01.01"_qd, date::sys_days{ 2000_y / 1 / 1 } },
-        { "2020/9/10"_qd, date::sys_days{ 2020_y / 9 / 10 } },
-        { "1997-11-28"_qd, date::sys_days{ 1997_y / 11 / 28 } },
-        { 19700101_qd, date::sys_days{ 1970_y / 1 / 1 } },
-        { 19691231_qd, date::sys_days{ 1969_y / 12 / 31 } },
-        { "1900.1.1"_qd, date::sys_days{ 1900_y / 1 / 1 } },
-        { "19991231"_qd, date::sys_days{ 1999_y / 12 / 31 } },
-        { "2038.01.19"_qd, date::sys_days{ 2038_y / 1 / 19 } },
-        { "2038.01.20"_qd, date::sys_days{ 2038_y / 1 / 20 } },
+        { "2000.01.01"_qd, Date{ 2000_y / 1 / 1 } },
+        { "2020/9/10"_qd, Date{ 2020_y / 9 / 10 } },
+        { "1997-11-28"_qd, Date{ 1997_y / 11 / 28 } },
+        { 19700101_qd, Date{ 1970_y / 1 / 1 } },
+        { 19691231_qd, Date{ 1969_y / 12 / 31 } },
+        { "1900.1.1"_qd, Date{ 1900_y / 1 / 1 } },
+        { "19991231"_qd, Date{ 1999_y / 12 / 31 } },
+        { "2038.01.19"_qd, Date{ 2038_y / 1 / 19 } },
+        { "2038.01.20"_qd, Date{ 2038_y / 1 / 20 } },
     };
     TEMPORAL_CHRONO_TEST_SET(kDatetime) = {
-        { "2000.01.01T00:00:00.000"_qz, Milliseconds{ Days{ Epoch } } },
+        { "2000.01.01T00:00:00.000"_qz, DateTime{ Date{ Epoch } } },
         { "2020/9/10T15:7:1.012"_qz, make_datetime(2020, 9, 10, 15, 7, 1, 12) },
         { "1997-11-28T9:59:59.1z"_qz, make_datetime(1997, 11, 28, 9, 59, 59, 100) },
         { 19700101'012345'678_qz, make_datetime(1970, 1, 1, 1, 23, 45, 678) },
@@ -268,12 +256,12 @@ namespace q
     };
     TEMPORAL_CHRONO_TEST_SET(kTimespan) = {
         { "0D00:00:00.000000000"_qn, Nanoseconds{} },
-        { "100D15:7:1.01234"_qn, make_timespan(8694421'012'340'000LL) },
-        { "-1D9:59:59.1n"_qn, make_timespan(-122399'100'000'000LL) },
-        { 93000'000'000'000_qn, make_timespan(34200'000'000'000LL) },
-        { -375959'000'000'001_qn, make_timespan(-136799'000'000'001LL) },
-        { "-42:01:60.012"_qn, make_timespan(-151320'012'000'000LL) },
-        { "123:45:67.987654321"_qn, make_timespan(445567'987654321LL) },
+        { "100D15:7:1.01234"_qn, Nanoseconds{ 8694421'012'340'000LL } },
+        { "-1D9:59:59.1n"_qn, Nanoseconds{ -122399'100'000'000LL } },
+        { 93000'000'000'000_qn, Nanoseconds{ 34200'000'000'000LL } },
+        { -375959'000'000'001_qn, Nanoseconds{ -136799'000'000'001LL } },
+        { "-42:01:60.012"_qn, Nanoseconds{ -151320'012'000'000LL } },
+        { "123:45:67.987654321"_qn, Nanoseconds{ 445567'987654321LL } },
     };
     TEMPORAL_CHRONO_TEST_SET(kMinute) = {
         { "00:00"_qu, Seconds{} },
@@ -287,21 +275,21 @@ namespace q
     };
     TEMPORAL_CHRONO_TEST_SET(kSecond) = {
         { "00:00:00"_qv, Seconds{} },
-        { "15:7:1"_qv, make_second(54421) },
-        { "-9:59:59v"_qv, make_second(-35999) },
-        { 93000_qv, make_second(34200) },
-        { -135959_qv, make_second(-50399) },
-        { "123:45:67"_qv, make_second(445567) },
-        { "-42:01"_qv, make_second(-151260) },
+        { "15:7:1"_qv, Seconds{ 54421 } },
+        { "-9:59:59v"_qv, Seconds{ -35999 } },
+        { 93000_qv, Seconds{ 34200 } },
+        { -135959_qv, Seconds{ -50399 } },
+        { "123:45:67"_qv, Seconds{ 445567 } },
+        { "-42:01"_qv, Seconds{ -151260 } },
     };
     TEMPORAL_CHRONO_TEST_SET(kTime) = {
         { "00:00:00.000"_qt, Milliseconds{} },
-        { "15:7:1.0"_qt, make_time(54421'000LL) },
-        { "-9:59:59.1t"_qt, make_time(-35999'100LL) },
-        { 93000000_qt, make_time(34200'000LL) },
-        { -135959001_qt, make_time(-50399'001LL) },
-        { "-42:01"_qt, make_time(-151260'000LL) },
-        { "123:45:67"_qt, make_time(445567'000LL) },
+        { "15:7:1.0"_qt, Milliseconds{ 54421'000LL } },
+        { "-9:59:59.1t"_qt, Milliseconds{ -35999'100LL } },
+        { 93000000_qt, Milliseconds{ 34200'000LL } },
+        { -135959001_qt, Milliseconds{ -50399'001LL } },
+        { "-42:01"_qt, Milliseconds{ -151260'000LL } },
+        { "123:45:67"_qt, Milliseconds{ 445567'000LL } },
     };
 
     using TemporalChronoTestTypes = TemporalTraitsTestTypes;
@@ -313,7 +301,9 @@ namespace q
         using Traits = TypeTraits<TypeParam::type_id>;
 
         for (auto const& sample : this->samples_) {
-            //std::cout << sample.first << std::endl;
+            std::ostringstream buffer;
+            Traits::print(buffer, sample.first);
+            SCOPED_TRACE(buffer.str());
             if (std::is_floating_point_v<typename Traits::value_type>)
                 EXPECT_FLOAT_EQ(sample.first, Traits::encode(sample.second));
             else
@@ -326,7 +316,9 @@ namespace q
         using Traits = TypeTraits<TypeParam::type_id>;
 
         for (auto const& sample : this->samples_) {
-            //std::cout << sample.first << std::endl;
+            std::ostringstream buffer;
+            Traits::print(buffer, sample.first);
+            SCOPED_TRACE(buffer.str());
             EXPECT_EQ(sample.second, Traits::decode(sample.first));
         }
     }

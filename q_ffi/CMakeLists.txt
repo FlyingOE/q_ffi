@@ -17,7 +17,7 @@ set(q_ffi_PUBLIC_API
     ${target_header_dir}/ffi.h
     ${target_header_dir}/std_ext.hpp
     ${target_header_dir}/ktypes.hpp
-    ${target_header_dir}/ktype_traits.hpp
+    ${target_header_dir}/ktype_traits.hpp ${target_header_dir}/ktype_traits_io.hpp
     ${target_header_dir}/kerror.hpp
     ${target_header_dir}/kpointer.hpp
     ${target_header_dir}/type_convert.hpp

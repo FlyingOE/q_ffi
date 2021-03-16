@@ -124,12 +124,16 @@ namespace q
     TYPED_TEST(TypeTraitsTests, qType)
     {
         using Traits = TypeTraits<TypeParam::type_id>;
-        SCOPED_TRACE("q::type() for atoms");
-        this->template test_type<Traits>(
-            has_value<Traits::type_id>(), kError != TypeParam::type_id);
-        SCOPED_TRACE("q::type() for lists");
-        this->template test_list_type<Traits>(
-            can_index<Traits::type_id>());
+        {
+            SCOPED_TRACE("q::type() for atoms");
+            this->template test_type<Traits>(
+                has_value<Traits::type_id>(), kError != TypeParam::type_id);
+        }
+        {
+            SCOPED_TRACE("q::type() for lists");
+            this->template test_list_type<Traits>(
+                can_index<Traits::type_id>());
+        }
     }
 
 #pragma endregion
@@ -346,6 +350,7 @@ namespace q
             K_ptr k{ Traits::atom(sample.first) };
             ASSERT_NE(k.get(), Nil);
             EXPECT_EQ(type(k.get()), -TypeParam::type_id);
+
             SCOPED_TRACE("literal for atom");
             this->expect_equal(Traits::value(k.get()), sample.first);
         }

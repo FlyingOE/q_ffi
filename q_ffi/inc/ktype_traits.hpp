@@ -5,8 +5,6 @@
 #include <cstring>
 #include <algorithm>
 #include <iterator>
-#include <sstream>
-#include <iomanip>
 #include "q_ffi.h"
 #include <k_compat.h>
 #include "std_ext.hpp"
@@ -15,60 +13,17 @@
 
 namespace q {
 
-    inline namespace temporal
+    /// @brief (Time units) number of Num per unit of Denom
+    template<typename Num, typename Denom>
+    struct time_scale
     {
-        q_ffi_API ::J encode_timestamp(long long year, long long month, long long day,
-            long long hour, long long minute, long long second, long long nanos) noexcept;
-        q_ffi_API ::J encode_timestamp(Nanoseconds const& t) noexcept;
-        q_ffi_API Nanoseconds decode_timestamp(::J p) noexcept;
-        /// @param raw If @c ymdhmsf is a "raw literal" string
-        q_ffi_API ::J parse_timestamp(char const* ymdhmsf, bool raw = false) noexcept;
+        static constexpr auto value = std::chrono::duration_cast<Num>(Denom{ 1 }).count();
+    };
 
-        q_ffi_API ::I encode_month(int year, int month) noexcept;
-        q_ffi_API ::I encode_month(Days const& d) noexcept;
-        q_ffi_API Days decode_month(::I m) noexcept;
-        q_ffi_API ::I parse_month(int yyyymm) noexcept;
-        q_ffi_API ::I parse_month(char const* ym) noexcept;
+    template<typename Num, typename Denom>
+    inline constexpr auto time_scale_v = time_scale<Num, Denom>::value;
 
-        q_ffi_API ::I encode_date(int year, int month, int day) noexcept;
-        q_ffi_API ::I encode_date(Days const& d) noexcept;
-        q_ffi_API Days decode_date(::I d) noexcept;
-        q_ffi_API ::I parse_date(int yyyymmdd) noexcept;
-        q_ffi_API ::I parse_date(char const* ymd) noexcept;
-
-        q_ffi_API ::F encode_datetime(int year, int month, int day,
-            int hour, int minute, int second, int millis) noexcept;
-        q_ffi_API ::F encode_datetime(Milliseconds const& t) noexcept;
-        q_ffi_API Milliseconds decode_datetime(::F z) noexcept;
-        q_ffi_API ::F parse_datetime(long long yyyymmddhhmmssf3) noexcept;
-        q_ffi_API ::F parse_datetime(char const* ymdhmsf) noexcept;
-
-        q_ffi_API ::J encode_timespan(long long day,
-            long long hour, long long minute, long long second, long long nanos) noexcept;
-        q_ffi_API ::J encode_timespan(Nanoseconds const& n) noexcept;
-        q_ffi_API ::J parse_timespan(long long hhmmssf9) noexcept;
-        q_ffi_API ::J parse_timespan(char const* dhmsf) noexcept;
-
-        q_ffi_API ::I encode_minute(int hour, int minute) noexcept;
-        q_ffi_API ::I encode_minute(Seconds const& m) noexcept;
-        q_ffi_API ::I decode_minute(::I m) noexcept;
-        q_ffi_API ::I parse_minute(int hhmm) noexcept;
-        q_ffi_API ::I parse_minute(char const* hm) noexcept;
-
-        q_ffi_API ::I encode_second(int hour, int minute, int second) noexcept;
-        q_ffi_API ::I encode_second(Seconds const& m) noexcept;
-        q_ffi_API ::I decode_second(::I s) noexcept;
-        q_ffi_API ::I parse_second(int hhmmss) noexcept;
-        q_ffi_API ::I parse_second(char const* hms) noexcept;
-
-        q_ffi_API ::I encode_time(int hour, int minute, int second, int millis) noexcept;
-        q_ffi_API ::I encode_time(Milliseconds const& t) noexcept;
-        q_ffi_API ::I parse_time(int hhmmssf3) noexcept;
-        q_ffi_API ::I parse_time(char const* hmsf) noexcept;
-
-    }//inline namespace q::temporal
-
-#pragma region Type trait facets
+    /// @brief Type traits facets
     inline namespace facets
     {
         template<typename Tr, typename Value>
@@ -87,18 +42,15 @@ namespace q {
                 return k.release();
             }
 
-            static reference value(::K k) noexcept /*to be defined*/;
-
-            static std::string to_str(const_reference v)
+            static reference value(::K)
             {
-                std::ostringstream buffer;
-                Tr::print(buffer, v);
-                return buffer.str();
+                throw std::logic_error("ValueType should implement its own value(::K)!");
             }
 
+            static std::string to_str(const_reference v);
+
             template<typename Elem, typename ElemTr>
-            static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-            { out << v; }
+            static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
         };
 
         template<typename Tr, typename Value>
@@ -108,7 +60,10 @@ namespace q {
             using reference = typename ValueType<Tr, Value>::reference;
             using const_reference = typename ValueType<Tr, Value>::const_reference;
 
-            static value_type null() noexcept /*to be defined*/;
+            static value_type null()
+            {
+                throw std::logic_error("NullableType should implement its own null()!");
+            }
 
             static bool is_null(const_reference v) noexcept
             {
@@ -124,7 +79,10 @@ namespace q {
             using pointer = typename ValueType<Tr, Value>::pointer;
             using const_pointer = typename ValueType<Tr, Value>::const_pointer;
 
-            static pointer index(::K k) noexcept /*to be defined*/;
+            static pointer index(::K)
+            {
+                throw std::logic_error("IndexableType should implement its own index(::K)!");
+            }
 
             static ::K list(std::initializer_list<value_type> const& vs) noexcept
             { return Tr::list(vs.begin(), vs.end()); }
@@ -147,7 +105,10 @@ namespace q {
             using reference = typename NullableType<Tr, Value>::reference;
             using const_reference = typename NullableType<Tr, Value>::const_reference;
 
-            static value_type inf(bool sign = true) noexcept /*to be defined*/;
+            static value_type inf(bool /*sign*/ = true)
+            {
+                throw std::logic_error("NumericType should implement its own inf(bool)!");
+            }
 
             static bool is_inf(const_reference& v, bool sign = true) noexcept
             {
@@ -156,30 +117,10 @@ namespace q {
             }
 
             template<typename Elem, typename ElemTr>
-            static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-            {
-                if (!Tr::print_special(out, v))
-                    out << std::to_string(v) << TypeCode.at(Tr::type_id);
-            }
+            static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
 
             template<typename Elem, typename ElemTr>
-            static bool print_special(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-            {
-                if (Tr::is_null(v)) {
-                    out << "0N";
-                }
-                else if (Tr::is_inf(v)) {
-                    out << "0W";
-                }
-                else if (Tr::is_inf(v, false)) {
-                    out << "-0W";
-                }
-                else {
-                    return false;   // not a special value
-                }
-                out << TypeCode.at(Tr::type_id);
-                return true;
-            }
+            static bool print_special(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
         };
 
         template<typename Tr, typename Value, typename Temporal>
@@ -187,19 +128,27 @@ namespace q {
         {
             using value_type = typename NullableType<Tr, Value>::value_type;
             using const_reference = typename NullableType<Tr, Value>::const_reference;
-            using temporal = Temporal;
+            using temporal_type = Temporal;
 
-            static value_type encode(temporal const& t) noexcept /*to be defined*/;
-            static temporal decode(const_reference v) noexcept /*to be defined*/;
+            static value_type encode(temporal_type const&)
+            {
+                throw std::logic_error("TemporalType should implement its own encode(temporal_type const&)!");
+            }
+
+            static temporal_type decode(const_reference)
+            {
+                throw std::logic_error("TemporalType should implement its own decode(const_reference)!");
+            }
         };
 
-    }//inline namespace facets
-#pragma endregion
+    }//namespace q::facets
+
+#   pragma region Type traits implementations
 
     template<TypeId tid>
     struct TypeTraits;
 
-#pragma region Type traits implementations
+#   pragma region Type traits - simple types
 
     template<>
     struct TypeTraits<kMixed> : public
@@ -213,11 +162,11 @@ namespace q {
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
 
-        /// Not an atom - intentially not defined!
-        static ::K atom(::K);
+        static ::K atom(::K)
+        { throw std::logic_error("Not an atom!"); }
 
-        /// Not an atom - intentially not defined!
-        static reference value(::K);
+        static reference value(::K)
+        { throw std::logic_error("Not an atom!"); }
 
         using IndexableType::list;
 
@@ -293,7 +242,9 @@ namespace q {
         }
     };
 
-#pragma region Decimal types
+#   pragma endregion
+
+#   pragma region Type traits - decimal types
 
     template<>
     struct TypeTraits<kShort> : public
@@ -401,9 +352,9 @@ namespace q {
         using NumericType::print;
     };
 
-#pragma endregion
+#   pragma endregion
 
-#pragma region Floating-point types
+#   pragma region Type traits - floating-point types
 
     template<>
     struct TypeTraits<kReal> : public
@@ -481,9 +432,9 @@ namespace q {
         using NumericType::print;
     };
 
-#pragma endregion
+#   pragma endregion
 
-#pragma region Character/string types
+#   pragma region Type traits - character/string types
 
     template<>
     struct TypeTraits<kChar> : public
@@ -518,7 +469,7 @@ namespace q {
         { return list(str.c_str(), str.length()); }
 
         static pointer index(::K k) noexcept
-        { return (pointer)(kG(k)); }
+        { return reinterpret_cast<pointer>(kG(k)); }
 
         static constexpr value_type null() noexcept
         { return ' '; }
@@ -566,14 +517,13 @@ namespace q {
         }
 
         static pointer index(::K k) noexcept
-        { return (value_type*)(kS(k)); }
+        { return const_cast<pointer>(static_cast<char**>(kS(k))); }
 
         static constexpr value_type null() noexcept
         { return ""; }
 
         template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        { out << '`' << v; }
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
 
     private:
         struct str_getter
@@ -586,208 +536,9 @@ namespace q {
         };
     };
 
-#pragma endregion
+#   pragma endregion
 
-#pragma region Temporal types
-
-    template<>
-    struct TypeTraits<kMonth> : public
-        ValueType<TypeTraits<kMonth>, int32_t>,
-        IndexableType<TypeTraits<kMonth>, int32_t>,
-        NullableType<TypeTraits<kMonth>, int32_t>,
-        NumericType<TypeTraits<kMonth>, int32_t>,
-        TemporalType<TypeTraits<kMonth>, int32_t, Days>
-    {
-        static constexpr TypeId type_id = kMonth;
-        using BaseTypeTraits = TypeTraits<kInt>;
-        using typename ValueType::value_type;
-        using typename ValueType::reference;
-        using typename ValueType::const_reference;
-        using typename ValueType::pointer;
-        using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
-
-        static ::K atom(value_type m) noexcept
-        { return ValueType::atom(type_id, m); }
-
-        static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
-
-        using IndexableType::list;
-
-        static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
-
-        static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
-
-        static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
-
-        static value_type encode(int year, int month) noexcept
-        { return encode_month(year, month); }
-
-        static value_type encode(temporal const& d) noexcept
-        { return encode_month(d); }
-
-        static temporal decode(const_reference m) noexcept
-        { return decode_month(m); }
-
-        static value_type parse(int yyyymm) noexcept
-        { return parse_month(yyyymm); }
-
-        static value_type parse(char const* ym) noexcept
-        { return parse_month(ym); }
-
-        template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
-
-            date::year_month_day const ymd{ decode(v) };
-            out << std::setfill('0')
-                << std::setw(4) << int(ymd.year()) << '.'
-                << std::setw(2) << unsigned(ymd.month())
-                << TypeCode.at(TypeTraits::type_id);
-        }
-    };
-
-    template<>
-    struct TypeTraits<kDate> : public
-        ValueType<TypeTraits<kDate>, int32_t>,
-        IndexableType<TypeTraits<kDate>, int32_t>,
-        NullableType<TypeTraits<kDate>, int32_t>,
-        NumericType<TypeTraits<kDate>, int32_t>,
-        TemporalType<TypeTraits<kDate>, int32_t, Days>
-    {
-        static constexpr TypeId type_id = kDate;
-        using BaseTypeTraits = TypeTraits<kInt>;
-        using typename ValueType::value_type;
-        using typename ValueType::reference;
-        using typename ValueType::const_reference;
-        using typename ValueType::pointer;
-        using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
-
-        static ::K atom(value_type d) noexcept
-        { return ::kd(d); }
-
-        static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
-
-        using IndexableType::list;
-
-        static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
-
-        static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
-
-        static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
-
-        static value_type encode(int year, int month, int day) noexcept
-        { return encode_date(year, month, day); }
-
-        static value_type encode(temporal const& d) noexcept
-        { return encode_date(d); }
-
-        static temporal decode(const_reference d) noexcept
-        { return decode_date(d); }
-
-        static value_type parse(int yyyymmdd) noexcept
-        { return parse_date(yyyymmdd); }
-
-        static value_type parse(char const* ymd) noexcept
-        { return parse_date(ymd); }
-
-        template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (!TypeTraits::print_special(out, v))
-                print(out, decode(v));
-        }
-
-        template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, temporal const& t)
-        {
-            date::year_month_day const& ymd{ t };
-            out << std::setfill('0')
-                << std::setw(4) << int(ymd.year()) << '.'
-                << std::setw(2) << unsigned(ymd.month()) << '.'
-                << std::setw(2) << unsigned(ymd.day());
-        }
-    };
-
-    template<>
-    struct TypeTraits<kTimespan> : public
-        ValueType<TypeTraits<kTimespan>, int64_t>,
-        IndexableType<TypeTraits<kTimespan>, int64_t>,
-        NullableType<TypeTraits<kTimespan>, int64_t>,
-        NumericType<TypeTraits<kTimespan>, int64_t>,
-        TemporalType<TypeTraits<kTimespan>, int64_t, Nanoseconds>
-    {
-        static constexpr TypeId type_id = kTimespan;
-        using BaseTypeTraits = TypeTraits<kLong>;
-        using typename ValueType::value_type;
-        using typename ValueType::reference;
-        using typename ValueType::const_reference;
-        using typename ValueType::pointer;
-        using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
-
-        static ::K atom(value_type n) noexcept
-        { return ::ktj(-type_id, n); }
-
-        static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
-
-        using IndexableType::list;
-
-        static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
-
-        static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
-
-        static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
-
-        static value_type encode(long long day,
-            long long hour, long long minute, long long second, long long nanos) noexcept
-        { return encode_timespan(day, hour, minute, second, nanos); }
-
-        static value_type encode(temporal const& n) noexcept
-        { return encode_timespan(n); }
-
-        static temporal decode(const_reference n) noexcept
-        { return Nanoseconds{ std::chrono::nanoseconds{ n } }; }
-
-        static value_type parse(long long hhmmssf9) noexcept
-        { return parse_timespan(hhmmssf9); }
-
-        static value_type parse(char const* dhmsf) noexcept
-        { return parse_timespan(dhmsf); }
-
-        template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
-
-            date::hh_mm_ss<std::chrono::nanoseconds> const t{ decode(v) - Days{} };
-            auto const h = t.hours().count();
-            if (t.is_negative())
-                out << '-';
-            out << std::setfill('0') << std::internal
-                << (h / time_scale_v<std::chrono::hours, date::days>) << 'D'
-                << std::setw(2) << (h % time_scale_v<std::chrono::hours, date::days>) << ':'
-                << std::setw(2) << t.minutes().count() << ':'
-                << std::setw(2) << t.seconds().count() << '.'
-                << std::setw(9) << t.subseconds().count();
-        }
-    };
+#   pragma region Type traits - time points
 
     template<>
     struct TypeTraits<kTimestamp> : public
@@ -795,7 +546,7 @@ namespace q {
         IndexableType<TypeTraits<kTimestamp>, int64_t>,
         NullableType<TypeTraits<kTimestamp>, int64_t>,
         NumericType<TypeTraits<kTimestamp>, int64_t>,
-        TemporalType<TypeTraits<kTimestamp>, int64_t, Nanoseconds>
+        TemporalType<TypeTraits<kTimestamp>, int64_t, Timestamp>
     {
         static constexpr TypeId type_id = kTimestamp;
         using BaseTypeTraits = TypeTraits<kLong>;
@@ -804,7 +555,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
+        using typename TemporalType::temporal_type;
 
         static ::K atom(value_type p) noexcept
         { return ::ktj(-type_id, p); }
@@ -823,172 +574,36 @@ namespace q {
         static constexpr value_type inf(bool sign = true) noexcept
         { return BaseTypeTraits::inf(sign); }
 
-        static value_type encode(long long year, long long month, long long day,
-            long long hour, long long minute, long long second, long long nanos) noexcept
-        { return encode_timestamp(year, month, day, hour, minute, second, nanos); }
+        q_ffi_API static value_type encode(
+            long long year, long long mon, long long day,
+            long long hour, long long min, long long sec, long long nano) noexcept;
 
-        static value_type encode(temporal const& t) noexcept
-        { return encode_timestamp(t); }
+        q_ffi_API static value_type encode(temporal_type const& p) noexcept;
 
-        static temporal decode(const_reference p) noexcept
-        { return decode_timestamp(p); }
+        q_ffi_API static temporal_type decode(const_reference p) noexcept;
 
-        static value_type parse(char const* ymdhmsf, bool raw = false) noexcept
-        { return parse_timestamp(ymdhmsf, raw); }
+        q_ffi_API static value_type parse(char const* ymdhmsf, bool raw = false) noexcept;
 
         template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
-
-            auto const t = decode(v);
-            auto const d = std::chrono::floor<date::days>(t);
-            TypeTraits<kDate>::print(out, date::year_month_day{ d });
-            out << 'D' << date::make_time(t - d);
-        }
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference p);
     };
 
     template<>
-    struct TypeTraits<kTime> : public
-        ValueType<TypeTraits<kTime>, int32_t>,
-        IndexableType<TypeTraits<kTime>, int32_t>,
-        NullableType<TypeTraits<kTime>, int32_t>,
-        NumericType<TypeTraits<kTime>, int32_t>,
-        TemporalType<TypeTraits<kTime>, int32_t, Milliseconds>
+    struct TypeTraits<kMonth> : public
+        ValueType<TypeTraits<kMonth>, int32_t>,
+        IndexableType<TypeTraits<kMonth>, int32_t>,
+        NullableType<TypeTraits<kMonth>, int32_t>,
+        NumericType<TypeTraits<kMonth>, int32_t>,
+        TemporalType<TypeTraits<kMonth>, int32_t, Date>
     {
-        static constexpr TypeId type_id = kTime;
+        static constexpr TypeId type_id = kMonth;
         using BaseTypeTraits = TypeTraits<kInt>;
         using typename ValueType::value_type;
         using typename ValueType::reference;
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
-
-        static ::K atom(value_type t) noexcept
-        { return ::kt(t); }
-
-        static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
-
-        using IndexableType::list;
-
-        static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
-
-        static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
-
-        static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
-
-        static value_type encode(int hour, int minute, int second, int millis) noexcept
-        { return encode_time(hour, minute, second, millis); }
-
-        static value_type encode(temporal const& t) noexcept
-        { return encode_time(t); }
-
-        static temporal decode(const_reference t) noexcept
-        { return temporal{ std::chrono::milliseconds{ t } }; }
-
-        static value_type parse(int hhmmssf3) noexcept
-        { return parse_time(hhmmssf3); }
-
-        static value_type parse(char const* hmsf) noexcept
-        { return parse_time(hmsf); }
-
-        template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
-
-            auto const t = decode(v) - Days{};
-            out << date::hh_mm_ss<std::chrono::milliseconds>{ t };
-        }
-    };
-
-    template<>
-    struct TypeTraits<kDatetime> : public
-        ValueType<TypeTraits<kDatetime>, double>,
-        IndexableType<TypeTraits<kDatetime>, double>,
-        NullableType<TypeTraits<kDatetime>, double>,
-        NumericType<TypeTraits<kDatetime>, double>,
-        TemporalType<TypeTraits<kDatetime>, double, Milliseconds>
-    {
-        static constexpr TypeId type_id = kDatetime;
-        using BaseTypeTraits = TypeTraits<kFloat>;
-        using typename ValueType::value_type;
-        using typename ValueType::reference;
-        using typename ValueType::const_reference;
-        using typename ValueType::pointer;
-        using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
-
-        static ::K atom(value_type z) noexcept
-        { return ::kz(z); }
-
-        static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
-
-        using IndexableType::list;
-
-        static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
-
-        static value_type null() noexcept
-        { return BaseTypeTraits::null(); }
-
-        static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
-
-        static value_type encode(int year, int month, int day,
-            int hour, int minute, int second, int millis) noexcept
-        { return encode_datetime(year, month, day, hour, minute, second, millis); }
-
-        static value_type encode(temporal const& t) noexcept
-        { return encode_datetime(t); }
-
-        static temporal decode(const_reference z) noexcept
-        { return decode_datetime(z); }
-
-        static value_type parse(long long yyyymmddhhmmssf3) noexcept
-        { return parse_datetime(yyyymmddhhmmssf3); }
-
-        static value_type parse(char const* ymdhmsf) noexcept
-        { return parse_datetime(ymdhmsf); }
-
-        template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
-
-            auto const t = decode(v);
-            auto const d = std::chrono::floor<date::days>(t);
-            TypeTraits<kDate>::print(out, date::year_month_day{ d });
-            out << 'T' << date::make_time(
-                std::chrono::duration_cast<std::chrono::milliseconds>(t - d));
-        }
-    };
-
-    template<>
-    struct TypeTraits<kMinute> : public
-        ValueType<TypeTraits<kMinute>, int32_t>,
-        IndexableType<TypeTraits<kMinute>, int32_t>,
-        NullableType<TypeTraits<kMinute>, int32_t>,
-        NumericType<TypeTraits<kMinute>, int32_t>,
-        TemporalType<TypeTraits<kMinute>, int32_t, Seconds>
-    {
-        static constexpr TypeId type_id = kMinute;
-        using BaseTypeTraits = TypeTraits<kInt>;
-        using typename ValueType::value_type;
-        using typename ValueType::reference;
-        using typename ValueType::const_reference;
-        using typename ValueType::pointer;
-        using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
+        using typename TemporalType::temporal_type;
 
         static ::K atom(value_type m) noexcept
         { return ValueType::atom(type_id, m); }
@@ -1007,34 +622,219 @@ namespace q {
         static constexpr value_type inf(bool sign = true) noexcept
         { return BaseTypeTraits::inf(sign); }
 
-        static value_type encode(int hour, int minute) noexcept
-        { return encode_minute(hour, minute); }
+        q_ffi_API static value_type encode(int year, int month) noexcept;
 
-        static value_type encode(temporal const& t) noexcept
-        { return encode_minute(t); }
+        q_ffi_API static value_type encode(temporal_type const& m) noexcept;
 
-        static temporal decode(const_reference t) noexcept
-        { return temporal{ std::chrono::minutes{ t } }; }
+        q_ffi_API static temporal_type decode(const_reference m) noexcept;
 
-        static value_type parse(int hhmm) noexcept
-        { return parse_minute(hhmm); }
+        q_ffi_API static value_type parse(int yyyymm) noexcept;
 
-        static value_type parse(char const* hm) noexcept
-        { return parse_minute(hm); }
+        q_ffi_API static value_type parse(char const* ym) noexcept;
 
         template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
+    };
 
-            date::hh_mm_ss<std::chrono::seconds> const hms{ decode(v) - Days{} };
-            if (hms.is_negative())
-                out << '-';
-            out << std::setfill('0') << std::internal
-                << std::setw(2) << hms.hours().count() << ':'
-                << std::setw(2) << hms.minutes().count();
-        }
+    template<>
+    struct TypeTraits<kDate> : public
+        ValueType<TypeTraits<kDate>, int32_t>,
+        IndexableType<TypeTraits<kDate>, int32_t>,
+        NullableType<TypeTraits<kDate>, int32_t>,
+        NumericType<TypeTraits<kDate>, int32_t>,
+        TemporalType<TypeTraits<kDate>, int32_t, Date>
+    {
+        static constexpr TypeId type_id = kDate;
+        using BaseTypeTraits = TypeTraits<kInt>;
+        using typename ValueType::value_type;
+        using typename ValueType::reference;
+        using typename ValueType::const_reference;
+        using typename ValueType::pointer;
+        using typename ValueType::const_pointer;
+        using typename TemporalType::temporal_type;
+
+        static ::K atom(value_type d) noexcept
+        { return ::kd(d); }
+
+        static reference value(::K k) noexcept
+        { return BaseTypeTraits::value(k); }
+
+        using IndexableType::list;
+
+        static pointer index(::K k) noexcept
+        { return BaseTypeTraits::index(k); }
+
+        static constexpr value_type null() noexcept
+        { return BaseTypeTraits::null(); }
+
+        static constexpr value_type inf(bool sign = true) noexcept
+        { return BaseTypeTraits::inf(sign); }
+
+        q_ffi_API static value_type encode(int year, int month, int day) noexcept;
+
+        q_ffi_API static value_type encode(temporal_type const& d) noexcept;
+
+        q_ffi_API static temporal_type decode(const_reference d) noexcept;
+
+        q_ffi_API static value_type parse(int yyyymmdd) noexcept;
+
+        q_ffi_API static value_type parse(char const* ymd) noexcept;
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, temporal_type const& t);
+    };
+
+    template<>
+    struct TypeTraits<kDatetime> : public
+        ValueType<TypeTraits<kDatetime>, double>,
+        IndexableType<TypeTraits<kDatetime>, double>,
+        NullableType<TypeTraits<kDatetime>, double>,
+        NumericType<TypeTraits<kDatetime>, double>,
+        TemporalType<TypeTraits<kDatetime>, double, DateTime>
+    {
+        static constexpr TypeId type_id = kDatetime;
+        using BaseTypeTraits = TypeTraits<kFloat>;
+        using typename ValueType::value_type;
+        using typename ValueType::reference;
+        using typename ValueType::const_reference;
+        using typename ValueType::pointer;
+        using typename ValueType::const_pointer;
+        using typename TemporalType::temporal_type;
+
+        static ::K atom(value_type z) noexcept
+        { return ::kz(z); }
+
+        static reference value(::K k) noexcept
+        { return BaseTypeTraits::value(k); }
+
+        using IndexableType::list;
+
+        static pointer index(::K k) noexcept
+        { return BaseTypeTraits::index(k); }
+
+        static value_type null() noexcept
+        { return BaseTypeTraits::null(); }
+
+        static constexpr value_type inf(bool sign = true) noexcept
+        { return BaseTypeTraits::inf(sign); }
+
+        q_ffi_API static value_type encode(int year, int month, int day,
+            int hour, int minute, int second, int millis) noexcept;
+
+        q_ffi_API static value_type encode(temporal_type const& t) noexcept;
+
+        q_ffi_API static temporal_type decode(const_reference z) noexcept;
+
+        q_ffi_API static value_type parse(long long yyyymmddhhmmssf3) noexcept;
+
+        q_ffi_API static value_type parse(char const* ymdhmsf) noexcept;
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference z);
+    };
+
+#   pragma endregion
+
+#   pragma region Type traits - time durations
+
+    template<>
+    struct TypeTraits<kTimespan> : public
+        ValueType<TypeTraits<kTimespan>, int64_t>,
+        IndexableType<TypeTraits<kTimespan>, int64_t>,
+        NullableType<TypeTraits<kTimespan>, int64_t>,
+        NumericType<TypeTraits<kTimespan>, int64_t>,
+        TemporalType<TypeTraits<kTimespan>, int64_t, Nanoseconds>
+    {
+        static constexpr TypeId type_id = kTimespan;
+        using BaseTypeTraits = TypeTraits<kLong>;
+        using typename ValueType::value_type;
+        using typename ValueType::reference;
+        using typename ValueType::const_reference;
+        using typename ValueType::pointer;
+        using typename ValueType::const_pointer;
+        using typename TemporalType::temporal_type;
+
+        static ::K atom(value_type n) noexcept
+        { return ::ktj(-type_id, n); }
+
+        static reference value(::K k) noexcept
+        { return BaseTypeTraits::value(k); }
+
+        using IndexableType::list;
+
+        static pointer index(::K k) noexcept
+        { return BaseTypeTraits::index(k); }
+
+        static constexpr value_type null() noexcept
+        { return BaseTypeTraits::null(); }
+
+        static constexpr value_type inf(bool sign = true) noexcept
+        { return BaseTypeTraits::inf(sign); }
+
+        q_ffi_API static value_type encode(long long day,
+            long long hour, long long minute, long long second, long long nanos) noexcept;
+
+        q_ffi_API static value_type encode(temporal_type const& n) noexcept;
+
+        q_ffi_API static temporal_type decode(const_reference n) noexcept;
+
+        q_ffi_API static value_type parse(long long hhmmssf9) noexcept;
+
+        q_ffi_API static value_type parse(char const* dhmsf) noexcept;
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference n);
+    };
+
+    template<>
+    struct TypeTraits<kMinute> : public
+        ValueType<TypeTraits<kMinute>, int32_t>,
+        IndexableType<TypeTraits<kMinute>, int32_t>,
+        NullableType<TypeTraits<kMinute>, int32_t>,
+        NumericType<TypeTraits<kMinute>, int32_t>,
+        TemporalType<TypeTraits<kMinute>, int32_t, Seconds>
+    {
+        static constexpr TypeId type_id = kMinute;
+        using BaseTypeTraits = TypeTraits<kInt>;
+        using typename ValueType::value_type;
+        using typename ValueType::reference;
+        using typename ValueType::const_reference;
+        using typename ValueType::pointer;
+        using typename ValueType::const_pointer;
+        using typename TemporalType::temporal_type;
+
+        static ::K atom(value_type m) noexcept
+        { return ValueType::atom(type_id, m); }
+
+        static reference value(::K k) noexcept
+        { return BaseTypeTraits::value(k); }
+
+        using IndexableType::list;
+
+        static pointer index(::K k) noexcept
+        { return BaseTypeTraits::index(k); }
+
+        static constexpr value_type null() noexcept
+        { return BaseTypeTraits::null(); }
+
+        static constexpr value_type inf(bool sign = true) noexcept
+        { return BaseTypeTraits::inf(sign); }
+
+        q_ffi_API static value_type encode(int hour, int minute) noexcept;
+
+        q_ffi_API static value_type encode(temporal_type const& t) noexcept;
+
+        q_ffi_API static temporal_type decode(const_reference t) noexcept;
+
+        q_ffi_API static value_type parse(int hhmm) noexcept;
+
+        q_ffi_API static value_type parse(char const* hm) noexcept;
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
     };
 
     template<>
@@ -1052,7 +852,7 @@ namespace q {
         using typename ValueType::const_reference;
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
-        using typename TemporalType::temporal;
+        using typename TemporalType::temporal_type;
 
         static ::K atom(value_type s) noexcept
         { return ValueType::atom(type_id, s); }
@@ -1071,33 +871,72 @@ namespace q {
         static constexpr value_type inf(bool sign = true) noexcept
         { return BaseTypeTraits::inf(sign); }
 
-        static value_type encode(int hour, int minute, int second) noexcept
-        { return encode_second(hour, minute, second); }
+        q_ffi_API static value_type encode(int hour, int minute, int second) noexcept;
 
-        static value_type encode(temporal const& t) noexcept
-        { return encode_second(t); }
+        q_ffi_API static value_type encode(temporal_type const& v) noexcept;
 
-        static temporal decode(const_reference t) noexcept
-        { return temporal{ std::chrono::seconds{ t} }; }
+        q_ffi_API static temporal_type decode(const_reference v) noexcept;
 
-        static value_type parse(int hhmmss) noexcept
-        { return parse_second(hhmmss); }
+        q_ffi_API static value_type parse(int hhmmss) noexcept;
 
-        static value_type parse(char const* hms) noexcept
-        { return parse_second(hms); }
+        q_ffi_API static value_type parse(char const* hms) noexcept;
 
         template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
-        {
-            if (TypeTraits::print_special(out, v))
-                return;
-
-            auto const t = decode(v) - Days{};
-            out << date::hh_mm_ss<std::chrono::seconds>{ t };
-        }
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
     };
 
-#pragma endregion
+    template<>
+    struct TypeTraits<kTime> : public
+        ValueType<TypeTraits<kTime>, int32_t>,
+        IndexableType<TypeTraits<kTime>, int32_t>,
+        NullableType<TypeTraits<kTime>, int32_t>,
+        NumericType<TypeTraits<kTime>, int32_t>,
+        TemporalType<TypeTraits<kTime>, int32_t, Milliseconds>
+    {
+        static constexpr TypeId type_id = kTime;
+        using BaseTypeTraits = TypeTraits<kInt>;
+        using typename ValueType::value_type;
+        using typename ValueType::reference;
+        using typename ValueType::const_reference;
+        using typename ValueType::pointer;
+        using typename ValueType::const_pointer;
+        using typename TemporalType::temporal_type;
+
+        static ::K atom(value_type t) noexcept
+        { return ::kt(t); }
+
+        static reference value(::K k) noexcept
+        { return BaseTypeTraits::value(k); }
+
+        using IndexableType::list;
+
+        static pointer index(::K k) noexcept
+        { return BaseTypeTraits::index(k); }
+
+        static constexpr value_type null() noexcept
+        { return BaseTypeTraits::null(); }
+
+        static constexpr value_type inf(bool sign = true) noexcept
+        { return BaseTypeTraits::inf(sign); }
+
+        q_ffi_API static value_type encode(
+            int hour, int minute, int second, int millis) noexcept;
+
+        q_ffi_API static value_type encode(temporal_type const& t) noexcept;
+
+        q_ffi_API static temporal_type decode(const_reference t) noexcept;
+
+        q_ffi_API static value_type parse(int hhmmssf3) noexcept;
+
+        q_ffi_API static value_type parse(char const* hmsf) noexcept;
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference t);
+    };
+
+#   pragma endregion
+
+#   pragma region Type traits - special types
 
     template<>
     struct TypeTraits<kNil>
@@ -1131,54 +970,64 @@ namespace q {
             return (sys ? ::orr : ::krr)(const_cast<::S>(message.c_str()));
         }
 
-        static value_type value(::K k) noexcept
-        { return k->s; }
+        static reference value(::K k) noexcept
+        {
+            static value_type str = k->s;
+            return str;
+        }
 
         template<typename Elem, typename ElemTr>
-        static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v)
-        { out << "<q>'" << v; }
+        static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v);
     };
 
-#pragma endregion
+#   pragma endregion
 
-#pragma region Type traits aspects
+#   pragma endregion
 
-    template<TypeId tid>
-    struct has_value
-        : public std::is_base_of<
+#   pragma region Type traits aspects
+    inline namespace aspects
+    {
+
+        template<TypeId tid>
+        struct has_value
+            : public std::is_base_of<
             ValueType<TypeTraits<tid>, typename TypeTraits<tid>::value_type>,
             TypeTraits<tid>>
-    {};
-    template<TypeId tid>
-    static constexpr bool has_value_v = has_value<tid>::value;
+        {};
+        template<TypeId tid>
+        static constexpr bool has_value_v = has_value<tid>::value;
 
-    template<TypeId tid>
-    struct has_null
-        : public std::is_base_of<
+        template<TypeId tid>
+        struct has_null
+            : public std::is_base_of<
             NullableType<TypeTraits<tid>, typename TypeTraits<tid>::value_type>,
             TypeTraits<tid>>
-    {};
-    template<TypeId tid>
-    static constexpr bool has_null_v = has_null<tid>::value;
+        {};
+        template<TypeId tid>
+        static constexpr bool has_null_v = has_null<tid>::value;
 
-    template<TypeId tid>
-    struct can_index
-        : public std::is_base_of<
+        template<TypeId tid>
+        struct can_index
+            : public std::is_base_of<
             IndexableType<TypeTraits<tid>, typename TypeTraits<tid>::value_type>,
             TypeTraits<tid>>
-    {};
-    template<TypeId tid>
-    static constexpr bool can_index_v = can_index<tid>::value;
+        {};
+        template<TypeId tid>
+        static constexpr bool can_index_v = can_index<tid>::value;
 
-    template<TypeId tid>
-    struct is_numeric
-        : public std::is_base_of<
+        template<TypeId tid>
+        struct is_numeric
+            : public std::is_base_of<
             NumericType<TypeTraits<tid>, typename TypeTraits<tid>::value_type>,
             TypeTraits<tid>>
-    {};
-    template<TypeId tid>
-    static constexpr bool is_numeric_v = is_numeric<tid>::value;
+        {};
+        template<TypeId tid>
+        static constexpr bool is_numeric_v = is_numeric<tid>::value;
 
-#pragma endregion
+    }//namespace q::aspects
+#   pragma endregion
 
 }//namespace q
+
+// I/O-related details for kdb+ types
+#include "ktype_traits_io.hpp"

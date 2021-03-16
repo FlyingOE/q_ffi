@@ -154,7 +154,10 @@ namespace q
 
     TEST_F(TypeConvertTests, q2Decimal)
     {
-        test_q2Decimal<long long, q2Decimal>();
+        {
+            SCOPED_TRACE("q::q2Decimal on integral atoms");
+            this->test_q2Decimal<long long, q2Decimal>();
+        }
 
         K_ptr k;
         k.reset(kf(-123.456));
@@ -167,7 +170,10 @@ namespace q
 
     TEST_F(TypeConvertTests, q2Decimals)
     {
-        test_q2Decimals<long long, q2Decimals>();
+        {
+            SCOPED_TRACE("q::q2Decimals on integral lists");
+            this->test_q2Decimals<long long, q2Decimals>();
+        }
 
         K_ptr k;
         k.reset(kf(-123.456));
@@ -183,41 +189,54 @@ namespace q
 #   pragma region q2Real|q2Reals
     TEST_F(TypeConvertTests, q2Real)
     {
-        // q decimals can be converted to C++ floating-points, too!
-        test_q2Decimal<double, q2Real>();
-
-        test_q2Atom<double, q2Real>(::ke, 967.23981f, "967.23981e");
-        test_q2Atom<double, q2Real>(::ke, 0.f, "0e");
-        test_q2Atom<double, q2Real>(::ke, -967.23981f, "-967.23981e");
-        test_q2Atom<double, q2Real>(::ke, ::E(wf), "0We");
-        test_q2Atom<double, q2Real>(::ke, ::E(-wf), "-0We");
-        test_q2Atom_with_list<double, q2Real>(kReal, "*e list");
-
-        test_q2Atom<double, q2Real>(::kf, 7413760.571230203088, "7413760.571230203088");
-        test_q2Atom<double, q2Real>(::kf, 0., "0f");
-        test_q2Atom<double, q2Real>(::kf, -7413760.571230203088, "-7413760.571230203088");
-        test_q2Atom<double, q2Real>(::kf, wf, "0w");
-        test_q2Atom<double, q2Real>(::kf, -wf, "-0w");
-        test_q2Atom_with_list<double, q2Real>(kFloat, "*f list");
+        {
+            SCOPED_TRACE("q::q2Real on integral atoms");
+            this->test_q2Decimal<double, q2Real>();
+        } {
+            SCOPED_TRACE("q::q2Real on q real");
+            this->test_q2Atom<double, q2Real>(::ke, 967.23981f, "967.23981e");
+            this->test_q2Atom<double, q2Real>(::ke, 0.f, "0e");
+            this->test_q2Atom<double, q2Real>(::ke, -967.23981f, "-967.23981e");
+            this->test_q2Atom<double, q2Real>(::ke, ::E(wf), "0We");
+            this->test_q2Atom<double, q2Real>(::ke, ::E(-wf), "-0We");
+        } {
+            SCOPED_TRACE("q::q2Real on q reals");
+            this->test_q2Atom_with_list<double, q2Real>(kReal, "*e list");
+        } {
+            SCOPED_TRACE("q::q2Real on q float");
+            this->test_q2Atom<double, q2Real>(::kf, 7413760.571230203088, "7413760.571230203088");
+            this->test_q2Atom<double, q2Real>(::kf, 0., "0f");
+            this->test_q2Atom<double, q2Real>(::kf, -7413760.571230203088, "-7413760.571230203088");
+            this->test_q2Atom<double, q2Real>(::kf, wf, "0w");
+            this->test_q2Atom<double, q2Real>(::kf, -wf, "-0w");
+        } {
+            SCOPED_TRACE("q::q2Real on q floats");
+            this->test_q2Atom_with_list<double, q2Real>(kFloat, "*f list");
+        }
     }
 
     TEST_F(TypeConvertTests, q2Reals)
     {
-        // q decimals can be converted to C++ floating-points, too!
-        test_q2Decimals<double, q2Reals>();
-
-        test_q2List<double, q2Reals, kReal>(std::vector<::E>{
-            967.23981f, 0.f, -967.23981f, float(wf), float(-wf)
-        });
-
+        {
+            SCOPED_TRACE("q::q2Reals on integral lists");
+            this->test_q2Decimals<double, q2Reals>();
+        }
+        {
+            SCOPED_TRACE("q::q2Reals on q reals");
+            this->test_q2List<double, q2Reals, kReal>(std::vector<::E>{
+                967.23981f, 0.f, -967.23981f, float(wf), float(-wf)
+            });
+        }
         K_ptr k;
         k.reset(::ke(0.f));
         EXPECT_THROW(q2Reals(k.get()), K_error) << "q)" << "0e";
 
-        test_q2List<double, q2Reals, kFloat>(std::vector<::F>{
-            7413760.571230203088, 0., -7413760.571230203088, wf, -wf
-        });
-
+        {
+            SCOPED_TRACE("q::q2Reals on q floats");
+            this->test_q2List<double, q2Reals, kFloat>(std::vector<::F>{
+                7413760.571230203088, 0., -7413760.571230203088, wf, -wf
+            });
+        }
         k.reset(::kf(0.));
         EXPECT_THROW(q2Reals(k.get()), K_error) << "q)" << "0.";
     }
@@ -228,54 +247,69 @@ namespace q
 
     TEST_F(TypeConvertTests, q2String)
     {
-        // symbol
-        test_q2Atom<std::string, q2String>(::ks,
-            const_cast<::S>("hello"), "`hello");
-        test_q2Atom<std::string, q2String>(::ks,
-            const_cast<::S>(""), "`");
-        test_q2Atom<std::string, q2String>(::ks,
-            const_cast<::S>("Hello world!"), "`$\"Hello world!\"");
-        test_q2Atom_with_list<std::string, q2String>(kSymbol, "`* list");
-
-        // char list
-        test_q2Atom<std::string, q2String>(::kp,
-            const_cast<::S>("hello"), "\"hello\"");
-        test_q2Atom<std::string, q2String>(::kp,
-            const_cast<::S>("A"), "1#\"A\"");
-        test_q2Atom<std::string, q2String>(::kp,
-            const_cast<::S>(""), "\"\"");
-        test_q2Atom<std::string, q2String>(::kp,
-            const_cast<::S>("Hello world!"), "\"Hello world!\"");
-        test_q2Atom_with_list<std::string, q2String>(kMixed, "\"*\" list");
-
-        // non-string
-        K_ptr k{ ::kf(-123.456) };
-        EXPECT_THROW(q2String(k.get()), K_error) << "q)" << "-123.456";
+        {
+            SCOPED_TRACE("q::q2String on q symbol");
+            this->test_q2Atom<std::string, q2String>(::ks,
+                const_cast<::S>("hello"), "`hello");
+            this->test_q2Atom<std::string, q2String>(::ks,
+                const_cast<::S>(""), "`");
+            this->test_q2Atom<std::string, q2String>(::ks,
+                const_cast<::S>("Hello world!"), "`$\"Hello world!\"");
+        } {
+            SCOPED_TRACE("q::q2String on q symbols");
+            this->test_q2Atom_with_list<std::string, q2String>(kSymbol, "`* list");
+        }
+        {
+            SCOPED_TRACE("q::q2String on q char list");
+            this->test_q2Atom<std::string, q2String>(::kp,
+                const_cast<::S>("hello"), "\"hello\"");
+            this->test_q2Atom<std::string, q2String>(::kp,
+                const_cast<::S>("A"), "1#\"A\"");
+            this->test_q2Atom<std::string, q2String>(::kp,
+                const_cast<::S>(""), "\"\"");
+            this->test_q2Atom<std::string, q2String>(::kp,
+                const_cast<::S>("Hello world!"), "\"Hello world!\"");
+        } {
+            SCOPED_TRACE("q::q2String on q char lists");
+            this->test_q2Atom_with_list<std::string, q2String>(kMixed, "\"*\" list");
+        }
+        {
+            // Non-string
+            K_ptr k{ ::kf(-123.456) };
+            EXPECT_THROW(q2String(k.get()), K_error) << "q)" << "-123.456";
+        }
     }
 
     TEST_F(TypeConvertTests, q2Strings)
     {
         K_ptr k;
-
-        // symbol list
         std::vector<::S> const samples{ "hello", "", "Hello world!" };
-        k.reset(TypeTraits<kSymbol>::list(samples.begin(), samples.end()));
-        verify_qList(kSymbol, q2Strings(k.get()), samples);
+        {
+            SCOPED_TRACE("q::q2Strings on q symbols");
+            k.reset(TypeTraits<kSymbol>::list(samples.begin(), samples.end()));
+            this->verify_qList(kSymbol, q2Strings(k.get()), samples);
+        } {
+            SCOPED_TRACE("q::q2Strings on q symbol");
+            this->test_q2List_with_atom<std::string, q2Strings>(::ks, const_cast<S>("hello"));
+        }
+        {
+            SCOPED_TRACE("q::q2Strings on q char lists");
+            this->test_q2List_with_atom<std::string, q2Strings>(::ks, const_cast<S>("hello"));
+            k.reset(knk(3, kp(samples[0]), kp(samples[1]), kp(samples[2])));
+            this->verify_qList(kMixed, q2Strings(k.get()), samples);
+        } {
+            SCOPED_TRACE("q::q2Strings on q char list");
+            this->test_q2List_with_atom<std::string, q2Strings>(::kp, const_cast<S>("hello"));
+        }
+        {
+            // Mixed list
+            K_ptr k;
+            k.reset(knk(2, ks("hello"), kf(-123.456)));
+            EXPECT_THROW(q2Strings(k.get()), K_error) << "q)" << "(\"hello\";-123.456)";
 
-        test_q2List_with_atom<std::string, q2Strings>(::ks, const_cast<S>("hello"));
-
-        // char lists
-        k.reset(knk(3, kp(samples[0]), kp(samples[1]), kp(samples[2])));
-        verify_qList(kMixed, q2Strings(k.get()), samples);
-
-        test_q2List_with_atom<std::string, q2Strings>(::kp, const_cast<S>("hello"));
-
-        // mixed list
-        k.reset(knk(2, ks("hello"), kf(-123.456)));
-        EXPECT_THROW(q2Strings(k.get()), K_error) << "q)" << "(\"hello\";-123.456)";
-
-        k.reset(::kf(-123.456));
-        EXPECT_THROW(q2Strings(k.get()), K_error) << "q)" << "-123.456";
+            k.reset(::kf(-123.456));
+            EXPECT_THROW(q2Strings(k.get()), K_error) << "q)" << "-123.456";
+        }
     }
 
 #   pragma endregion

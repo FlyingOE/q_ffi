@@ -239,5 +239,5 @@ namespace q
         ::I operator"" _qt(unsigned long long int hhmmssf3) noexcept
         { return TypeTraits<kTime>::parse(static_cast<int>(hhmmssf3)); }
 
-    }//inline namespace q::literals
+    }//namespace q::literals
 }//namespace q

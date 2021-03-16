@@ -179,6 +179,7 @@ std::vector<std::string> q::q2Strings(K x) noexcept(false)
 
 #pragma region Unix <==> q temporal types
 
+/*
 #ifdef _MSC_VER
 namespace ms_ext
 {
@@ -398,7 +399,7 @@ namespace kx
         assert(p == t);
         return s;
     }
-*/
+* /
 
 }//namespace kx
 #pragma endregion
@@ -569,7 +570,7 @@ namespace
         return tms;
     }
 
-}//namespace /*anonymous*/
+}//namespace /*anonymous* /
 
 q::tm_ext q::q2DateTime(K x) noexcept(false)
 {
@@ -641,5 +642,6 @@ std::vector<q::tm_ext> q::q2DateTimes(K x) noexcept(false)
     }
     return std::move(result);
 }
+*/
 
 #pragma endregion

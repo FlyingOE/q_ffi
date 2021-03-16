@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <date/date.h>
 #include <k_compat.h>
+#include <iosfwd>
 
 namespace q
 {
@@ -37,12 +38,60 @@ namespace q
         kError = -128
     };
 
+    template<typename Elem, typename ElemTraits>
+    std::basic_ostream<Elem, ElemTraits>& operator<<(
+        std::basic_ostream<Elem, ElemTraits>& os, TypeId tid)
+    {
+#   define Q_TYPEID_OUTPUT(T)  \
+        case -(k##T): return os << "{" #T "}";  \
+        case (k##T): return os << "{" #T "s}"
+        switch (tid)
+        {
+        case kMixed: return os << "{(...)}";
+            Q_TYPEID_OUTPUT(Boolean);
+            Q_TYPEID_OUTPUT(GUID);
+            Q_TYPEID_OUTPUT(Byte);
+            Q_TYPEID_OUTPUT(Short);
+            Q_TYPEID_OUTPUT(Int);
+            Q_TYPEID_OUTPUT(Long);
+            Q_TYPEID_OUTPUT(Real);
+            Q_TYPEID_OUTPUT(Float);
+            Q_TYPEID_OUTPUT(Char);
+            Q_TYPEID_OUTPUT(Symbol);
+            Q_TYPEID_OUTPUT(Timestamp);
+            Q_TYPEID_OUTPUT(Month);
+            Q_TYPEID_OUTPUT(Date);
+            Q_TYPEID_OUTPUT(Datetime);
+            Q_TYPEID_OUTPUT(Timespan);
+            Q_TYPEID_OUTPUT(Minute);
+            Q_TYPEID_OUTPUT(Second);
+            Q_TYPEID_OUTPUT(Time);
+        case kTable: return os << "{Table}";
+        case kDict: return os << "{Dict}";
+        case kNil: return os << "{(::)}";
+        case kError: return os << "{'Error}";
+        default:
+            if (-kEnumMin >= tid && tid >= -kEnumMax)
+                return os << "{Enum}";
+            else if (kEnumMin <= tid && tid <= kEnumMax)
+                return os << "{Enums}";
+            else
+                return os << '{' << tid << '}';
+        }
+#   undef Q_TYPEID_OUTPUT
+    }
+
     /// @brief Map @c TypeId to single-character type code in q.
     q_ffi_API extern std::unordered_map<TypeId, char> const TypeCode;
 
     /// @brief Generic nil value in q.
     /// @ref q::kNil
     constexpr ::K Nil = static_cast<::K>(nullptr);
+
+    /// @brief kdb+ epoch.
+    static constexpr auto Epoch = date::January / 1 / 2000;
+
+#   pragma region K object queries
 
     /// @brief Inspect type ID of a (potentially null) @c K object.
     inline std::underlying_type_t<TypeId> type(::K const k) noexcept
@@ -56,6 +105,8 @@ namespace q
         return nullptr == k ? 0 : 0 > type(k) ? 1 : static_cast<std::size_t>(k->n);
     }
 
+#   pragma endregion
+
     /// @brief Report error into q host.
     /// @param sys If the error should be prepended with system error message.
     q_ffi_API ::K error(char const* msg, bool sys = false) noexcept;
@@ -64,20 +115,30 @@ namespace q
     ///     If the q type is recognized, @c k is converted using the @c to_str method in the respective type traits.
     q_ffi_API std::string to_string(::K const k);
 
-    /// @brief kdb+ date/month.
-    using Days = date::sys_days;
+#   pragma region kdb+ temporal type representations
 
-    /// @brief kdb+ minute/second.
-    using Seconds = date::sys_seconds;
+    /// @brief kdb+ date/month (time point).
+    using Date = date::sys_days;
 
-    /// @brief kdb+ time/datetime.
-    using Milliseconds = date::sys_time<std::chrono::milliseconds>;
+    /// @brief kdb+ minute (time duration).
+    using Minutes = std::chrono::minutes;
 
-    /// @brief kdb+ timespan/timestamp.
-    using Nanoseconds = date::sys_time<std::chrono::nanoseconds>;
+    /// @brief kdb+ second (time duration).
+    using Seconds = std::chrono::seconds;
 
-    /// @brief kdb+ epoch.
-    static constexpr auto Epoch = date::January / 1 / 2000;
+    /// @brief kdb+ time (time duration).
+    using Milliseconds = std::chrono::milliseconds;
+
+    /// @brief kdb+ datetime (time point).
+    using DateTime = date::sys_time<std::chrono::milliseconds>;
+
+    /// @brief kdb+ timespan (time duration).
+    using Nanoseconds = std::chrono::nanoseconds;
+
+    /// @brief kdb+ timestamp (time point).
+    using Timestamp = date::sys_time<std::chrono::nanoseconds>;
+
+#   pragma endregion
 
     /// @brief UDLs that are adapted from q literal suffices.
     inline namespace literals
@@ -117,17 +178,6 @@ namespace q
         q_ffi_API ::I operator"" _qt(unsigned long long int hhmmssf3) noexcept;
 
     }//inline namespace q::literals
-
-    /// (Time units) number of Num per unit of Denom
-    template<typename Num, typename Denom>
-    struct time_scale
-    {
-        static constexpr auto value =
-            std::chrono::duration_cast<Num>(Denom{ 1 }).count();
-    };
-
-    template<typename Num, typename Denom>
-    inline constexpr auto time_scale_v = time_scale<Num, Denom>::value;
 
 }//namespace q
 

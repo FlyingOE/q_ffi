@@ -34,6 +34,6 @@ namespace q
         "q::tm_ext should be backward compatible with std::tm");
 
     q_ffi_API tm_ext q2DateTime(::K x) noexcept(false);
-    q_ffi_API std::vector<tm_ext> q2DateTimes(::K x) noexcept(false);
+//    q_ffi_API std::vector<tm_ext> q2DateTimes(::K x) noexcept(false);
 
 }//namespace q
