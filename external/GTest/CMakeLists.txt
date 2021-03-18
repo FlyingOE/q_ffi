@@ -14,15 +14,19 @@ FetchContent_Declare(${GTEST_NAME}
 )
 
 message(STATUS "GitHub >> Fetching ${GTEST_NAME}/release-${GTEST_VERSION} ...")
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 set(BUILD_GTEST ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(${GTEST_NAME})
-message(STATUS "       << Updated ${GTEST_NAME}/release-${GTEST_VERSION} .")
 
-#FetchContent_GetProperties(${GTEST_NAME})
-#string(TOLOWER "${GTEST_NAME}" lcname)
-#if(NOT ${lcname}_POPULATED)
-#    FetchContent_Populate(${GTEST_NAME})
-#    add_subdirectory(${${lcname}_SOURCE_DIR} ${${lcname}_BINARY_DIR})
-#endif()
+FetchContent_MakeAvailable(${GTEST_NAME})
+#[==[
+FetchContent_GetProperties(${GTEST_NAME})
+string(TOLOWER "${GTEST_NAME}" lcname)
+if(NOT ${lcname}_POPULATED)
+    FetchContent_Populate(${GTEST_NAME})
+    add_subdirectory(${${lcname}_SOURCE_DIR} ${${lcname}_BINARY_DIR})
+endif()
+#]==]
+
+message(STATUS "------ << Updated ${GTEST_NAME}/release-${GTEST_VERSION} .")

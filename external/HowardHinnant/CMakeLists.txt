@@ -14,7 +14,10 @@ FetchContent_Declare(${HH_DATE_NAME}
 )
 
 message(STATUS "GitHub >> Fetching ${HH_DATE_NAME}/v${HH_DATE_VERSION} ...")
+
 set(CMAKE_CXX_STANDARD 17)
 set(USE_SYSTEM_TZ_DB   ON)
+
 FetchContent_MakeAvailable(${HH_DATE_NAME})
-message(STATUS "       << Updated ${HH_DATE_NAME}/v${HH_DATE_VERSION} .")
+
+message(STATUS "------ << Updated ${HH_DATE_NAME}/v${HH_DATE_VERSION} .")

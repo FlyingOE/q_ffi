@@ -77,6 +77,8 @@ target_link_libraries(${target_name}
     PUBLIC
         kdb::C-dll
         date::date
+    PRIVATE
+        libffi::static
 )
 
 # dlfcn-win32 to emulate dlopen/dlsym
