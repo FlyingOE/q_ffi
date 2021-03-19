@@ -14,7 +14,6 @@ configure_file(q_ffi_config.h.in q_ffi_config.h @ONLY)
 # Library contents
 set(q_ffi_PUBLIC_API
     ${target_header_dir}/q_ffi.h
-    ${target_header_dir}/ffi.h
     ${target_header_dir}/std_ext.hpp
     ${target_header_dir}/ktypes.hpp
     ${target_header_dir}/ktype_traits.hpp ${target_header_dir}/ktype_traits_io.hpp
@@ -24,11 +23,12 @@ set(q_ffi_PUBLIC_API
 )
 set(q_ffi_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/q_ffi_config.h
+    ${target_header_dir}/ffi_api.h
     ${target_header_dir}/version.hpp
 )
 set(q_ffi_SOURCES
     ${target_source_dir}/dllmain.cpp
-    ${target_source_dir}/ffi.cpp
+    ${target_source_dir}/ffi_api.cpp
     ${target_source_dir}/ktypes.cpp
     ${target_source_dir}/ktype_traits.cpp
     ${target_source_dir}/kerror.cpp
@@ -72,6 +72,8 @@ target_include_directories(${target_name}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target_header_dir}>
         $<INSTALL_INTERFACE:${target_header_dir}>
         kdb::C-dll
+    PRIVATE
+        libffi::static
 )
 target_link_libraries(${target_name}
     PUBLIC

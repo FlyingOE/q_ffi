@@ -1,8 +1,8 @@
 #include "ktype_traits.hpp"
-#include "ffi.h"
+#include "ffi_api.h"
 #include "version.hpp"
-#include <dlfcn.h>
-#include <ffi.h>
+//#include <dlfcn.h>
+//#include <ffi.h>
 
 #include <iostream>
 ::K K4_DECL load(::K dllSym, ::K fName, ::K resType, ::K parTypes)

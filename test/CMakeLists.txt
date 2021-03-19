@@ -1,7 +1,7 @@
 # vim: set et noai ts=4 sw=4 syntax=cmake:
 set(target_name "test_q_ffi")
-set(target_source_dir src)
-set(target_header_dir inc)
+set(source_dir src)
+set(header_dir inc)
 
 # GTest
 enable_testing()
@@ -11,25 +11,27 @@ include(GoogleTest)
 add_executable(${target_name})
 target_sources(${target_name}
     PRIVATE
-        ${target_source_dir}/setup.cpp          ${target_header_dir}/setup.hpp
-        ${target_source_dir}/test_std_ext.cpp
-        ${target_source_dir}/test_ktypes.cpp
-        ${target_source_dir}/test_temporals.cpp
-        ${target_source_dir}/test_kpointer.cpp
-        ${target_source_dir}/test_type_convert.cpp
+        ${source_dir}/setup.cpp     ${header_dir}/setup.hpp
+        ${source_dir}/test_std_ext.cpp
+        ${source_dir}/test_libffi.cpp
+        ${source_dir}/test_ktypes.cpp
+        ${source_dir}/test_temporals.cpp
+        ${source_dir}/test_kpointer.cpp
+        ${source_dir}/test_type_convert.cpp
 )
 target_include_directories(${target_name}
     PRIVATE
-        ${target_header_dir}
+        ${header_dir}
         kdb::C-exe
+        libffi::static
         CapitalEdge::q_ffi
 )
 target_link_libraries(${target_name}
     PRIVATE
+        gtest       gtest_main
         kdb::C-exe
+        libffi::static
         CapitalEdge::q_ffi
-        gtest
-        gtest_main
 )
 
 # Copy test dependencies
