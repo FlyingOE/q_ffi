@@ -34,6 +34,16 @@ target_link_libraries(${target_name}
         CapitalEdge::q_ffi
 )
 
+# Extra test assets
+add_library(${target_name}_dll SHARED)
+target_sources(${target_name}_dll
+    PRIVATE
+        ${source_dir}/test_libffi_dll.cpp
+)
+add_dependencies(${target_name}
+    ${target_name}_dll
+)
+
 # Copy test dependencies
 add_custom_command(
     TARGET ${target_name}
