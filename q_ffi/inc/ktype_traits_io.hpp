@@ -256,14 +256,14 @@ namespace std
                 return os;  \
             }
 
-        DEFINE_TEMPORAL_IO(q::kMinute, q::Minutes);
-        DEFINE_TEMPORAL_IO(q::kSecond, q::Seconds);
-        DEFINE_TEMPORAL_IO(q::kTime, q::Milliseconds);
-        DEFINE_TEMPORAL_IO(q::kTimespan, q::Nanoseconds);
+        DEFINE_TEMPORAL_IO(q::kMinute, q::Minutes)
+        DEFINE_TEMPORAL_IO(q::kSecond, q::Seconds)
+        DEFINE_TEMPORAL_IO(q::kTime, q::Milliseconds)
+        DEFINE_TEMPORAL_IO(q::kTimespan, q::Nanoseconds)
 
-        DEFINE_TEMPORAL_IO(q::kDate, q::Date);
-        DEFINE_TEMPORAL_IO(q::kDatetime, q::DateTime);
-        DEFINE_TEMPORAL_IO(q::kTimestamp, q::Timestamp);
+        DEFINE_TEMPORAL_IO(q::kDate, q::Date)
+        DEFINE_TEMPORAL_IO(q::kDatetime, q::DateTime)
+        DEFINE_TEMPORAL_IO(q::kTimestamp, q::Timestamp)
 
 #       undef DEFINE_TEMPORAL_IO
     }

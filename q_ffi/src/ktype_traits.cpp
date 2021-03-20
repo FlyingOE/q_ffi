@@ -53,7 +53,7 @@ noexcept
     return compose_timestamp(date, time);
 }
 
-::J
+q::TypeTraits<q::kTimestamp>::value_type
 q::TypeTraits<q::kTimestamp>::encode(q::TypeTraits<q::kTimestamp>::temporal_type const& p)
 noexcept
 {
@@ -256,7 +256,7 @@ q::TypeTraits<q::kDatetime>::decode(q::TypeTraits<q::kDatetime>::const_reference
 noexcept
 {
     return DateTime{ Date{ Epoch } } + milliseconds{
-        long long(std::round(z * time_scale_v<milliseconds, date::days>)) };
+        (long long)(std::round(z * time_scale_v<milliseconds, date::days>)) };
 }
 
 q::TypeTraits<q::kDatetime>::value_type

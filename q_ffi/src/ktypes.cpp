@@ -79,21 +79,18 @@ namespace
 
     std::string mixed_to_str(::K const k)
     {
-        k,  //VC++: C41000
         assert(nullptr != k && q::kMixed == q::type(k));
         return "<kMixed>";
     }
 
     std::string table_to_str(::K const k)
     {
-        k,  //VC++: C41000
         assert(nullptr != k && q::kTable == q::type(k));
         return "<kTable>";
     }
 
     std::string dict_to_str(::K const k)
     {
-        k,  //VC++: C41000
         assert(nullptr != k && q::kDict == q::type(k));
         return "<kDict>";
     }

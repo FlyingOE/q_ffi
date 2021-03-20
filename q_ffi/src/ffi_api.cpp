@@ -5,6 +5,7 @@
 //#include <ffi.h>
 
 #include <iostream>
+#include "kerror.hpp"
 ::K K4_DECL load(::K dllSym, ::K fName, ::K resType, ::K parTypes)
 {
 //    auto dll = q::q2Str(dllSym);
@@ -12,7 +13,7 @@
 	fName++;
 	resType++;
 	parTypes++;
-    return ::krr("error!");
+    return q::K_error("error!").report();
     /*
     auto handle = dlopen("QQQQQ:kernel32.dll", RTLD_NOW);
     std::cout << handle << std::endl;

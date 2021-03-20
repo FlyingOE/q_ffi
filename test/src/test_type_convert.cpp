@@ -42,11 +42,11 @@ namespace q
                 SCOPED_TRACE("q2* on non-numeric type(s)");
 
                 K_ptr k;
-                k.reset(ks("hello"));
+                k.reset(ks(const_cast<::S>("hello")));
                 EXPECT_THROW(q2Atom(k.get()), K_error) << "q)" << "`hello";
 
                 k.reset(ktn(kSymbol, 1));
-                TypeTraits<kSymbol>::index(k.get())[0] = ::ss("hello");
+                TypeTraits<kSymbol>::index(k.get())[0] = ::ss(const_cast<::S>("hello"));
                 EXPECT_THROW(q2Atom(k.get()), K_error) << "q)" << "1#`hello";
 
                 k.reset(knk(0));
@@ -108,11 +108,11 @@ namespace q
                 SCOPED_TRACE("q2*s on non-numeric type(s)");
 
                 K_ptr k;
-                k.reset(ks("hello"));
+                k.reset(ks(const_cast<::S>("hello")));
                 EXPECT_THROW(q2List(k.get()), K_error) << "q)" << "`hello";
 
                 k.reset(ktn(KS, 1));
-                TypeTraits<kSymbol>::index(k.get())[0] = ::ss("hello");
+                TypeTraits<kSymbol>::index(k.get())[0] = ::ss(const_cast<::S>("hello"));
                 EXPECT_THROW(q2List(k.get()), K_error) << "q)" << "1#`hello";
             }
         }
@@ -301,7 +301,9 @@ namespace q
     TEST_F(TypeConvertTests, q2Strings)
     {
         K_ptr k;
-        std::vector<::S> const samples{ "hello", "", "Hello world!" };
+        std::vector<::S> const samples{
+            const_cast<::S>("hello"), const_cast<::S>(""), const_cast<::S>("Hello world!")
+        };
         {
             SCOPED_TRACE("q::q2Strings on q symbols");
             k.reset(TypeTraits<kSymbol>::list(samples.begin(), samples.end()));
@@ -322,7 +324,7 @@ namespace q
         {
             // Mixed list
             K_ptr k;
-            k.reset(knk(2, ks("hello"), kf(-123.456)));
+            k.reset(knk(2, ks(const_cast<::S>("hello")), kf(-123.456)));
             EXPECT_THROW(q2Strings(k.get()), K_error) << "q)" << "(\"hello\";-123.456)";
 
             k.reset(::kf(-123.456));

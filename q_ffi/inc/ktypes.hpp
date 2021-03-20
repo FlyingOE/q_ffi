@@ -102,7 +102,13 @@ namespace q
     /// @brief Inspect the element count of a (potentially null) @c K object. Atoms' size is 1.
     inline std::size_t count(::K const k) noexcept
     {
-        return nullptr == k ? 0 : 0 > type(k) ? 1 : static_cast<std::size_t>(k->n);
+        if (nullptr == k) {
+            return 0;
+        }
+        else {
+            assert(k->n >= 0);
+            return type(k) < 0 ? 1 : static_cast<std::size_t>(k->n);
+        }
     }
 
 #   pragma endregion

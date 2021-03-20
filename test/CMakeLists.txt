@@ -13,11 +13,11 @@ target_sources(${target_name}
     PRIVATE
         ${source_dir}/setup.cpp     ${header_dir}/setup.hpp
         ${source_dir}/test_std_ext.cpp
-        ${source_dir}/test_libffi.cpp
+        ${source_dir}/test_kpointer.cpp
         ${source_dir}/test_ktypes.cpp
         ${source_dir}/test_temporals.cpp
-        ${source_dir}/test_kpointer.cpp
         ${source_dir}/test_type_convert.cpp
+        ${source_dir}/test_libffi.cpp
 )
 target_include_directories(${target_name}
     PRIVATE

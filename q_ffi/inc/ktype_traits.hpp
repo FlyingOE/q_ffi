@@ -5,11 +5,12 @@
 #include <cstring>
 #include <algorithm>
 #include <iterator>
+#include <iomanip>
 #include "q_ffi.h"
-#include <k_compat.h>
-#include "std_ext.hpp"
 #include "ktypes.hpp"
+#include "std_ext.hpp"
 #include "kpointer.hpp"
+#include <k_compat.h>
 
 namespace q {
 

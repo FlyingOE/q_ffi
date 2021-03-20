@@ -26,9 +26,9 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
     set(libffi_SYSTEM "linux")
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-        set(libffi_PLATFORM "x86")
+        set(libffi_PLATFORM "i686")
     elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-        set(libffi_PLATFORM "x64")
+        set(libffi_PLATFORM "x86_64")
     else()
         message(FATAL_ERROR "Failed to detect Linux platform: CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
     endif()
@@ -70,13 +70,12 @@ if(libffi_SYSTEM STREQUAL "msvc")
 
 elseif(libffi_SYSTEM STREQUAL "linux")
     set_target_properties(libffi_static PROPERTIES
-        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/???
+        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/libffi_convenience.a
     )
     set_target_properties(libffi_shared PROPERTIES
-        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/???
-        IMPORTED_IMPLIB ${libffi_IMPORTS}/lib/???
+        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/libffi.so.8.1.0
+        IMPORTED_IMPLIB ${libffi_IMPORTS}/lib/libffi.a
     )
-    messsage(FATAL_ERROR "FIXME: add Linux libraries...")
 
 elseif(libffi_SYSTEM STREQUAL "mac")
     # FIXME
