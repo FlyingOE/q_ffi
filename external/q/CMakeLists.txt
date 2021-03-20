@@ -67,13 +67,9 @@ if(k4_SYSTEM STREQUAL "w")
 
 elseif(k4_SYSTEM STREQUAL "l")
     # SO to be loaded into q
-    add_library(kdb_C_DLL INTERFACE IMPORTED GLOBAL)
+    add_library(kdb_C_DLL OBJECT IMPORTED GLOBAL)
     target_include_directories(kdb_C_DLL
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-    target_compile_options(kdb_C_DLL
-        INTERFACE
-            -fPIC
     )
 
     # stand-alone ELF
@@ -96,21 +92,11 @@ endif()
 add_library(kdb::C-dll ALIAS kdb_C_DLL)
 add_library(kdb::C-exe ALIAS kdb_C_EXE)
 
-if(${CMAKE_VERSION} VERSION_GREATER "3.18")
-    cmake_print_properties(
-        TARGETS kdb::C-dll
-        PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES
-            IMPORTED_LOCATION
-            IMPORTED_IMPLIB
-            IMPORTED_OBJECTS
-    )
-    cmake_print_properties(
-        TARGETS kdb::C-exe
-        PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES
-            IMPORTED_LOCATION
-            IMPORTED_IMPLIB
-            IMPORTED_OBJECTS
-    )
-endif()
+cmake_print_properties(
+    TARGETS kdb::C-dll kdb::C-exe
+    PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        IMPORTED_LOCATION
+        IMPORTED_IMPLIB
+        IMPORTED_OBJECTS
+)

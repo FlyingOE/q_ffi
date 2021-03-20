@@ -87,14 +87,7 @@ add_library(libffi::static ALIAS libffi_static)
 add_library(libffi::shared ALIAS libffi_shared)
 
 cmake_print_properties(
-    TARGETS libffi::shared
-    PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES
-        IMPORTED_LOCATION
-        IMPORTED_IMPLIB
-)
-cmake_print_properties(
-    TARGETS libffi::static
+    TARGETS libffi::shared libffi::static
     PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES
         IMPORTED_LOCATION
