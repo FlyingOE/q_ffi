@@ -171,11 +171,12 @@ namespace q
         }
     }
 
+#   pragma endregion
+
     TEST(KptrTests, dupK)
     {
         K_ptr pk{ TypeTraits<kSymbol>::atom(test_info_->name()) };
         ASSERT_NE(pk.get(), Nil) << "fail to create K object";
-
         K k = pk.get();
         EXPECT_EQ(k->r, 0) << "different initial ref count vs documentation?";
 
@@ -196,8 +197,6 @@ namespace q
         pk2 = dup_K(pk3);
         EXPECT_EQ(pk2.get(), Nil);
     }
-
-#   pragma endregion
 
     TEST(KptrTests, dupKNil)
     {

@@ -2,11 +2,11 @@
 #include <cassert>
 #include <mutex>
 #ifndef NDEBUG
-#   include <iostream>
+#   include <cstdio>
 #   ifdef WIN32
 #       define q_ffi_DLL "q_ffi.dll"
 #   else
-#       define q_ffi_DLL "q_ffi.so"
+#       define q_ffi_DLL "libq_ffi.so"
 #   endif
 #endif
 #include <k_compat.h>
@@ -27,7 +27,7 @@ namespace
         // @ref https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting
         std::call_once(onLoad, []() {
 #       ifndef NDEBUG
-            std::cout << "# <" q_ffi_DLL "> loading..." << std::endl;
+            std::printf("# <" q_ffi_DLL "> loading...\n");
 #       endif
             ::setm(1);
         });
@@ -38,7 +38,7 @@ namespace
         static std::once_flag onUnload;
         std::call_once(onUnload, []() {
 #       ifndef NDEBUG
-            std::cout << "# <" q_ffi_DLL "> unloading..." << std::endl;
+            std::printf("# <" q_ffi_DLL "> unloading...\n");
 #       endif
         });
     }
