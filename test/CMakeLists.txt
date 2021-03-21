@@ -1,7 +1,5 @@
 # vim: set et noai ts=4 sw=4 syntax=cmake:
 set(target_name "test_q_ffi")
-set(source_dir src)
-set(header_dir inc)
 
 # GTest
 enable_testing()
@@ -11,13 +9,13 @@ include(GoogleTest)
 add_executable(${target_name})
 target_sources(${target_name}
     PRIVATE
-        ${source_dir}/setup.cpp     ${header_dir}/setup.hpp
-        ${source_dir}/test_std_ext.cpp
-        ${source_dir}/test_kpointer.cpp
-        ${source_dir}/test_ktypes.cpp
-        ${source_dir}/test_temporals.cpp
-        ${source_dir}/test_type_convert.cpp
-        ${source_dir}/test_libffi.cpp
+        setup.cpp     setup.hpp
+        test_std_ext.cpp
+        test_kpointer.cpp
+        test_ktypes.cpp
+        test_temporals.cpp
+        test_type_convert.cpp
+        test_libffi.cpp
 )
 target_include_directories(${target_name}
     PRIVATE
@@ -33,12 +31,24 @@ target_link_libraries(${target_name}
         libffi::static
         CapitalEdge::q_ffi
 )
+if(WIN32)
+    target_include_directories(${target_name})
+        PRIVATE
+            dlfcn-win32::dl
+    )
+    target_link_libraries(${target_name})
+        PRIVATE
+            dlfcn-win32::dl
+    )
+endif()
 
 # Extra test assets
 add_library(${target_name}_dll SHARED)
 target_sources(${target_name}_dll
     PRIVATE
-        ${source_dir}/test_libffi_dll.cpp
+        dll/test_dll.cpp
+        dll/test_dll_win.hpp
+        dll/test_dll_linux.hpp
 )
 add_dependencies(${target_name}
     ${target_name}_dll

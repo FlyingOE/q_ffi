@@ -3,34 +3,25 @@
 #include <stdexcept>
 #include <sstream>
 #include <random>
+#include <dlfcn.h>
 #include <ffi.h>
-
-#ifdef _WIN32
-
-#   define WIN32_LEAN_AND_MEAN
-#   define NOMINMAX
-#   include <windows.h>
 
 namespace
 {
     class DLLLoader
     {
-        HMODULE dll_{ nullptr };
+        void *dll_{ nullptr };
 
     public:
-        using filename_type = LPCSTR;
-
-#       define MAKE_FILENAME(s) \
-            TEXT(s)
-
-        DLLLoader(filename_type const& dll)
+        DLLLoader(char const* dll)
         {
             assert(nullptr == dll_);
-            dll_ = LoadLibrary(dll);
+            dll_ = dlopen(dll, RTLD_LAZY);
+
             if (nullptr == dll_) {
                 std::ostringstream buffer;
                 buffer << "Failed to load DLL `" << dll << "'"
-                    << " (error = " << GetLastError() << ')';
+                    << " (error = " << dlerror() << ')';
                 throw std::runtime_error(buffer.str());
             }
         }
@@ -39,13 +30,13 @@ namespace
         ProcType getProc(char const* funcName) const
         {
             checkState();
-            return (ProcType)GetProcAddress(dll_, funcName);
+            return (ProcType)dlsym(dll_, funcName);
         }
 
         ~DLLLoader()
         {
             if (nullptr != dll_) {
-                FreeLibrary(dll_);
+                dlclose(dll_);
                 dll_ = nullptr;
             }
         }
@@ -60,7 +51,18 @@ namespace
 
 }//namespace /*anonymous*/
 
-#pragma region Base test cases (to prove that libffi itself is working properly)
+namespace
+{
+#ifdef _WIN32
+    char const* TEST_DLL = "test_q_ffi_dll.dll";
+#elif defined(__linux__) && !defined(__ANDROID__)
+    char const* TEST_DLL = "libtest_q_ffi_dll.so";
+#else
+#   error FIXME: add unit test for this platform...
+#endif
+}
+
+#ifdef _WIN32
 
 TEST(libffiBaseTests, Win32API)
 {
@@ -95,8 +97,6 @@ TEST(libffiBaseTests, Win32API)
     EXPECT_GE(width, 640);
     EXPECT_GE(height, 480);
 }
-
-#pragma endregion
 
 #pragma region Test all supported call conventions
 
@@ -137,7 +137,7 @@ namespace
 #       ifdef _WIN64
             FFI_WIN64;
 #       else
-            FFI__MS_CDECL;
+            FFI_MS_CDECL;
 #       endif
 
         template<typename Type>
@@ -312,5 +312,5 @@ TYPED_TEST(LibffiTests, add)
 #pragma endregion
 
 #else
-#error FIXME: Implement tests for this platform...
+//#error FIXME: Implement tests for this platform...
 #endif
