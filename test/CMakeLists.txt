@@ -15,7 +15,7 @@ target_sources(${target_name}
         test_ktypes.cpp
         test_temporals.cpp
         test_type_convert.cpp
-        test_libffi.cpp
+        test_libffi.cpp     test_libffi_win.hpp test_libffi_linux.hpp
 )
 target_include_directories(${target_name}
     PRIVATE
@@ -32,11 +32,11 @@ target_link_libraries(${target_name}
         CapitalEdge::q_ffi
 )
 if(WIN32)
-    target_include_directories(${target_name})
+    target_include_directories(${target_name}
         PRIVATE
             dlfcn-win32::dl
     )
-    target_link_libraries(${target_name})
+    target_link_libraries(${target_name}
         PRIVATE
             dlfcn-win32::dl
     )
@@ -46,9 +46,7 @@ endif()
 add_library(${target_name}_dll SHARED)
 target_sources(${target_name}_dll
     PRIVATE
-        dll/test_dll.cpp
-        dll/test_dll_win.hpp
-        dll/test_dll_linux.hpp
+        dll/test_dll.cpp    dll/test_dll_win.hpp dll/test_dll_linux.hpp
 )
 add_dependencies(${target_name}
     ${target_name}_dll

@@ -6,6 +6,12 @@
 #include <dlfcn.h>
 #include <ffi.h>
 
+#if defined(_WIN64) || defined(__x86_64__)
+#   define PLATFORM_64BIT
+#else
+#   define PLATFORM_32BIT
+#endif
+
 namespace
 {
     class DLLLoader
@@ -51,52 +57,17 @@ namespace
 
 }//namespace /*anonymous*/
 
-namespace
-{
-#ifdef _WIN32
-    char const* TEST_DLL = "test_q_ffi_dll.dll";
+/////////////////////////////////////////////////////////////////////////////
+#if defined(_WIN32)
+#   include "test_libffi_win.hpp"
 #elif defined(__linux__) && !defined(__ANDROID__)
-    char const* TEST_DLL = "libtest_q_ffi_dll.so";
+#   include "test_libffi_linux.hpp"
 #else
-#   error FIXME: add unit test for this platform...
+#   error FIXME: add base case tests for this platform...
 #endif
-}
+/////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
-
-TEST(libffiBaseTests, Win32API)
-{
-    auto const dll = MAKE_FILENAME("user32.dll");
-    auto const func = "GetSystemMetrics";   // Win32 API
-
-    DLLLoader dyn{ dll };
-    auto const fp = dyn.getProc<void(*)()>(func);
-    ASSERT_NE(fp, nullptr);
-
-    ffi_cif cif{};
-    ffi_type* args[1] = { &ffi_type_sint };
-#ifdef _WIN64
-    ffi_abi const abi = FFI_WIN64;
-#else
-    ffi_abi const abi = FFI_STDCALL;
-#endif
-    auto const status = ffi_prep_cif(&cif, abi, 1, &ffi_type_sint, args);
-    ASSERT_EQ(status, FFI_OK);
-
-    int widthQuery = SM_CXSCREEN;
-    int heightQuery = SM_CYSCREEN;
-    ffi_sarg width0, height0;
-    void* params[1] = { &widthQuery };
-    ffi_call(&cif, fp, &width0, params);
-    params[0] = &heightQuery;
-    ffi_call(&cif, fp, &height0, params);
-
-    int const width = *reinterpret_cast<int*>(&width0);
-    int const height = *reinterpret_cast<int*>(&height0);
-    std::cout << "Current screen resolution = " << width << " x " << height << std::endl;
-    EXPECT_GE(width, 640);
-    EXPECT_GE(height, 480);
-}
 
 #pragma region Test all supported call conventions
 
@@ -130,12 +101,16 @@ namespace
     struct function_traits;
 
     template<class R, class... Args>
-    struct function_traits<R(__cdecl *)(Args...)>
+#   ifdef PLATFORM_64BIT
+    struct function_traits<R(*)(Args...)>
+#   else
+    struct function_traits<R(CALL_CDECL *)(Args...)>
+#   endif
         : public function_traits<R(Args...)>
     {
         static constexpr ffi_abi abi_type =
-#       ifdef _WIN64
-            FFI_WIN64;
+#       ifdef PLATFORM_64BIT
+            FFI_DEFAULT_ABI;
 #       else
             FFI_MS_CDECL;
 #       endif
@@ -144,15 +119,15 @@ namespace
         static std::string mangle_name(char const* funcName, char const* typeName)
         {
             std::ostringstream buffer;
-            buffer << funcName << '_' << typeName << "__cdecl";
+            buffer << funcName << '_' << typeName << "_" "cdecl";
             return buffer.str();
         }
     };
 
-#ifndef _WIN64
+#ifndef PLATFORM_64BIT
 
     template<class R, class... Args>
-    struct function_traits<R(__stdcall *)(Args...)>
+    struct function_traits<R(CALL_STDCALL *)(Args...)>
         : public function_traits<R(Args...)>
     {
         static constexpr ffi_abi abi_type = FFI_STDCALL;
@@ -162,14 +137,14 @@ namespace
         {
             std::ostringstream buffer;
             buffer << '_'
-                << funcName << '_' << typeName << "__stdcall"
+                << funcName << '_' << typeName << "_" "stdcall"
                 << '@' << std::max<std::size_t>(8, sizeof(Type) * 2);
             return buffer.str();
         }
     };
 
     template<class R, class... Args>
-    struct function_traits<R(__fastcall*)(Args...)>
+    struct function_traits<R(CALL_FASTCALL *)(Args...)>
         : public function_traits<R(Args...)>
     {
         static constexpr ffi_abi abi_type = FFI_FASTCALL;
@@ -179,7 +154,7 @@ namespace
         {
             std::ostringstream buffer;
             buffer << '@'
-                << funcName << '_' << typeName << "__fastcall"
+                << funcName << '_' << typeName << "_" "fastcall"
                 << '@' << std::max<std::size_t>(8, sizeof(Type) * 2);
             return buffer.str();
         }
@@ -211,14 +186,14 @@ struct LibffiTestCase
     using function_type = Signature;
 };
 
-#ifdef _WIN64
+#ifdef PLATFORM_64BIT
 #   define ADD_FFI_TEST_CASES(Type)   \
         Type (*)(Type, Type)
 #else
 #   define ADD_FFI_TEST_CASES(Type)   \
-        Type (__cdecl *)(Type, Type),   \
-        Type (__stdcall *)(Type, Type), \
-        Type (__fastcall *)(Type, Type)
+        Type (CALL_CDECL    *)(Type, Type), \
+        Type (CALL_STDCALL  *)(Type, Type), \
+        Type (CALL_FASTCALL *)(Type, Type)
 #endif
 
 using LibffiTestTypes = ::testing::Types <
@@ -235,7 +210,7 @@ class LibffiTests : public ::testing::Test
 {
 protected:
     using function_type = Signature;
-    using function_types = typename function_traits<function_type>;
+    using function_types = function_traits<function_type>;
     static_assert(function_types::arity == 2, "Expecting a diadic test function");
 
     using data_type = typename function_types::return_type;
@@ -265,8 +240,11 @@ private:
             std::uniform_int_distribution<data_type>>>;
 
 protected:
-    void test_invoke(DLLLoader::filename_type const& dll, char const* func)
+    void test_invoke(char const* dll, char const* func)
     {
+        ASSERT_NE(dll, nullptr);
+        ASSERT_NE(func, nullptr);
+
         DLLLoader dyn{ dll };
 
         auto const mangled = function_types::mangle_name<data_type>(
@@ -306,11 +284,9 @@ TYPED_TEST_SUITE(LibffiTests, LibffiTestTypes);
 
 TYPED_TEST(LibffiTests, add)
 {
-    this->test_invoke("test_q_ffi_dll.dll", "add");
+    this->test_invoke(TEST_DLL, "add");
 }
 
 #pragma endregion
 
-#else
-//#error FIXME: Implement tests for this platform...
 #endif

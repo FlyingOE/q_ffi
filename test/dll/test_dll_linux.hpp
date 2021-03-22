@@ -2,45 +2,39 @@
 #include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
-#include "gtest/gtest.h"
 
 #define CALL_CDECL    __attribute__((cdecl))
 #define CALL_STDCALL  __attribute__((stdcall))
 #define CALL_FASTCALL __attribute__((fastcall))
 
+#define API_EXPORT
+
 namespace
 {
     char const* DLL_NAME = "libtest_q_ffi_dll.so";
-}
 
-class DllEcho
-{
-private:
-    pid_t pid_;
+    pid_t pid()
+    {
+        return getpid();
+    }
 
     std::thread::id tid()
     {
         return std::this_thread::get_id();
     }
 
-public:
-    DllEcho() : pid_{ getpid() }
+    __attribute__((constructor))
+    void dllOnLoad()
     {
         std::cout << ">>> Loaded " << DLL_NAME
-            << " in process #" << pid_ << " (thread #" << tid() << ")." << std::endl;
+            << " in process #" << pid() << " (thread #" << tid() << ")." << std::endl;
     }
 
-    ~DllEcho()
+    __attribute__((destructor))
+    void dllOnUnload()
     {
         std::cout << ">>> Unloading " << DLL_NAME
-            << " from process #" << pid_ << " (thread #" << tid() << ")..." << std::endl;
+            << " from process #" << pid() << " (thread #" << tid() << ")..." << std::endl;
     }
-};
 
-namespace
-{
-
-    ::testing::Environment* const init_dll =
-        ::testing::AddGlobalTestEnvironment(new DllEcho);
-
-}
+}//namespace /*anonymous*/

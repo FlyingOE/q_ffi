@@ -21,7 +21,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     LPVOID lpReserved
 )
 {
-    auto const pid = ::GetCurrentProcessId();
+    auto const pid = GetCurrentProcessId();
     auto const tid = std::this_thread::get_id();
     switch (ul_reason_for_call)
     {
