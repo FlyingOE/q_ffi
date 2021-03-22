@@ -89,7 +89,7 @@ The following steps assume a x86_64 system.
 #### 64-bit (x64) Build
 
 0. Download (and unpack) or checkout (Git tag=`v3.3`) libffi sources.
-1. From Start menu, run "x64 Native Tools Command Prompt for VS 2019".  
+1. From Start menu, run "**x64** Native Tools Command Prompt for VS 2019".
    This opens the MSVC development command prompt for x64.
 2. Start Cygwin in the development command prompt, for example:  
    ```batch
@@ -107,11 +107,11 @@ The following steps assume a x86_64 system.
 5. Depending on which VC runtime you want to use, run one of the following commands:
    - Dynamic runtime (`/MD`)  
      ```bash
-     ../configure CC="../msvcc.sh -m64" CXX="../msvcc.sh -m64" LD=link CPP="cl -nologo -EP" --build=x86_64-unknown-cygwin
+     ../configure CC="../msvcc.sh -m64" CXX="../msvcc.sh -m64" LD=link CPP="cl -nologo -EP" CPPFLAGS="-DFFI_BUILDING_DLL" --build=x86_64-unknown-cygwin
      ```
    - Static runtime (`/MT`)  
      ```bash
-     ../configure CC="../msvcc.sh -DUSE_STATIC_RTL -DUSE_DEBUG_RTL -m64" CXX="../msvcc.sh -DUSE_STATIC_RTL -DUSE_DEBUG_RTL -m64" LD=link CPP="cl -nologo -EP" --build=x86_64-unknown-cygwin
+     ../configure CC="../msvcc.sh -DUSE_STATIC_RTL -DUSE_DEBUG_RTL -m64" CXX="../msvcc.sh -DUSE_STATIC_RTL -DUSE_DEBUG_RTL -m64" LD=link CPP="cl -nologo -EP" CPPFLAGS="-DFFI_BUILDING_DLL" --build=x86_64-unknown-cygwin
      ```
 6. Verify that `./include/ffitarget.h` is not a symlink.  
    If it is, as Visual Studio does not understand symlinks, replace it with a real file:  
@@ -142,7 +142,7 @@ The following steps assume a x86_64 system.
 #### 32-bit (x86) Build
 
 0. Download (and unpack) or checkout (Git tag=`v3.3`) libffi sources.
-1. From Start menu, run "x86 Native Tools Command Prompt for VS 2019".  
+1. From Start menu, run "**x86** Native Tools Command Prompt for VS 2019".
    This opens the MSVC development command prompt for x86.
 2. Start Cygwin in the development command prompt, for example:  
    ```batch
@@ -160,11 +160,11 @@ The following steps assume a x86_64 system.
 5. Depending on which VC runtime you want to use, run one of the following commands:
    - Dynamic runtime (`/MD`)  
      ```bash
-     ../configure CC="../msvcc.sh" CXX="../msvcc.sh" LD=link CPP="cl -nologo -EP" --build=i686-unknown-cygwin
+     ../configure CC="../msvcc.sh" CXX="../msvcc.sh" LD=link CPP="cl -nologo -EP" CPPFLAGS="-DFFI_BUILDING_DLL" --build=i686-unknown-cygwin
      ```
    - Static runtime (`/MT`)  
      ```bash
-     ../configure CC="../msvcc.sh -DUSE_STATIC_RTL" CXX="../msvcc.sh -DUSE_STATIC_RTL" LD=link CPP="cl -nologo -EP" --build=i686-unknown-cygwin
+     ../configure CC="../msvcc.sh -DUSE_STATIC_RTL" CXX="../msvcc.sh -DUSE_STATIC_RTL" LD=link CPP="cl -nologo -EP" CPPFLAGS="-DFFI_BUILDING_DLL" --build=i686-unknown-cygwin
      ```
 6. Verify that `./include/ffitarget.h` is not a symlink.  
    If it is, as Visual Studio does not understand symlinks, replace it with a real file:  
