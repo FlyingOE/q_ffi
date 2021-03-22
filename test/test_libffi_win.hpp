@@ -1,3 +1,7 @@
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+
 #define CALL_CDECL    __cdecl
 #define CALL_STDCALL  __stdcall
 #define CALL_FASTCALL __fastcall
