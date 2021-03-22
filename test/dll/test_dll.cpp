@@ -27,35 +27,35 @@
 extern "C"
 {
 
-#   define DEFINE_TEST_FUNCTION(Abi, Type)  \
+#   define DEFINE_TEST_FUNCTION(Abi, AbiName, Type)  \
         API_EXPORT  \
-        Type Abi add_##Type##Abi(Type a, Type b)    \
+        Type Abi add_##Type##_##AbiName(Type a, Type b)    \
         {   \
 			auto const c = a + b;   \
-			std::cout << "In add_" #Type #Abi " with "   \
+			std::cout << "In add_" #Type "_" #AbiName " with "  \
                 << '(' << a << ") + (" << b << ") = (" << c << ')' << std::endl;    \
             return c;   \
         }
 
-    DEFINE_TEST_FUNCTION(CALL_CDECL, char);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, int16_t);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, int32_t);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, int64_t);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, float);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, double);
+    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, char);
+    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, int16_t);
+    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, int32_t);
+    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, int64_t);
+    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, float);
+    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, double);
 
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, char);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, int16_t);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, int32_t);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, int64_t);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, float);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, double);
+    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, char);
+    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, int16_t);
+    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, int32_t);
+    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, int64_t);
+    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, float);
+    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, double);
 
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, char);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, int16_t);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, int32_t);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, int64_t);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, float);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, double);
+    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, char);
+    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, int16_t);
+    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, int32_t);
+    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, int64_t);
+    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, float);
+    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, double);
 
 }//extern "C"

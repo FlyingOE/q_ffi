@@ -1,13 +1,31 @@
+#include <unistd.h>
+#include <cstring>
+#include <cstring>
+
 #define CALL_CDECL    __attribute__((cdecl))
 #define CALL_STDCALL  __attribute__((stdcall))
 #define CALL_FASTCALL __attribute__((fastcall))
 
 namespace
 {
-    char const* TEST_DLL = "libtest_q_ffi_dll.so";
+    std::string getTestDllPath()
+    {
+        char path[PATH_MAX + 1]{};
+        auto n = readlink("/proc/self/exe", path, PATH_MAX);
+        assert(n <= PATH_MAX);
+
+        char* p = std::strrchr(path, '/');
+        assert(p != nullptr && p <= path + PATH_MAX);
+        
+        auto const DLL_NAME ="libtest_q_ffi_dll.so";
+        std::strncpy(p + 1, DLL_NAME, PATH_MAX - std::strlen(path));
+        return path;
+    }
+
+    std::string TEST_DLL{ getTestDllPath() };
 }
 
-TEST(libffiBaseTests, libdl)
+TEST(LibffiBaseTests, libdl)
 {
     auto const dll = "libdl.so";
     auto const func = "dladdr";

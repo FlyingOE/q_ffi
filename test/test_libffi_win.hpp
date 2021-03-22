@@ -4,10 +4,10 @@
 
 namespace
 {
-    char const* TEST_DLL = "test_q_ffi_dll.dll";
+    std::string TEST_DLL{ "test_q_ffi_dll.dll" };
 }
 
-TEST(libffiBaseTests, Win32API)
+TEST(LibffiBaseTests, Win32API)
 {
     auto const dll = "user32.dll";
     auto const func = "GetSystemMetrics";   // Win32 API

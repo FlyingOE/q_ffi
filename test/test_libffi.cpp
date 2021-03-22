@@ -19,15 +19,15 @@ namespace
         void *dll_{ nullptr };
 
     public:
-        DLLLoader(char const* dll)
+        DLLLoader(char const* filename)
         {
             assert(nullptr == dll_);
-            dll_ = dlopen(dll, RTLD_LAZY);
+            std::cout << "Loading DLL `" << filename << "'..." << std::endl;
+            dll_ = dlopen(filename, RTLD_LAZY);
 
             if (nullptr == dll_) {
                 std::ostringstream buffer;
-                buffer << "Failed to load DLL `" << dll << "'"
-                    << " (error = " << dlerror() << ')';
+                buffer << "Failed to load DLL `" << filename << "' (error = " << dlerror() << ')';
                 throw std::runtime_error(buffer.str());
             }
         }
@@ -66,8 +66,6 @@ namespace
 #   error FIXME: add base case tests for this platform...
 #endif
 /////////////////////////////////////////////////////////////////////////////
-
-#ifdef _WIN32
 
 #pragma region Test all supported call conventions
 
@@ -209,66 +207,55 @@ template<typename Signature>
 class LibffiTests : public ::testing::Test
 {
 protected:
-    using function_type = Signature;
-    using function_types = function_traits<function_type>;
-    static_assert(function_types::arity == 2, "Expecting a diadic test function");
+    using fun_type = Signature;
+    using fun_traits = function_traits<fun_type>;
+    static_assert(fun_traits::arity == 2, "Expecting a diadic test function");
 
-    using data_type = typename function_types::return_type;
+    using data_type = typename fun_traits::return_type;
     using return_type = std::conditional_t<
         sizeof(data_type) < sizeof(ffi_sarg),
         ffi_sarg,
         data_type>;
 
 private:
-    class uniform_char_distribution
-    {
-    private:
-        std::uniform_int_distribution<short> dist{};
-
-    public:
-        template<typename Engine>
-        char operator()(Engine& engine) const
-        { return static_cast<char>(dist(engine)); }
-    };
-
     using distribution_type = std::conditional_t<
         std::is_floating_point_v<data_type>,
         std::uniform_real_distribution<data_type>,
         std::conditional_t<
             std::is_same_v<data_type, char>,
-            uniform_char_distribution,
+            std::uniform_int_distribution<int16_t>,
             std::uniform_int_distribution<data_type>>>;
 
 protected:
-    void test_invoke(char const* dll, char const* func)
+    void test_invoke(char const* dllname, char const* func)
     {
-        ASSERT_NE(dll, nullptr);
+        ASSERT_NE(dllname, nullptr);
         ASSERT_NE(func, nullptr);
 
-        DLLLoader dyn{ dll };
+        DLLLoader dll{ dllname };
 
-        auto const mangled = function_types::mangle_name<data_type>(
+        auto const mangled = fun_traits::template mangle_name<data_type>(
             func, ffi_type_info<data_type>::type_name);
         SCOPED_TRACE("FFI invocation of " + mangled);
 
-        auto const fp = dyn.getProc<void(*)()>(mangled.c_str());
-        ASSERT_NE(fp, nullptr) << "Look up for `" << mangled << "' in " << dll;
+        auto const fp = dll.getProc<void(*)()>(mangled.c_str());
+        ASSERT_NE(fp, nullptr) << "Look up for `" << mangled << "' in " << dllname;
 
         // Setup invocation argument and result types
         ffi_cif cif{};
         ffi_type* res_type = &ffi_type_info<data_type>::type_info;
         ffi_type* arg_types[] = { res_type, res_type };
         auto const status = ffi_prep_cif(&cif,
-            function_types::abi_type, function_types::arity, res_type, arg_types);
+            fun_traits::abi_type, fun_traits::arity, res_type, arg_types);
         ASSERT_EQ(status, FFI_OK);
 
         // Generate random parameters for the invocation
-        data_type parameters[function_types::arity];
-        void* params[function_types::arity];
+        data_type parameters[fun_traits::arity];
+        void* params[fun_traits::arity];
         std::random_device rd;  // seed generator
         distribution_type dist;
-        for (auto i = 0; i < function_types::arity; ++i) {
-            parameters[i] = dist(rd);
+        for (auto i = 0; i < fun_traits::arity; ++i) {
+            parameters[i] = static_cast<data_type>(dist(rd));
             params[i] = &parameters[i];
         }
 
@@ -282,11 +269,9 @@ protected:
 
 TYPED_TEST_SUITE(LibffiTests, LibffiTestTypes);
 
-TYPED_TEST(LibffiTests, add)
+TYPED_TEST(LibffiTests, dll_add)
 {
-    this->test_invoke(TEST_DLL, "add");
+    this->test_invoke(TEST_DLL.c_str(), "add");
 }
 
 #pragma endregion
-
-#endif
