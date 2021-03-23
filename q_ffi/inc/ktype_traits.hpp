@@ -981,6 +981,34 @@ namespace q {
         static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v);
     };
 
+    template<>
+    struct TypeTraits<kDLL> : public
+        ValueType<TypeTraits<kDLL>, void*>
+    {
+        static constexpr TypeId type_id = kDLL;
+        using ValueType::value_type;
+        using ValueType::reference;
+        using ValueType::const_reference;
+        using ValueType::pointer;
+        using ValueType::const_pointer;
+
+        static ::K atom(value_type func, std::size_t argc) noexcept
+        {
+            assert(nullptr != func);
+            assert(argc > 0);
+            return dl(func, argc);
+        }
+
+        static reference value(::K k) noexcept
+        { return *reinterpret_cast<pointer>(k->G0); }
+
+        static std::size_t arity(::K k) noexcept
+        { return k->u; }
+
+        template<typename Elem, typename ElemTr>
+        static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v);
+    };
+
 #   pragma endregion
 
 #   pragma endregion

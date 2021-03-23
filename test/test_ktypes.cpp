@@ -70,7 +70,8 @@ namespace q
         TraitsInfo<int32_t, kSecond, 'v', true, true, true, true>,
         TraitsInfo<int32_t, kTime, 't', true, true, true, true>,
         TraitsInfo<void, kNil, '\0', false, false, false, false>,
-        TraitsInfo<char const*, kError, '\0', true, false, false, false>
+        TraitsInfo<char const*, kError, '\0', true, false, false, false>//,
+        //TraitsInfo<void*, kDLL, '\0', true, false, false, false>
     >;
 
     TYPED_TEST_SUITE(TypeTraitsTests, TraitsTestTypes);

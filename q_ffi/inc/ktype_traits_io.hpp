@@ -242,6 +242,20 @@ q::TypeTraits<q::kError>::print(std::basic_ostream<Elem, ElemTr>& out,
 
 #pragma endregion
 
+#pragma region q::TypeTraits<q::kDLL>
+
+template<typename Elem, typename ElemTr>
+void
+q::TypeTraits<q::kDLL>::print(std::basic_ostream<Elem, ElemTr>& out,
+    q::TypeTraits<q::kDLL>::value_type const& v)
+{
+    out << "{0x"
+        << std::hex << std::setfill('0') << std::setw(sizeof(value_type) * 2) << v
+        << '}';
+}
+
+#pragma endregion
+
 #pragma region Make kdb+ temporal type representations I/O stream-able
 namespace std
 {

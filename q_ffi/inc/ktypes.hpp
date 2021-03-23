@@ -34,8 +34,20 @@ namespace q
         kEnumMax = 76,
         kTable = (XT),
         kDict = (XD),
+        kLambda = 100,
         kNil = 101,
-        kError = -128
+        kOperator = 102,
+        kIterator = 103,
+        kProjection = 104,
+        kComposite = 105,
+        kEach = 106,
+        kOver = 107,
+        kScan = 108,
+        kPeach = 109,
+        kEachR = 110,
+        kEachL = 111,
+        kDLL = 112,
+        kError = -128,
     };
 
     template<typename Elem, typename ElemTr>
