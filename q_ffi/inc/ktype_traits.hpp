@@ -203,7 +203,7 @@ namespace q {
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
         {
-            out << static_cast<bool>(v) << TypeCode.at(TypeTraits::type_id);
+            out << static_cast<bool>(v) << TypeId2Code.at(TypeTraits::type_id);
         }
     };
 

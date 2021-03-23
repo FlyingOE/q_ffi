@@ -84,7 +84,7 @@ namespace q
             typename TypeParam::value_type
         >));
         EXPECT_EQ(Traits::type_id, TypeId{ TypeParam::type_id });
-        EXPECT_EQ(TypeCode.at(Traits::type_id), char{ TypeParam::type_code });
+        EXPECT_EQ(TypeId2Code.at(Traits::type_id), char{ TypeParam::type_code });
     }
 
     TYPED_TEST(TypeTraitsTests, qTypeTraitsQueries)

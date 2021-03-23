@@ -35,7 +35,7 @@ q::facets::NumericType<Tr, Value>::print(std::basic_ostream<Elem, ElemTr>& out,
     typename q::facets::NumericType<Tr, Value>::const_reference v)
 {
     if (!Tr::print_special(out, v))
-        out << std::to_string(v) << TypeCode.at(Tr::type_id);
+        out << std::to_string(v) << TypeId2Code.at(Tr::type_id);
 }
 
 template<typename Tr, typename Value>
@@ -56,7 +56,7 @@ q::facets::NumericType<Tr, Value>::print_special(std::basic_ostream<Elem, ElemTr
     else {
         return false;   // not a special value
     }
-    out << TypeCode.at(Tr::type_id);
+    out << TypeId2Code.at(Tr::type_id);
     return true;
 }
 
@@ -106,7 +106,7 @@ q::TypeTraits<q::kMonth>::print(std::basic_ostream<Elem, ElemTr>& out,
     out << std::setfill('0')
         << std::setw(4) << int(ymd.year()) << '.'
         << std::setw(2) << unsigned(ymd.month())
-        << TypeCode.at(TypeTraits::type_id);
+        << TypeId2Code.at(TypeTraits::type_id);
 }
 
 #pragma endregion

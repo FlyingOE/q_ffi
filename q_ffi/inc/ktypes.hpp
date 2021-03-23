@@ -32,6 +32,8 @@ namespace q
         kTime = (KT),
         kEnumMin = 20,
         kEnumMax = 76,
+        kMappedListsMin = 78,   // not yet supported
+        kMappedListsMax = 96,   // not yet supported
         kTable = (XT),
         kDict = (XD),
         kLambda = 100,
@@ -55,11 +57,11 @@ namespace q
         std::basic_ostream<Elem, ElemTr>& os, TypeId tid)
     {
 #   define Q_TYPEID_OUTPUT(T)  \
-        case -(k##T): return os << "{" #T "}";  \
-        case (k##T): return os << "{" #T "s}"
+        case -(k##T): return os << "<" #T ">";  \
+        case (k##T): return os << "<" #T "s>"
         switch (tid)
         {
-        case kMixed: return os << "{(...)}";
+        case kMixed: return os << "<(...)>";
             Q_TYPEID_OUTPUT(Boolean);
             Q_TYPEID_OUTPUT(GUID);
             Q_TYPEID_OUTPUT(Byte);
@@ -78,23 +80,24 @@ namespace q
             Q_TYPEID_OUTPUT(Minute);
             Q_TYPEID_OUTPUT(Second);
             Q_TYPEID_OUTPUT(Time);
-        case kTable: return os << "{Table}";
-        case kDict: return os << "{Dict}";
-        case kNil: return os << "{(::)}";
-        case kError: return os << "{'Error}";
+        case kTable: return os << "<Table>";
+        case kDict: return os << "<Dict>";
+        case kNil: return os << "<::>";
+        case kError: return os << "<'Error>";
         default:
             if (-kEnumMin >= tid && tid >= -kEnumMax)
-                return os << "{Enum}";
+                return os << "<Enum>";
             else if (kEnumMin <= tid && tid <= kEnumMax)
-                return os << "{Enums}";
+                return os << "<Enums>";
             else
-                return os << '{' << tid << '}';
+                return os << '<' << tid << '>';
         }
 #   undef Q_TYPEID_OUTPUT
     }
 
     /// @brief Map @c TypeId to single-character type code in q.
-    q_ffi_API extern std::unordered_map<TypeId, char> const TypeCode;
+    q_ffi_API extern std::unordered_map<TypeId, char> const TypeId2Code;
+    q_ffi_API extern std::unordered_map<char, TypeId> const TypeCode2Id;
 
     /// @brief Generic nil value in q.
     /// @ref q::kNil

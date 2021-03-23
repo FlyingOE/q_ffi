@@ -5,7 +5,7 @@ using namespace std::string_literals;
 
 namespace q
 {
-    std::unordered_map<TypeId, char> const TypeCode{
+    std::unordered_map<TypeId, char> const TypeId2Code{
         { kMixed, ' ' },
         { kBoolean, 'b' },
         { kGUID, 'g' },
@@ -25,12 +25,31 @@ namespace q
         { kMinute, 'u' },
         { kSecond, 'v' },
         { kTime, 't' },
-        { kEnumMin, 's' },
-        { kEnumMax, 's' },
         { kTable, ' ' },
         { kDict, ' ' },
         { kNil, '\0' },
-        { kError, '\0' }
+        { kError, '\0' },
+    };
+
+    std::unordered_map<char, TypeId> const TypeCode2Id{
+        { 'b', kBoolean },
+        { 'g', kGUID },
+        { 'x', kByte },
+        { 'h', kShort },
+        { 'i', kInt },
+        { 'j', kLong },
+        { 'e', kReal },
+        { 'f', kFloat },
+        { 'c', kChar },
+        { 's', kSymbol },
+        { 'p', kTimestamp },
+        { 'm', kMonth },
+        { 'd', kDate },
+        { 'z', kDatetime },
+        { 'n', kTimespan },
+        { 'u', kMinute },
+        { 'v', kSecond },
+        { 't', kTime },
     };
 
 }//namespace q
