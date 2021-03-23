@@ -8,24 +8,24 @@
 
 namespace q
 {
-    q_ffi_API long long q2Decimal(::K x) noexcept(false);
-    q_ffi_API std::vector<long long> q2Decimals(::K x) noexcept(false);
+    q_ffi_API long long q2Decimal(::K x, bool dryRun = false) noexcept(false);
+    q_ffi_API std::vector<long long> q2Decimals(::K x, bool dryRun = false) noexcept(false);
 
-    q_ffi_API double q2Real(::K x) noexcept(false);
-    q_ffi_API std::vector<double> q2Reals(::K x) noexcept(false);
+    q_ffi_API double q2Real(::K x, bool dryRun = false) noexcept(false);
+    q_ffi_API std::vector<double> q2Reals(::K x, bool dryRun = false) noexcept(false);
 
-    q_ffi_API std::string q2String(::K x) noexcept(false);
-    q_ffi_API std::vector<std::string> q2Strings(::K x) noexcept(false);
+    q_ffi_API std::string q2String(::K x, bool dryRun = false) noexcept(false);
+    q_ffi_API std::vector<std::string> q2Strings(::K x, bool dryRun = false) noexcept(false);
 
-    template <typename TimePt>
-    TimePt q2TimePoint(::K x) noexcept(false);
-    template <typename TimePt>
-    std::vector<TimePt> q2TimePoints(::K x) noexcept(false);
+    template<typename TimePt>
+    TimePt q2TimePoint(::K x, bool dryRun = false) noexcept(false);
+    template<typename TimePt>
+    std::vector<TimePt> q2TimePoints(::K x, bool dryRun = false) noexcept(false);
 
-    template <typename Duration>
-    Duration q2TimeSpan(::K x) noexcept(false);
-    template <typename Duration>
-    std::vector<Duration> q2TimeSpans(::K x) noexcept(false);
+    template<typename Duration>
+    Duration q2TimeSpan(::K x, bool dryRun = false) noexcept(false);
+    template<typename Duration>
+    std::vector<Duration> q2TimeSpans(::K x, bool dryRun = false) noexcept(false);
 
 }//namespace q
 
@@ -72,20 +72,20 @@ namespace q
 }//namespace q
 
 template<typename TimePt>
-TimePt q::q2TimePoint(::K x) noexcept(false)
+TimePt q::q2TimePoint(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         details::signalError("nil timepoint");
     }
 
-#   define GET_TIME_POINT(T, Dur, x)    \
+#   define GET_TIME_POINT(T, Dur, x, dryRun)    \
         case -(T):  \
-            return details::get_time_point<Dur, (T)>((x))
+            return (dryRun) ? TimePt{} : details::get_time_point<Dur, (T)>((x))
     switch (type(x)) {
-        GET_TIME_POINT(kTimestamp, typename TimePt::duration, x);
-        GET_TIME_POINT(kMonth, typename TimePt::duration, x);
-        GET_TIME_POINT(kDate, typename TimePt::duration, x);
-        GET_TIME_POINT(kDatetime, typename TimePt::duration, x);
+        GET_TIME_POINT(kTimestamp, typename TimePt::duration, x, dryRun);
+        GET_TIME_POINT(kMonth, typename TimePt::duration, x, dryRun);
+        GET_TIME_POINT(kDate, typename TimePt::duration, x, dryRun);
+        GET_TIME_POINT(kDatetime, typename TimePt::duration, x, dryRun);
     default:
         details::signalError("not a timepoint");
         assert(!"Shall never arrive here!");
@@ -95,7 +95,7 @@ TimePt q::q2TimePoint(::K x) noexcept(false)
 }
 
 template<typename TimePt>
-std::vector<TimePt> q::q2TimePoints(::K x) noexcept(false)
+std::vector<TimePt> q::q2TimePoints(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         details::signalError("nil time-point list");
@@ -105,18 +105,21 @@ std::vector<TimePt> q::q2TimePoints(::K x) noexcept(false)
     }
 
     assert(count(x) >= 0);
-    std::vector<TimePt> result(count(x));
+    std::vector<TimePt> result(dryRun ? 0 : count(x));
 
-#   define GET_TIME_POINTS(T, Dur, x, r)    \
+#   define GET_TIME_POINTS(T, Dur, x, r, dryRun)    \
         case (T):  \
-            std::transform(TypeTraits<(T)>::index((x)), TypeTraits<(T)>::index((x)) + count((x)),   \
-                (r).begin(), [](auto const t) { return details::get_time_point<Dur, (T)>(t); });    \
+            if (!(dryRun))  \
+                std::transform(TypeTraits<(T)>::index((x)), \
+                    TypeTraits<(T)>::index((x)) + count((x)),   \
+                    (r).begin(),    \
+                    [](auto const t) { return details::get_time_point<Dur, (T)>(t); }); \
             break
     switch (type(x)) {
-        GET_TIME_POINTS(kTimestamp, typename TimePt::duration, x, result);
-        GET_TIME_POINTS(kMonth, typename TimePt::duration, x, result);
-        GET_TIME_POINTS(kDate, typename TimePt::duration, x, result);
-        GET_TIME_POINTS(kDatetime, typename TimePt::duration, x, result);
+        GET_TIME_POINTS(kTimestamp, typename TimePt::duration, x, result, dryRun);
+        GET_TIME_POINTS(kMonth, typename TimePt::duration, x, result, dryRun);
+        GET_TIME_POINTS(kDate, typename TimePt::duration, x, result, dryRun);
+        GET_TIME_POINTS(kDatetime, typename TimePt::duration, x, result, dryRun);
     default:
         details::signalError("not a time-point list");
     }
@@ -126,20 +129,20 @@ std::vector<TimePt> q::q2TimePoints(::K x) noexcept(false)
 }
 
 template<typename Duration>
-Duration q::q2TimeSpan(::K x) noexcept(false)
+Duration q::q2TimeSpan(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         details::signalError("nil time-span");
     }
 
-#   define GET_TIME_SPAN(T, Dur, x)    \
+#   define GET_TIME_SPAN(T, Dur, x, dryRun) \
         case -(T):  \
-            return details::get_time_span<Dur, (T)>((x))
+            return (dryRun) ? Duration{} : details::get_time_span<Dur, (T)>((x))
     switch (type(x)) {
-        GET_TIME_SPAN(kTimespan, Duration, x);
-        GET_TIME_SPAN(kMinute, Duration, x);
-        GET_TIME_SPAN(kSecond, Duration, x);
-        GET_TIME_SPAN(kTime, Duration, x);
+        GET_TIME_SPAN(kTimespan, Duration, x, dryRun);
+        GET_TIME_SPAN(kMinute, Duration, x, dryRun);
+        GET_TIME_SPAN(kSecond, Duration, x, dryRun);
+        GET_TIME_SPAN(kTime, Duration, x, dryRun);
     default:
         details::signalError("not a time-span");
         assert(!"Shall never arrive here!");
@@ -149,7 +152,7 @@ Duration q::q2TimeSpan(::K x) noexcept(false)
 }
 
 template<typename Duration>
-std::vector<Duration> q::q2TimeSpans(::K x) noexcept(false)
+std::vector<Duration> q::q2TimeSpans(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         details::signalError("nil time-span list");
@@ -159,18 +162,21 @@ std::vector<Duration> q::q2TimeSpans(::K x) noexcept(false)
     }
 
     assert(count(x) >= 0);
-    std::vector<Duration> result(count(x));
+    std::vector<Duration> result(dryRun ? 0 : count(x));
 
-#   define GET_TIME_SPANS(T, Dur, x, r) \
+#   define GET_TIME_SPANS(T, Dur, x, r, dryRun) \
         case (T):  \
-            std::transform(TypeTraits<(T)>::index((x)), TypeTraits<(T)>::index((x)) + count((x)),   \
-                (r).begin(), [](auto const t) { return details::get_time_span<Dur, (T)>(t); });   \
+            if (!(dryRun))  \
+                std::transform(TypeTraits<(T)>::index((x)), \
+                    TypeTraits<(T)>::index((x)) + count((x)),   \
+                    (r).begin(),    \
+                    [](auto const t) { return details::get_time_span<Dur, (T)>(t); });  \
             break
     switch (type(x)) {
-        GET_TIME_SPANS(kTimespan, Duration, x, result);
-        GET_TIME_SPANS(kMinute, Duration, x, result);
-        GET_TIME_SPANS(kSecond, Duration, x, result);
-        GET_TIME_SPANS(kTime, Duration, x, result);
+        GET_TIME_SPANS(kTimespan, Duration, x, result, dryRun);
+        GET_TIME_SPANS(kMinute, Duration, x, result, dryRun);
+        GET_TIME_SPANS(kSecond, Duration, x, result, dryRun);
+        GET_TIME_SPANS(kTime, Duration, x, result, dryRun);
     default:
         details::signalError("not a time-span list");
     }

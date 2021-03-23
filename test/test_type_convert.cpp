@@ -6,6 +6,23 @@
 
 namespace q
 {
+    namespace tester
+    {
+        inline long long q2Decimal(::K k)
+        { return q::q2Decimal(k); }
+        inline std::vector<long long> q2Decimals(::K k)
+        { return q::q2Decimals(k); }
+
+        inline double q2Real(::K k)
+        { return q::q2Real(k); }
+        inline std::vector<double> q2Reals(::K k)
+        { return q::q2Reals(k); }
+
+        inline std::string q2String(::K k)
+        { return q::q2String(k); }
+        inline std::vector<std::string> q2Strings(::K k)
+        { return q::q2Strings(k); }
+    }
 
     class TypeConvertTests : public ::testing::Test
     {
@@ -174,7 +191,7 @@ namespace q
     {
         {
             SCOPED_TRACE("q::q2Decimal on integral atoms");
-            this->test_q2Decimal<long long, q2Decimal>();
+            this->test_q2Decimal<long long, tester::q2Decimal>();
         }
 
         K_ptr k;
@@ -190,7 +207,7 @@ namespace q
     {
         {
             SCOPED_TRACE("q::q2Decimals on integral lists");
-            this->test_q2Decimals<long long, q2Decimals>();
+            this->test_q2Decimals<long long, tester::q2Decimals>();
         }
 
         K_ptr k;
@@ -209,27 +226,27 @@ namespace q
     {
         {
             SCOPED_TRACE("q::q2Real on integral atoms");
-            this->test_q2Decimal<double, q2Real>();
+            this->test_q2Decimal<double, tester::q2Real>();
         } {
             SCOPED_TRACE("q::q2Real on q real");
-            this->test_q2Atom<double, q2Real>(::ke, 967.23981f, "967.23981e");
-            this->test_q2Atom<double, q2Real>(::ke, 0.f, "0e");
-            this->test_q2Atom<double, q2Real>(::ke, -967.23981f, "-967.23981e");
-            this->test_q2Atom<double, q2Real>(::ke, ::E(wf), "0We");
-            this->test_q2Atom<double, q2Real>(::ke, ::E(-wf), "-0We");
+            this->test_q2Atom<double, tester::q2Real>(::ke, 967.23981f, "967.23981e");
+            this->test_q2Atom<double, tester::q2Real>(::ke, 0.f, "0e");
+            this->test_q2Atom<double, tester::q2Real>(::ke, -967.23981f, "-967.23981e");
+            this->test_q2Atom<double, tester::q2Real>(::ke, ::E(wf), "0We");
+            this->test_q2Atom<double, tester::q2Real>(::ke, ::E(-wf), "-0We");
         } {
             SCOPED_TRACE("q::q2Real on q reals");
-            this->test_q2Atom_with_list<double, q2Real>(kReal, "*e list");
+            this->test_q2Atom_with_list<double, tester::q2Real>(kReal, "*e list");
         } {
             SCOPED_TRACE("q::q2Real on q float");
-            this->test_q2Atom<double, q2Real>(::kf, 7413760.571230203088, "7413760.571230203088");
-            this->test_q2Atom<double, q2Real>(::kf, 0., "0f");
-            this->test_q2Atom<double, q2Real>(::kf, -7413760.571230203088, "-7413760.571230203088");
-            this->test_q2Atom<double, q2Real>(::kf, wf, "0w");
-            this->test_q2Atom<double, q2Real>(::kf, -wf, "-0w");
+            this->test_q2Atom<double, tester::q2Real>(::kf, 7413760.571230203088, "7413760.571230203088");
+            this->test_q2Atom<double, tester::q2Real>(::kf, 0., "0f");
+            this->test_q2Atom<double, tester::q2Real>(::kf, -7413760.571230203088, "-7413760.571230203088");
+            this->test_q2Atom<double, tester::q2Real>(::kf, wf, "0w");
+            this->test_q2Atom<double, tester::q2Real>(::kf, -wf, "-0w");
         } {
             SCOPED_TRACE("q::q2Real on q floats");
-            this->test_q2Atom_with_list<double, q2Real>(kFloat, "*f list");
+            this->test_q2Atom_with_list<double, tester::q2Real>(kFloat, "*f list");
         }
     }
 
@@ -237,11 +254,11 @@ namespace q
     {
         {
             SCOPED_TRACE("q::q2Reals on integral lists");
-            this->test_q2Decimals<double, q2Reals>();
+            this->test_q2Decimals<double, tester::q2Reals>();
         }
         {
             SCOPED_TRACE("q::q2Reals on q reals");
-            this->test_q2List<double, q2Reals, kReal>(std::vector<::E>{
+            this->test_q2List<double, tester::q2Reals, kReal>(std::vector<::E>{
                 967.23981f, 0.f, -967.23981f, float(wf), float(-wf)
             });
         }
@@ -251,7 +268,7 @@ namespace q
 
         {
             SCOPED_TRACE("q::q2Reals on q floats");
-            this->test_q2List<double, q2Reals, kFloat>(std::vector<::F>{
+            this->test_q2List<double, tester::q2Reals, kFloat>(std::vector<::F>{
                 7413760.571230203088, 0., -7413760.571230203088, wf, -wf
             });
         }
@@ -267,29 +284,29 @@ namespace q
     {
         {
             SCOPED_TRACE("q::q2String on q symbol");
-            this->test_q2Atom<std::string, q2String>(::ks,
+            this->test_q2Atom<std::string, tester::q2String>(::ks,
                 const_cast<::S>("hello"), "`hello");
-            this->test_q2Atom<std::string, q2String>(::ks,
+            this->test_q2Atom<std::string, tester::q2String>(::ks,
                 const_cast<::S>(""), "`");
-            this->test_q2Atom<std::string, q2String>(::ks,
+            this->test_q2Atom<std::string, tester::q2String>(::ks,
                 const_cast<::S>("Hello world!"), "`$\"Hello world!\"");
         } {
             SCOPED_TRACE("q::q2String on q symbols");
-            this->test_q2Atom_with_list<std::string, q2String>(kSymbol, "`* list");
+            this->test_q2Atom_with_list<std::string, tester::q2String>(kSymbol, "`* list");
         }
         {
             SCOPED_TRACE("q::q2String on q char list");
-            this->test_q2Atom<std::string, q2String>(::kp,
+            this->test_q2Atom<std::string, tester::q2String>(::kp,
                 const_cast<::S>("hello"), "\"hello\"");
-            this->test_q2Atom<std::string, q2String>(::kp,
+            this->test_q2Atom<std::string, tester::q2String>(::kp,
                 const_cast<::S>("A"), "1#\"A\"");
-            this->test_q2Atom<std::string, q2String>(::kp,
+            this->test_q2Atom<std::string, tester::q2String>(::kp,
                 const_cast<::S>(""), "\"\"");
-            this->test_q2Atom<std::string, q2String>(::kp,
+            this->test_q2Atom<std::string, tester::q2String>(::kp,
                 const_cast<::S>("Hello world!"), "\"Hello world!\"");
         } {
             SCOPED_TRACE("q::q2String on q char lists");
-            this->test_q2Atom_with_list<std::string, q2String>(kMixed, "\"*\" list");
+            this->test_q2Atom_with_list<std::string, tester::q2String>(kMixed, "\"*\" list");
         }
         {
             // Non-string
@@ -310,16 +327,16 @@ namespace q
             this->verify_qList(kSymbol, q2Strings(k.get()), samples);
         } {
             SCOPED_TRACE("q::q2Strings on q symbol");
-            this->test_q2List_with_atom<std::string, q2Strings>(::ks, const_cast<S>("hello"));
+            this->test_q2List_with_atom<std::string, tester::q2Strings>(::ks, const_cast<S>("hello"));
         }
         {
             SCOPED_TRACE("q::q2Strings on q char lists");
-            this->test_q2List_with_atom<std::string, q2Strings>(::ks, const_cast<S>("hello"));
+            this->test_q2List_with_atom<std::string, tester::q2Strings>(::ks, const_cast<S>("hello"));
             k.reset(knk(3, kp(samples[0]), kp(samples[1]), kp(samples[2])));
             this->verify_qList(kMixed, q2Strings(k.get()), samples);
         } {
             SCOPED_TRACE("q::q2Strings on q char list");
-            this->test_q2List_with_atom<std::string, q2Strings>(::kp, const_cast<S>("hello"));
+            this->test_q2List_with_atom<std::string, tester::q2Strings>(::kp, const_cast<S>("hello"));
         }
         {
             // Mixed list
