@@ -16,7 +16,8 @@ set(q_ffi_PUBLIC_API
     ${target_header_dir}/q_ffi.h
     ${target_header_dir}/std_ext.hpp
     ${target_header_dir}/ktypes.hpp
-    ${target_header_dir}/ktype_traits.hpp ${target_header_dir}/ktype_traits_io.hpp
+    ${target_header_dir}/ktype_traits.hpp
+    ${target_header_dir}/ktype_traits_io.hpp
     ${target_header_dir}/kerror.hpp
     ${target_header_dir}/kpointer.hpp
     ${target_header_dir}/type_convert.hpp
@@ -25,6 +26,8 @@ set(q_ffi_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/q_ffi_config.h
     ${target_header_dir}/ffi_api.h
     ${target_header_dir}/version.hpp
+    ${target_header_dir}/ffcall.hpp
+    ${target_header_dir}/ffargs.hpp
 )
 set(q_ffi_SOURCES
     ${target_source_dir}/dllmain.cpp
@@ -33,6 +36,8 @@ set(q_ffi_SOURCES
     ${target_source_dir}/ktype_traits.cpp
     ${target_source_dir}/kerror.cpp
     ${target_source_dir}/type_convert.cpp
+    ${target_source_dir}/ffcall.cpp
+    ${target_source_dir}/ffargs.cpp
 )
 set(q_ffi_ALWAYS_BUILD
     ${target_source_dir}/version.cpp
@@ -112,6 +117,10 @@ if(WIN32)
             /EHsc       # standard C++ exception handling
         PRIVATE
             /W4 /WX     # warning level - compulsory
+    )
+    target_link_options(${target_name}
+        PRIVATE
+            /NODEFAULTLIB:MSVCRT
     )
 elseif(UNIX AND NOT APPLE)
     target_compile_options(${target_name}

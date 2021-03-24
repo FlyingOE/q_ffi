@@ -20,10 +20,3 @@
 #   define q_ffi_API
 #   define K4_DECL
 #endif
-
-// Platform-specific headers
-#ifdef _WIN32
-#   define WIN32_LEAN_AND_MEAN
-#   define NOMINMAX
-#   include <windows.h>
-#endif

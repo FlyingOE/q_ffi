@@ -3,17 +3,23 @@
 #include <mutex>
 #ifndef NDEBUG
 #   include <cstdio>
-#   ifdef WIN32
-#       define q_ffi_DLL "q_ffi.dll"
-#   else
-#       define q_ffi_DLL "libq_ffi.so"
-#   endif
+#endif
+#ifdef _WIN32
+#   define WIN32_LEAN_AND_MEAN
+#   define NOMINMAX
+#   include <windows.h>
 #endif
 #include <k_compat.h>
 
 namespace
 {
-#   if WIN32
+#ifdef _WIN32
+#   define q_ffi_DLL "q_ffi.dll"
+#else
+#   define q_ffi_DLL "libq_ffi.so"
+#endif
+
+#   ifdef _WIN32
 #       define DLL_CONSTRUCTOR
 #       define DLL_DESTRUCTOR
 #   else

@@ -33,6 +33,7 @@
 
 # IDE/build directories
 build/
+out/
 .vs/
 
 # 3rd-party dependencies
