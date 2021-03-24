@@ -946,7 +946,7 @@ namespace q {
         using value_type = void;
 
         static ::K atom(...) noexcept
-        { return Nil; }
+        { return ::ka(kNil); }
     };
 
     template<>

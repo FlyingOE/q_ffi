@@ -200,7 +200,7 @@ namespace q
 
     TEST(KptrTests, dupKNil)
     {
-        K_ptr nil{ TypeTraits<kNil>::atom() };
+        K_ptr nil{ Nil };
         ASSERT_EQ(nil.get(), Nil) << "unexpected non-nil value";
 
         K_ptr pk;

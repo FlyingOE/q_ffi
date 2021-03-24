@@ -97,7 +97,6 @@ namespace q
 
     /// @brief Map @c TypeId to single-character type code in q.
     q_ffi_API extern std::unordered_map<TypeId, char> const TypeId2Code;
-    q_ffi_API extern std::unordered_map<char, TypeId> const TypeCode2Id;
 
     /// @brief Generic nil value in q.
     /// @ref q::kNil
@@ -111,7 +110,7 @@ namespace q
     /// @brief Inspect type ID of a (potentially null) @c K object.
     inline std::underlying_type_t<TypeId> type(::K const k) noexcept
     {
-        return nullptr == k ? q::kNil : static_cast<TypeId>(k->t);
+        return nullptr == k ? q::kError : static_cast<TypeId>(k->t);
     }
 
     /// @brief Inspect the element count of a (potentially null) @c K object. Atoms' size is 1.

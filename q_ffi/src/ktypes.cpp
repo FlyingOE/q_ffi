@@ -31,27 +31,6 @@ namespace q
         { kError, '\0' },
     };
 
-    std::unordered_map<char, TypeId> const TypeCode2Id{
-        { 'b', kBoolean },
-        { 'g', kGUID },
-        { 'x', kByte },
-        { 'h', kShort },
-        { 'i', kInt },
-        { 'j', kLong },
-        { 'e', kReal },
-        { 'f', kFloat },
-        { 'c', kChar },
-        { 's', kSymbol },
-        { 'p', kTimestamp },
-        { 'm', kMonth },
-        { 'd', kDate },
-        { 'z', kDatetime },
-        { 'n', kTimespan },
-        { 'u', kMinute },
-        { 'v', kSecond },
-        { 't', kTime },
-    };
-
 }//namespace q
 
 ::K q::error(char const* msg, bool sys) noexcept
@@ -179,9 +158,9 @@ std::string q::to_string(::K const k)
         TO_STR_BY_TYPETRAITS(kSecond);
         TO_STR_BY_TYPETRAITS(kTime);
     case kError:
-        return atom_to_str<kError>(k);
+        return k ? atom_to_str<kError>(k) : "\0"s;
     case kNil:
-        return "\0"s;
+        return "::";
     case kMixed:
         return mixed_to_str(k);
     case kTable:
