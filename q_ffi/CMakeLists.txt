@@ -26,6 +26,7 @@ set(q_ffi_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/q_ffi_config.h
     ${target_header_dir}/ffi_api.h
     ${target_header_dir}/version.hpp
+    ${target_header_dir}/dlloader.hpp
     ${target_header_dir}/ffcall.hpp
     ${target_header_dir}/ffargs.hpp
 )
@@ -36,6 +37,7 @@ set(q_ffi_SOURCES
     ${target_source_dir}/ktype_traits.cpp
     ${target_source_dir}/kerror.cpp
     ${target_source_dir}/type_convert.cpp
+    ${target_source_dir}/dlloader.cpp
     ${target_source_dir}/ffcall.cpp
     ${target_source_dir}/ffargs.cpp
 )
