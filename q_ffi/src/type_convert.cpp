@@ -4,6 +4,8 @@
 #include "ktype_traits.hpp"
 #include "kerror.hpp"
 
+using namespace std;
+
 void q::details::signalError(char const* message) noexcept(false)
 {
     throw K_error(message);
@@ -16,7 +18,7 @@ void q::details::signalError(char const* message) noexcept(false)
 #define GET_VALUE_LIST(T, x, r, dryRun) \
     case (T):  \
         if (!(dryRun))  \
-            std::copy(TypeTraits<(T)>::index((x)), TypeTraits<(T)>::index((x)) + count((x)),    \
+            copy(TypeTraits<(T)>::index((x)), TypeTraits<(T)>::index((x)) + count((x)), \
                 (r).begin());   \
         break
 
@@ -39,7 +41,7 @@ long long q::q2Decimal(::K x, bool dryRun) noexcept(false)
     }
 }
 
-std::vector<long long> q::q2Decimals(::K x, bool dryRun) noexcept(false)
+vector<long long> q::q2Decimals(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil decimal list");
@@ -47,7 +49,7 @@ std::vector<long long> q::q2Decimals(::K x, bool dryRun) noexcept(false)
     else if (type(x) < 0) {
         throw K_error("not a list");
     }
-    std::vector<long long> result(dryRun ? 0 : count(x), 0L);
+    vector<long long> result(dryRun ? 0 : count(x), 0L);
     switch (type(x))
     {
         GET_VALUE_LIST(kBoolean, x, result, dryRun);
@@ -85,7 +87,7 @@ double q::q2Real(::K x, bool dryRun) noexcept(false)
     }
 }
 
-std::vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
+vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil floating-point list");
@@ -93,7 +95,7 @@ std::vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
     else if (type(x) < 0) {
         throw K_error("not a list");
     }
-    std::vector<double> result(dryRun ? 0 : count(x), 0.);
+    vector<double> result(dryRun ? 0 : count(x), 0.);
     switch (type(x))
     {
         GET_VALUE_LIST(kReal, x, result, dryRun);
@@ -105,7 +107,7 @@ std::vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
     case kLong: {
         auto const decimals = q2Decimals(x, dryRun);
         if (!dryRun)
-            std::transform(decimals.cbegin(), decimals.cend(), result.begin(),
+            transform(decimals.cbegin(), decimals.cend(), result.begin(),
                 [](auto x) { return static_cast<double>(x); });
         break;
     }
@@ -119,16 +121,16 @@ std::vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
 
 #pragma region q <==> C++ string
 
-std::string q::q2String(::K x, bool dryRun) noexcept(false)
+string q::q2String(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil symbol/char list");
     }
     switch (type(x)) {
     case kChar:
-        return dryRun ? "" : std::string(TypeTraits<kChar>::index(x), count(x));
+        return dryRun ? "" : string(TypeTraits<kChar>::index(x), count(x));
     case -kSymbol:
-        return dryRun ? "" : std::string(TypeTraits<kSymbol>::value(x));
+        return dryRun ? "" : string(TypeTraits<kSymbol>::value(x));
     default:
         if ((-kEnumMin >= type(x)) && (type(x) >= -kEnumMax))
             throw K_error("enumerated symbol");
@@ -137,7 +139,7 @@ std::string q::q2String(::K x, bool dryRun) noexcept(false)
     }
 }
 
-std::vector<std::string> q::q2Strings(K x, bool dryRun) noexcept(false)
+vector<string> q::q2Strings(K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil symbol list/char lists");
@@ -145,19 +147,17 @@ std::vector<std::string> q::q2Strings(K x, bool dryRun) noexcept(false)
     else if (type(x) < 0) {
         throw K_error("not a list");
     }
-    std::vector<std::string> result;
+    vector<string> result;
     if (!dryRun)
         result.reserve(count(x));
     switch (type(x)) {
     case kMixed:
         try {
             if (dryRun)
-                std::for_each(TypeTraits<kMixed>::index(x),
-                    TypeTraits<kMixed>::index(x) + count(x),
+                for_each(TypeTraits<kMixed>::index(x), TypeTraits<kMixed>::index(x) + count(x),
                     [](::K s) { q2String(s); });
             else
-                std::for_each(TypeTraits<kMixed>::index(x),
-                    TypeTraits<kMixed>::index(x) + count(x),
+                for_each(TypeTraits<kMixed>::index(x), TypeTraits<kMixed>::index(x) + count(x),
                     [&result](::K s) { result.push_back(q2String(s)); });
         }
         catch (K_error const& ) {
@@ -166,8 +166,7 @@ std::vector<std::string> q::q2Strings(K x, bool dryRun) noexcept(false)
         break;
     case kSymbol:
         if (!dryRun)
-            std::for_each(TypeTraits<kSymbol>::index(x),
-                TypeTraits<kSymbol>::index(x) + count(x),
+            for_each(TypeTraits<kSymbol>::index(x), TypeTraits<kSymbol>::index(x) + count(x),
                 [&result](auto const s) { result.push_back(s); });
         break;
     default:

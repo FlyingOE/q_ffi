@@ -3,6 +3,8 @@
 #include "kpointer.hpp"
 #include <map>
 
+using namespace std;
+
 namespace q
 {
 
@@ -13,29 +15,29 @@ namespace q
     {
     protected:
         template<typename Tr>
-        void test_type(std::true_type /*has_value*/, bool notKError);
+        void test_type(true_type /*has_value*/, bool notKError);
         template<typename Tr>
-        void test_type(std::false_type /*has_value*/, bool)
+        void test_type(false_type /*has_value*/, bool)
         { ASSERT_FALSE(TraitsInfo::has_value); }
 
         template<typename Tr>
-        void test_list_type(std::true_type /*can_index*/);
+        void test_list_type(true_type /*can_index*/);
         template<typename Tr>
-        void test_list_type(std::false_type /*can_index*/)
+        void test_list_type(false_type /*can_index*/)
         { ASSERT_FALSE(TraitsInfo::can_index); }
 
         template<typename Tr>
-        K_ptr init_atom(std::false_type /*convertible from (char const*)*/)
+        K_ptr init_atom(false_type /*convertible from (char const*)*/)
         { return K_ptr{ Tr::atom(typename Tr::value_type()) }; }
         template<typename Tr>
-        K_ptr init_atom(std::true_type /*convertible from (char const*)*/)
+        K_ptr init_atom(true_type /*convertible from (char const*)*/)
         { return K_ptr{ Tr::atom("") }; }
 
         template<typename Tr>
-        K_ptr init_list(std::false_type /*convertible from (char const*)*/)
+        K_ptr init_list(false_type /*convertible from (char const*)*/)
         { return K_ptr{ Tr::list({ typename Tr::value_type() }) }; }
         template<typename Tr>
-        K_ptr init_list(std::true_type /*convertible from (char const*)*/)
+        K_ptr init_list(true_type /*convertible from (char const*)*/)
         { return K_ptr{ Tr::list({ "" }) }; }
     };
 
@@ -79,10 +81,7 @@ namespace q
     TYPED_TEST(TypeTraitsTests, qTypeTraits)
     {
         using Traits = TypeTraits<TypeParam::type_id>;
-        ASSERT_TRUE((std::is_same_v<
-            typename Traits::value_type,
-            typename TypeParam::value_type
-        >));
+        ASSERT_TRUE((is_same_v<typename Traits::value_type, typename TypeParam::value_type>));
         EXPECT_EQ(Traits::type_id, TypeId{ TypeParam::type_id });
         EXPECT_EQ(TypeId2Code.at(Traits::type_id), char{ TypeParam::type_code });
     }
@@ -97,9 +96,9 @@ namespace q
 
     template<typename TraitsInfo>
     template<typename Tr>
-    void TypeTraitsTests<TraitsInfo>::test_type(std::true_type /*has_value*/, bool notKError)
+    void TypeTraitsTests<TraitsInfo>::test_type(true_type /*has_value*/, bool notKError)
     {
-        K_ptr k = init_atom<Tr>(std::is_convertible<char const*, typename Tr::value_type>());
+        K_ptr k = init_atom<Tr>(is_convertible<char const*, typename Tr::value_type>());
         if (notKError) {
             ASSERT_NE(k.get(), nullptr)
                 << "TypeTraits<" << Tr::type_id << ">::atom() failed";
@@ -113,10 +112,10 @@ namespace q
 
     template<typename TraitsInfo>
     template<typename Tr>
-    void TypeTraitsTests<TraitsInfo>::test_list_type(std::true_type /*can_index*/)
+    void TypeTraitsTests<TraitsInfo>::test_list_type(true_type /*can_index*/)
     {
-        K_ptr k = init_list<Tr>(std::integral_constant<bool,
-            std::is_convertible_v<char const*, typename Tr::value_type>>());
+        K_ptr k = init_list<Tr>(integral_constant<bool,
+            is_convertible_v<char const*, typename Tr::value_type>>());
         ASSERT_NE(k.get(), nullptr)
             << "TypeTraits<" << Tr::type_id << ">::list() failed";
         EXPECT_EQ(type(k.get()), Tr::type_id);
@@ -145,14 +144,14 @@ namespace q
     class TypeTraitsOpsTests : public ::testing::Test
     {
     protected:
-        static std::map<typename TraitsInfo::value_type, std::string> const samples_;
+        static map<typename TraitsInfo::value_type, string> const samples_;
 
         template<typename T>
         void expect_equal(T const& actual, T const& expected)
         {
             // Some values are not comparable (e.g. NaN), use bit comparison
             auto const bit_equal = [](auto&& actual, auto&& expected) -> bool {
-                return 0 == std::memcmp(&actual, &expected, sizeof(T));
+                return 0 == memcmp(&actual, &expected, sizeof(T));
             };
             EXPECT_PRED2(bit_equal, actual, expected);
         }
@@ -165,7 +164,7 @@ namespace q
 
 #   define OPS_TEST_SET(tid)   \
         template<>  \
-        std::map<typename TypeTraits<(tid)>::value_type, std::string> const  \
+        map<typename TypeTraits<(tid)>::value_type, string> const  \
         TypeTraitsOpsTests<TypeTraits<(tid)>>::samples_
 
     using namespace std::literals;
@@ -361,8 +360,8 @@ namespace q
     {
         using Traits = TypeTraits<TypeParam::type_id>;
 
-        std::vector<typename TypeParam::value_type> values(this->samples_.size());
-        std::transform(this->samples_.cbegin(), this->samples_.cend(), values.begin(),
+        vector<typename TypeParam::value_type> values(this->samples_.size());
+        transform(this->samples_.cbegin(), this->samples_.cend(), values.begin(),
             [](auto const& sample) { return sample.first; });
 
         K_ptr k{ Traits::list(values.cbegin(), values.cend()) };
@@ -385,26 +384,26 @@ namespace q
         using Traits = TypeTraits<kChar>;
         char const sample[] = u8"ABC 123 测试\0+-/";
 
-        auto str_check = [&sample](K_ptr k, std::size_t length) {
+        auto str_check = [&sample](K_ptr k, size_t length) {
             ASSERT_NE(k.get(), Nil);
             EXPECT_EQ(type(k.get()), Traits::type_id);
             ASSERT_EQ(count(k.get()), length);
-            for (std::size_t i = 0; i < length; ++i) {
+            for (size_t i = 0; i < length; ++i) {
                 EXPECT_EQ(Traits::index(k.get())[i], sample[i]);
             }
         };
 
-        std::size_t const strlen = std::strlen(sample);
+        size_t const strlen = strlen(sample);
         str_check(K_ptr{ Traits::list(sample) }, strlen);
 
-        std::size_t const length = std::extent_v<decltype(sample), 0> - 1;   // less trailing '\0'
+        size_t const length = extent_v<decltype(sample), 0> - 1;   // less trailing '\0'
         str_check(K_ptr{ Traits::list(sample, length) }, length);
     }
 
     TEST(TypeTraitsOpsTests, kSymbolList)
     {
         using Traits = TypeTraits<kSymbol>;
-        std::vector<std::string> sample{
+        vector<string> sample{
             "600000.SH"s,
             "123 abc ABC"s,
             "  abc\0ABC"s,
@@ -412,13 +411,13 @@ namespace q
             "\0"s,
             Traits::null()
         };
-        std::size_t const length = sample.size();
+        size_t const length = sample.size();
 
         K_ptr k{ Traits::list(sample.cbegin(), sample.cend()) };
         ASSERT_NE(k.get(), Nil);
         EXPECT_EQ(type(k.get()), Traits::type_id);
         ASSERT_EQ(count(k.get()), length);
-        for (std::size_t i = 0; i < length; ++i) {
+        for (size_t i = 0; i < length; ++i) {
             EXPECT_STREQ(Traits::index(k.get())[i], sample[i].c_str());
         }
     }

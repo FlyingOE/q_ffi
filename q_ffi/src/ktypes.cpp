@@ -1,11 +1,12 @@
 #include "ktype_traits.hpp"
 #include <regex>
 
+using namespace std;
 using namespace std::string_literals;
 
 namespace q
 {
-    std::unordered_map<TypeId, char> const TypeId2Code{
+    unordered_map<TypeId, char> const TypeId2Code{
         { kMixed, ' ' },
         { kBoolean, 'b' },
         { kGUID, 'g' },
@@ -42,7 +43,7 @@ namespace q
 namespace
 {
     template<q::TypeId tid>
-    std::string atom_to_str(::K const k)
+    string atom_to_str(::K const k)
     {
         using Traits = q::TypeTraits<tid>;
         assert(nullptr != k && 0 > q::type(k));
@@ -50,7 +51,7 @@ namespace
     }
 
     template<q::TypeId tid>
-    std::string list_to_str(::K const k)
+    string list_to_str(::K const k)
     {
         using Traits = q::TypeTraits<tid>;
         assert(nullptr != k && 0 < q::type(k));
@@ -67,7 +68,7 @@ namespace
         default:
             delimiter = " ";
         }
-        std::ostringstream buffer;
+        ostringstream buffer;
         auto const p = Traits::index(k);
         buffer << Traits::to_str(p[0]);
         for (auto i = 1u; i < len; ++i)
@@ -75,30 +76,30 @@ namespace
         return buffer.str();
     }
 
-    std::string mixed_to_str(::K const k)
+    string mixed_to_str(::K const k)
     {
         assert(nullptr != k && q::kMixed == q::type(k));
         return "<kMixed>";
     }
 
-    std::string table_to_str(::K const k)
+    string table_to_str(::K const k)
     {
         assert(nullptr != k && q::kTable == q::type(k));
         return "<kTable>";
     }
 
-    std::string dict_to_str(::K const k)
+    string dict_to_str(::K const k)
     {
         assert(nullptr != k && q::kDict == q::type(k));
         return "<kDict>";
     }
 
-    std::string any_to_str(::K const k)
+    string any_to_str(::K const k)
     {
         assert(nullptr != k && 0 != q::type(k));
         auto const scalar = 0 > q::type(k);
 
-        std::ostringstream buffer;
+        ostringstream buffer;
         buffer << '{';
 
         // Attribute & data type
@@ -107,7 +108,7 @@ namespace
 
         // Contents & pointer/count
         if (scalar) {
-            auto const bytes = std::max({ sizeof(k->j), sizeof(k->f), sizeof(k->s), sizeof(k->k) });
+            auto const bytes = max({ sizeof(k->j), sizeof(k->f), sizeof(k->s), sizeof(k->k) });
             auto const p = &q::TypeTraits<q::kByte>::value(k);
             for (auto i = 0u; i < bytes; ++i)
                 buffer << q::TypeTraits<q::kByte>::to_str(p[i]);
@@ -130,7 +131,7 @@ namespace
 
 }//namespace <anonymous>
 
-std::string q::to_string(::K const k)
+string q::to_string(::K const k)
 {
 #define TO_STR_BY_TYPETRAITS(tid)   \
     case -(tid):   \
@@ -194,42 +195,42 @@ namespace q
         ::F operator"" _qf(long double f64) noexcept
         { return static_cast<TypeTraits<kFloat>::value_type>(f64); }
 
-        ::J operator"" _qp(char const* ymdhmsf, std::size_t /*len*/) noexcept
+        ::J operator"" _qp(char const* ymdhmsf, size_t /*len*/) noexcept
         { return TypeTraits<kTimestamp>::parse(ymdhmsf); }
         ::J operator"" _qp(char const* yyyymmddhhmmssf9) noexcept
         { return TypeTraits<kTimestamp>::parse(yyyymmddhhmmssf9, true); }
 
-        ::I operator"" _qm(char const* ym, std::size_t /*len*/) noexcept
+        ::I operator"" _qm(char const* ym, size_t /*len*/) noexcept
         { return TypeTraits<kMonth>::parse(ym); }
         ::I operator"" _qm(unsigned long long int yyyymm) noexcept
         { return TypeTraits<kMonth>::parse(static_cast<int>(yyyymm)); }
 
-        ::I operator"" _qd(char const* ymd, std::size_t /*len*/) noexcept
+        ::I operator"" _qd(char const* ymd, size_t /*len*/) noexcept
         { return TypeTraits<kDate>::parse(ymd); }
         ::I operator"" _qd(unsigned long long int yyyymmdd) noexcept
         { return TypeTraits<kDate>::parse(static_cast<int>(yyyymmdd)); }
 
-        ::F operator"" _qz(char const* ymdhmsf, std::size_t /*len*/) noexcept
+        ::F operator"" _qz(char const* ymdhmsf, size_t /*len*/) noexcept
         { return TypeTraits<kDatetime>::parse(ymdhmsf); }
         ::F operator"" _qz(unsigned long long int yyyymmddhhmmssf3) noexcept
         { return TypeTraits<kDatetime>::parse(static_cast<long long>(yyyymmddhhmmssf3)); }
 
-        ::J operator"" _qn(char const* dhmsf, std::size_t /*len*/) noexcept
+        ::J operator"" _qn(char const* dhmsf, size_t /*len*/) noexcept
         { return TypeTraits<kTimespan>::parse(dhmsf); }
         ::J operator"" _qn(unsigned long long int hhmmssf9) noexcept
         { return TypeTraits<kTimespan>::parse(static_cast<long long>(hhmmssf9)); }
 
-        ::I operator"" _qu(char const* hm, std::size_t /*len*/) noexcept
+        ::I operator"" _qu(char const* hm, size_t /*len*/) noexcept
         { return TypeTraits<kMinute>::parse(hm); }
         ::I operator"" _qu(unsigned long long int hhmm) noexcept
         { return TypeTraits<kMinute>::parse(static_cast<int>(hhmm)); }
 
-        ::I operator"" _qv(char const* hms, std::size_t /*len*/) noexcept
+        ::I operator"" _qv(char const* hms, size_t /*len*/) noexcept
         { return TypeTraits<kSecond>::parse(hms); }
         ::I operator"" _qv(unsigned long long int hhmmss) noexcept
         { return TypeTraits<kSecond>::parse(static_cast<int>(hhmmss)); }
 
-        ::I operator"" _qt(char const* hmsf, std::size_t /*len*/) noexcept
+        ::I operator"" _qt(char const* hmsf, size_t /*len*/) noexcept
         { return TypeTraits<kTime>::parse(hmsf); }
         ::I operator"" _qt(unsigned long long int hhmmssf3) noexcept
         { return TypeTraits<kTime>::parse(static_cast<int>(hhmmssf3)); }

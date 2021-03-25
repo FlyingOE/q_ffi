@@ -2,6 +2,9 @@
 #include "ktype_traits.hpp"
 #include <map>
 
+using namespace std;
+using namespace std::chrono;
+
 namespace q
 {
 
@@ -13,12 +16,12 @@ namespace q
     protected:
         using value_type = typename TraitsInfo::value_type;
 
-        static std::map<value_type, value_type> const temporals_;
+        static map<value_type, value_type> const temporals_;
     };
 
 #   define TEMPORAL_TEST_SET(tid)   \
         template<>  \
-        std::map<TypeTraits<(tid)>::value_type, TypeTraits<(tid)>::value_type> const  \
+        map<TypeTraits<(tid)>::value_type, TypeTraits<(tid)>::value_type> const  \
         TemporalTraitsTests<TypeTraits<(tid)>>::temporals_
 
     using namespace literals;
@@ -181,28 +184,26 @@ namespace q
         using value_type = typename TemporalTraits::value_type;
         using temporal_type = typename TemporalTraits::temporal_type;
 
-        static std::map<value_type, temporal_type> const samples_;
+        static map<value_type, temporal_type> const samples_;
 
     private:
         static Seconds make_minute(int m) noexcept
         {
-            return Seconds{ std::chrono::minutes{ m } };
+            return Seconds{ minutes{ m } };
         }
 
         static DateTime make_datetime(
             int y, unsigned mon, unsigned d, int h, int m, int s, int ms) noexcept
         {
             return DateTime{ Date{ date::year(y) / mon / d } }
-                + std::chrono::hours{ h } + std::chrono::minutes{ m }
-                + std::chrono::seconds{ s } + std::chrono::milliseconds{ ms };
+                + hours{ h } + minutes{ m } + seconds{ s } + milliseconds{ ms };
         }
 
         static Timestamp make_timestamp(int year, unsigned month, unsigned day,
             int h, int m, int s, long long ns) noexcept
         {
             return Timestamp{ Date{ date::year{ year } / month / day } }
-                + std::chrono::hours(h) + std::chrono::minutes(m)
-                + std::chrono::seconds(s) + std::chrono::nanoseconds(ns);
+                + hours(h) + minutes(m) + seconds(s) + nanoseconds(ns);
         }
     };
 
@@ -211,7 +212,7 @@ namespace q
 
 #   define TEMPORAL_CHRONO_TEST_SET(tid)   \
         template<>  \
-        std::map<TypeTraits<(tid)>::value_type, TypeTraits<(tid)>::temporal_type> const \
+        map<TypeTraits<(tid)>::value_type, TypeTraits<(tid)>::temporal_type> const \
         TemporalChronoTests<TypeTraits<(tid)>>::samples_
 
     TEMPORAL_CHRONO_TEST_SET(kTimestamp) = {
@@ -301,10 +302,10 @@ namespace q
         using Traits = TypeTraits<TypeParam::type_id>;
 
         for (auto const& sample : this->samples_) {
-            std::ostringstream buffer;
+            ostringstream buffer;
             Traits::print(buffer, sample.first);
             SCOPED_TRACE(buffer.str());
-            if (std::is_floating_point_v<typename Traits::value_type>)
+            if (is_floating_point_v<typename Traits::value_type>)
                 EXPECT_FLOAT_EQ(sample.first, Traits::encode(sample.second));
             else
                 EXPECT_EQ(sample.first, Traits::encode(sample.second));
@@ -316,7 +317,7 @@ namespace q
         using Traits = TypeTraits<TypeParam::type_id>;
 
         for (auto const& sample : this->samples_) {
-            std::ostringstream buffer;
+            ostringstream buffer;
             Traits::print(buffer, sample.first);
             SCOPED_TRACE(buffer.str());
             EXPECT_EQ(sample.second, Traits::decode(sample.first));

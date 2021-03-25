@@ -4,23 +4,25 @@
 #include "kpointer.hpp"
 #include "kerror.hpp"
 
+using namespace std;
+
 namespace q
 {
     namespace tester
     {
         inline long long q2Decimal(::K k)
         { return q::q2Decimal(k); }
-        inline std::vector<long long> q2Decimals(::K k)
+        inline vector<long long> q2Decimals(::K k)
         { return q::q2Decimals(k); }
 
         inline double q2Real(::K k)
         { return q::q2Real(k); }
-        inline std::vector<double> q2Reals(::K k)
+        inline vector<double> q2Reals(::K k)
         { return q::q2Reals(k); }
 
-        inline std::string q2String(::K k)
+        inline string q2String(::K k)
         { return q::q2String(k); }
-        inline std::vector<std::string> q2Strings(::K k)
+        inline vector<string> q2Strings(::K k)
         { return q::q2Strings(k); }
     }
 
@@ -88,36 +90,36 @@ namespace q
         }
 
     protected:
-        template<typename T, std::vector<T> q2List(::K)>
+        template<typename T, vector<T> q2List(::K)>
         void test_q2Decimals()
         {
             {
                 SCOPED_TRACE("q2*s on q boolean(s)");
-                this->test_q2List<T, q2List, kBoolean>(std::vector<bool>{
+                this->test_q2List<T, q2List, kBoolean>(vector<bool>{
                     true, false
                 });
                 this->test_q2List_with_atom<T, q2List>(::kb, true);
             } {
                 SCOPED_TRACE("q2*s on q byte(s)");
-                this->test_q2List<T, q2List, kByte>(std::vector<unsigned char>{
+                this->test_q2List<T, q2List, kByte>(vector<unsigned char>{
                     0x16, 0, 0xF3
                 });
                 this->test_q2List_with_atom<T, q2List>(::kg, 0xF3);
             } {
                 SCOPED_TRACE("q2*s on q short(s)");
-                this->test_q2List<T, q2List, kShort>(std::vector<::H>{
+                this->test_q2List<T, q2List, kShort>(vector<::H>{
                     -14733, 0, 27856, nh, wh
                 });
                 this->test_q2List_with_atom<T, q2List>(::kh, 27856);
             } {
                 SCOPED_TRACE("q2*s on q int(s)");
-                this->test_q2List<T, q2List, kInt>(std::vector<::I>{
+                this->test_q2List<T, q2List, kInt>(vector<::I>{
                     -773686186, 0, 476883888, ni, wi
                 });
                 this->test_q2List_with_atom<T, q2List>(::ki, 476883888);
             } {
                 SCOPED_TRACE("q2*s on q long(s)");
-                this->test_q2List<T, q2List, kLong>(std::vector<::J>{
+                this->test_q2List<T, q2List, kLong>(vector<::J>{
                     -26995309665792L, 0, 7413760571230203088L, nj, wj
                 });
                 this->test_q2List_with_atom<T, q2List>(::kj, 7413760571230203088L);
@@ -134,7 +136,7 @@ namespace q
             }
         }
 
-        template<typename T, std::vector<T> q2List(::K), TypeId tid, typename S>
+        template<typename T, vector<T> q2List(::K), TypeId tid, typename S>
         void test_q2List(S const& samples)
         {
             K_ptr k;
@@ -143,7 +145,7 @@ namespace q
             this->verify_qList(tid, q2List(k.get()), samples);
         }
 
-        template<typename T, std::vector<T> q2List(::K), typename createAtom, typename V>
+        template<typename T, vector<T> q2List(::K), typename createAtom, typename V>
         void test_q2List_with_atom(createAtom const& create, V const& val)
         {
             K_ptr k{ create(val) };
@@ -152,7 +154,7 @@ namespace q
         }
 
         template<TypeId tid, typename T>
-        void init_qList(K_ptr& pk, std::vector<T> const& samples)
+        void init_qList(K_ptr& pk, vector<T> const& samples)
         {
             ASSERT_FALSE(samples.empty());
             K_ptr k{ ::ktn(tid, samples.size()) };
@@ -165,7 +167,7 @@ namespace q
         }
 
         template<typename T0, typename T1>
-        void verify_qList(TypeId tid, std::vector<T0> const& expected, std::vector<T1> const& values)
+        void verify_qList(TypeId tid, vector<T0> const& expected, vector<T1> const& values)
         {
             ASSERT_EQ(expected.size(), values.size()) << tid << " list lengths mismatch";
             auto e = expected.cbegin();
@@ -258,7 +260,7 @@ namespace q
         }
         {
             SCOPED_TRACE("q::q2Reals on q reals");
-            this->test_q2List<double, tester::q2Reals, kReal>(std::vector<::E>{
+            this->test_q2List<double, tester::q2Reals, kReal>(vector<::E>{
                 967.23981f, 0.f, -967.23981f, float(wf), float(-wf)
             });
         }
@@ -268,7 +270,7 @@ namespace q
 
         {
             SCOPED_TRACE("q::q2Reals on q floats");
-            this->test_q2List<double, tester::q2Reals, kFloat>(std::vector<::F>{
+            this->test_q2List<double, tester::q2Reals, kFloat>(vector<::F>{
                 7413760.571230203088, 0., -7413760.571230203088, wf, -wf
             });
         }
@@ -284,29 +286,29 @@ namespace q
     {
         {
             SCOPED_TRACE("q::q2String on q symbol");
-            this->test_q2Atom<std::string, tester::q2String>(::ks,
+            this->test_q2Atom<string, tester::q2String>(::ks,
                 const_cast<::S>("hello"), "`hello");
-            this->test_q2Atom<std::string, tester::q2String>(::ks,
+            this->test_q2Atom<string, tester::q2String>(::ks,
                 const_cast<::S>(""), "`");
-            this->test_q2Atom<std::string, tester::q2String>(::ks,
+            this->test_q2Atom<string, tester::q2String>(::ks,
                 const_cast<::S>("Hello world!"), "`$\"Hello world!\"");
         } {
             SCOPED_TRACE("q::q2String on q symbols");
-            this->test_q2Atom_with_list<std::string, tester::q2String>(kSymbol, "`* list");
+            this->test_q2Atom_with_list<string, tester::q2String>(kSymbol, "`* list");
         }
         {
             SCOPED_TRACE("q::q2String on q char list");
-            this->test_q2Atom<std::string, tester::q2String>(::kp,
+            this->test_q2Atom<string, tester::q2String>(::kp,
                 const_cast<::S>("hello"), "\"hello\"");
-            this->test_q2Atom<std::string, tester::q2String>(::kp,
+            this->test_q2Atom<string, tester::q2String>(::kp,
                 const_cast<::S>("A"), "1#\"A\"");
-            this->test_q2Atom<std::string, tester::q2String>(::kp,
+            this->test_q2Atom<string, tester::q2String>(::kp,
                 const_cast<::S>(""), "\"\"");
-            this->test_q2Atom<std::string, tester::q2String>(::kp,
+            this->test_q2Atom<string, tester::q2String>(::kp,
                 const_cast<::S>("Hello world!"), "\"Hello world!\"");
         } {
             SCOPED_TRACE("q::q2String on q char lists");
-            this->test_q2Atom_with_list<std::string, tester::q2String>(kMixed, "\"*\" list");
+            this->test_q2Atom_with_list<string, tester::q2String>(kMixed, "\"*\" list");
         }
         {
             // Non-string
@@ -318,7 +320,7 @@ namespace q
     TEST_F(TypeConvertTests, q2Strings)
     {
         K_ptr k;
-        std::vector<::S> const samples{
+        vector<::S> const samples{
             const_cast<::S>("hello"), const_cast<::S>(""), const_cast<::S>("Hello world!")
         };
         {
@@ -327,16 +329,16 @@ namespace q
             this->verify_qList(kSymbol, q2Strings(k.get()), samples);
         } {
             SCOPED_TRACE("q::q2Strings on q symbol");
-            this->test_q2List_with_atom<std::string, tester::q2Strings>(::ks, const_cast<S>("hello"));
+            this->test_q2List_with_atom<string, tester::q2Strings>(::ks, const_cast<S>("hello"));
         }
         {
             SCOPED_TRACE("q::q2Strings on q char lists");
-            this->test_q2List_with_atom<std::string, tester::q2Strings>(::ks, const_cast<S>("hello"));
+            this->test_q2List_with_atom<string, tester::q2Strings>(::ks, const_cast<S>("hello"));
             k.reset(knk(3, kp(samples[0]), kp(samples[1]), kp(samples[2])));
             this->verify_qList(kMixed, q2Strings(k.get()), samples);
         } {
             SCOPED_TRACE("q::q2Strings on q char list");
-            this->test_q2List_with_atom<std::string, tester::q2Strings>(::kp, const_cast<S>("hello"));
+            this->test_q2List_with_atom<string, tester::q2Strings>(::kp, const_cast<S>("hello"));
         }
         {
             // Mixed list
@@ -446,7 +448,7 @@ namespace q
             kJ(k.get())[2] = "1969.12.31D23:59:59.999999999"_qp;
 
             EXPECT_EQ(q2TimePoints<Timestamp>(k.get()),
-                (std::vector<Timestamp>{
+                (vector<Timestamp>{
                     Timestamp{ Date{ date::year(2020) / 9 / 10 } }
                         + hours{ 15 } + minutes{ 7 } + seconds{ 1 } + nanoseconds{ 12'345'678LL },
                     Timestamp{ Date{ Epoch } },
@@ -454,14 +456,14 @@ namespace q
                         + hours{ 23 } + minutes{ 59 } + seconds{ 59 } + nanoseconds{ 999'999'999LL },
                 }));
             EXPECT_EQ(q2TimePoints<DateTime>(k.get()),
-                (std::vector<DateTime>{
+                (vector<DateTime>{
                     DateTime{ Date{ date::year(2020) / 9 / 10 } }
                         + hours{ 15 } + minutes{ 7 } + seconds{ 1 } + milliseconds{ 12 },
                     DateTime{ Date{ Epoch } },
                     DateTime{ Date{ date::year(1970) / 1 / 1 } },   //rounded up to 1970.01.01
                 }));
             EXPECT_EQ(q2TimePoints<Date>(k.get()),
-                (std::vector<Date>{
+                (vector<Date>{
                     Date{ date::year(2020) / 9 / 10 },
                     Date{ Epoch },
                     Date{ date::year(1970) / 1 / 1 },               //rounded up to 1970.01.01
@@ -482,19 +484,19 @@ namespace q
             kI(k.get())[2] = "1969.12"_qm;
 
             EXPECT_EQ(q2TimePoints<Timestamp>(k.get()),
-                (std::vector<Timestamp>{
+                (vector<Timestamp>{
                     Timestamp{ Date{ date::year(2020) / 9 / 1 } },
                     Timestamp{ Date{ Epoch } },
                     Timestamp{ Date{ date::year(1969) / 12 / 1 } },
                 }));
             EXPECT_EQ(q2TimePoints<DateTime>(k.get()),
-                (std::vector<DateTime>{
+                (vector<DateTime>{
                     DateTime{ Date{ date::year(2020) / 9 / 1 } },
                     DateTime{ Date{ Epoch } },
                     DateTime{ Date{ date::year(1969) / 12 / 1 } },
                 }));
             EXPECT_EQ(q2TimePoints<Date>(k.get()),
-                (std::vector<Date>{
+                (vector<Date>{
                     Date{ date::year(2020) / 9 / 1 },
                     Date{ Epoch },
                     Date{ date::year(1969) / 12 / 1 },
@@ -515,19 +517,19 @@ namespace q
             kI(k.get())[2] = "1969.12.31"_qd;
 
             EXPECT_EQ(q2TimePoints<Timestamp>(k.get()),
-                (std::vector<Timestamp>{
+                (vector<Timestamp>{
                     Timestamp{ Date{ date::year(2020) / 9 / 10 } },
                     Timestamp{ Date{ Epoch } },
                     Timestamp{ Date{ date::year(1969) / 12 / 31 } },
                 }));
             EXPECT_EQ(q2TimePoints<DateTime>(k.get()),
-                (std::vector<DateTime>{
+                (vector<DateTime>{
                     DateTime{ Date{ date::year(2020) / 9 / 10 } },
                         DateTime{ Date{ Epoch } },
                         DateTime{ Date{ date::year(1969) / 12 / 31 } },
                 }));
             EXPECT_EQ(q2TimePoints<Date>(k.get()),
-                (std::vector<Date>{
+                (vector<Date>{
                     Date{ date::year(2020) / 9 / 10 },
                         Date{ Epoch },
                         Date{ date::year(1969) / 12 / 31 },
@@ -548,7 +550,7 @@ namespace q
             kF(k.get())[2] = "1969.12.31T23:59:59.999"_qz;
 
             EXPECT_EQ(q2TimePoints<Timestamp>(k.get()),
-                (std::vector<Timestamp>{
+                (vector<Timestamp>{
                     Timestamp{ Date{ date::year(2020) / 9 / 10 } }
                         + hours{ 15 } + minutes{ 7 } + seconds{ 1 } + nanoseconds{ 12'000'000LL },
                     Timestamp{ Date{ Epoch } },
@@ -556,7 +558,7 @@ namespace q
                         + hours{ 23 } + minutes{ 59 } + seconds{ 59 } + nanoseconds{ 999'000'000LL },
                 }));
             EXPECT_EQ(q2TimePoints<DateTime>(k.get()),
-                (std::vector<DateTime>{
+                (vector<DateTime>{
                     DateTime{ Date{ date::year(2020) / 9 / 10 } }
                         + hours{ 15 } + minutes{ 7 } + seconds{ 1 } + milliseconds{ 12 },
                     DateTime{ Date{ Epoch } },
@@ -564,7 +566,7 @@ namespace q
                         + hours{ 23 } + minutes{ 59 } + seconds{ 59 } + milliseconds{ 999 },
                 }));
             EXPECT_EQ(q2TimePoints<Date>(k.get()),
-                (std::vector<Date>{
+                (vector<Date>{
                     Date{ date::year(2020) / 9 / 10 },
                     Date{ Epoch },
                     Date{ date::year(1970) / 1 / 1 },   //rounded up to 1970.01.01
@@ -679,7 +681,7 @@ namespace q
             kJ(k.get())[2] = "-1D09:59:59.999999999"_qn;
 
             EXPECT_EQ(q2TimeSpans<Nanoseconds>(k.get()),
-                (std::vector<Nanoseconds>{
+                (vector<Nanoseconds>{
                     date::days{ 10 } + hours{ 15 } + minutes{ 7 } + seconds{ 1 }
                         + nanoseconds{ 12'345'678LL },
                     nanoseconds{ 0 },
@@ -687,7 +689,7 @@ namespace q
                         - nanoseconds{ 999'999'999LL },
                 }));
             EXPECT_EQ(q2TimeSpans<Milliseconds>(k.get()),
-                (std::vector<Milliseconds>{
+                (vector<Milliseconds>{
                     date::days{ 10 } + hours{ 15 } + minutes{ 7 } + seconds{ 1 }
                         + milliseconds{ 12 },
                     milliseconds{ 0 },
@@ -695,13 +697,13 @@ namespace q
                         - milliseconds{ 999 },
                 }));
             EXPECT_EQ(q2TimeSpans<Seconds>(k.get()),
-                (std::vector<Seconds>{
+                (vector<Seconds>{
                     date::days{ 10 } + hours{ 15 } + minutes{ 7 } + seconds{ 1 },
                     seconds{ 0 },
                     date::days{ -1 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Minutes>(k.get()),
-                (std::vector<Minutes>{
+                (vector<Minutes>{
                     date::days{ 10 } + hours{ 15 } + minutes{ 7 },
                     minutes{ 0 },
                     date::days{ -1 } - hours{ 9 } - minutes{ 59 },
@@ -722,27 +724,27 @@ namespace q
             kI(k.get())[2] = "-09:59:59.999"_qt;
 
             EXPECT_EQ(q2TimeSpans<Nanoseconds>(k.get()),
-                (std::vector<Nanoseconds>{
+                (vector<Nanoseconds>{
                     hours{ 15 } + minutes{ 7 } + seconds{ 1 } + nanoseconds{ 12'000'000LL },
                     nanoseconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 }
                         - nanoseconds{ 999'000'000LL },
                 }));
             EXPECT_EQ(q2TimeSpans<Milliseconds>(k.get()),
-                (std::vector<Milliseconds>{
+                (vector<Milliseconds>{
                     hours{ 15 } + minutes{ 7 } + seconds{ 1 } + milliseconds{ 12 },
                     milliseconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 }
                         - milliseconds{ 999 },
                 }));
             EXPECT_EQ(q2TimeSpans<Seconds>(k.get()),
-                (std::vector<Seconds>{
+                (vector<Seconds>{
                     hours{ 15 } + minutes{ 7 } + seconds{ 1 },
                     seconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Minutes>(k.get()),
-                (std::vector<Minutes>{
+                (vector<Minutes>{
                     hours{ 15 } + minutes{ 7 },
                     minutes{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 },
@@ -763,25 +765,25 @@ namespace q
             kI(k.get())[2] = "-09:59:59"_qv;
 
             EXPECT_EQ(q2TimeSpans<Nanoseconds>(k.get()),
-                (std::vector<Nanoseconds>{
+                (vector<Nanoseconds>{
                     hours{ 15 } + minutes{ 7 } + seconds{ 1 },
                     nanoseconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Milliseconds>(k.get()),
-                (std::vector<Milliseconds>{
+                (vector<Milliseconds>{
                     hours{ 15 } + minutes{ 7 } + seconds{ 1 },
                     milliseconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Seconds>(k.get()),
-                (std::vector<Seconds>{
+                (vector<Seconds>{
                     hours{ 15 } + minutes{ 7 } + seconds{ 1 },
                     seconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 } - seconds{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Minutes>(k.get()),
-                (std::vector<Minutes>{
+                (vector<Minutes>{
                     hours{ 15 } + minutes{ 7 },
                     minutes{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 },
@@ -802,25 +804,25 @@ namespace q
             kI(k.get())[2] = "-09:59"_qu;
 
             EXPECT_EQ(q2TimeSpans<Nanoseconds>(k.get()),
-                (std::vector<Nanoseconds>{
+                (vector<Nanoseconds>{
                     hours{ 15 } + minutes{ 7 },
                     nanoseconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Milliseconds>(k.get()),
-                (std::vector<Milliseconds>{
+                (vector<Milliseconds>{
                     hours{ 15 } + minutes{ 7 },
                     milliseconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Seconds>(k.get()),
-                (std::vector<Seconds>{
+                (vector<Seconds>{
                     hours{ 15 } + minutes{ 7 },
                     seconds{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 },
                 }));
             EXPECT_EQ(q2TimeSpans<Minutes>(k.get()),
-                (std::vector<Minutes>{
+                (vector<Minutes>{
                     hours{ 15 } + minutes{ 7 },
                     minutes{ 0 },
                     date::days{ 0 } - hours{ 9 } - minutes{ 59 },

@@ -2,6 +2,8 @@
 #include "ktype_traits.hpp"
 #include "kpointer.hpp"
 
+using namespace std;
+
 namespace q
 {
     TEST(KptrTests, refCount)
@@ -31,7 +33,7 @@ namespace q
             EXPECT_EQ(k->r, 1) << "manually released ownership once";
 
             pk2.reset(k);
-            K_ptr pk3 = std::move(pk2);
+            K_ptr pk3 = move(pk2);
             EXPECT_EQ(k->r, 1) << "moved ownership doesn't impact ref count";
         }
         EXPECT_EQ(k->r, 0) << "last remaining ref";
@@ -43,7 +45,7 @@ namespace q
     class KptrTests : public ::testing::Test
     {
     protected:
-        static std::vector<typename Tr::value_type> samples_;
+        static vector<typename Tr::value_type> samples_;
 
         void SetUp() override
         {
@@ -51,36 +53,36 @@ namespace q
             extra_samples_for_numeric(is_numeric<Tr::type_id>());
         }
 
-        void extra_samples_for_null(std::false_type /*has_null*/)
+        void extra_samples_for_null(false_type /*has_null*/)
         {}
-        void extra_samples_for_null(std::true_type /*has_null*/)
+        void extra_samples_for_null(true_type /*has_null*/)
         {
             this->samples_.push_back(Tr::null());
         }
 
-        void extra_samples_for_numeric(std::false_type /*is_numeric*/)
+        void extra_samples_for_numeric(false_type /*is_numeric*/)
         {}
-        void extra_samples_for_numeric(std::true_type /*is_numeric*/)
+        void extra_samples_for_numeric(true_type /*is_numeric*/)
         {
             this->samples_.insert(this->samples_.end(), {
                 Tr::inf(),
                 Tr::inf(false),
-                std::numeric_limits<typename Tr::value_type>::min(),
-                std::numeric_limits<typename Tr::value_type>::max()
+                numeric_limits<typename Tr::value_type>::min(),
+                numeric_limits<typename Tr::value_type>::max()
             });
         }
 
         template<typename T>
         void expect_equal(::K const k, T&& v)
         {
-            ASSERT_TRUE((std::is_same_v<std::decay_t<T>, typename Tr::value_type>));
+            ASSERT_TRUE((is_same_v<decay_t<T>, typename Tr::value_type>));
 
             auto const bit_equal = [](auto&& actual, auto&& expected) {
                 return sizeof(actual) == sizeof(expected) &&
-                    0 == std::memcmp(&actual, &expected, sizeof(actual));
+                    0 == memcmp(&actual, &expected, sizeof(actual));
             };
             // Use bit comparison because some values (e.g. NaN) are not comparable
-            EXPECT_PRED2(bit_equal, Tr::value(k), std::forward<T>(v));
+            EXPECT_PRED2(bit_equal, Tr::value(k), forward<T>(v));
         }
 
         void expect_equal(::K const k, char const* str)
@@ -91,7 +93,7 @@ namespace q
 
 #   define KPTR_TEST_SET(tid)  \
         template<>  \
-        std::vector<typename TypeTraits<(tid)>::value_type>  \
+        vector<typename TypeTraits<(tid)>::value_type>  \
         KptrTests<TypeTraits<(tid)>>::samples_
 
     using namespace literals;

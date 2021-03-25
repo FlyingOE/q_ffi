@@ -2,6 +2,7 @@
 #include <regex>
 #include "kerror.hpp"
 
+using namespace std;
 using namespace std::chrono;
 
 #pragma region <kTimestamp> conversions
@@ -17,24 +18,24 @@ namespace
     {
         using Traits = q::TypeTraits<q::kTimestamp>;
 
-        static const std::regex separator{ "'" };
-        static const std::regex pattern{ R"(^(\d{8})(\d{6}\d{9})$)" };
+        static const regex separator{ "'" };
+        static const regex pattern{ R"(^(\d{8})(\d{6}\d{9})$)" };
         static constexpr auto PATTERN_LEN = 8 + 6 + 9;
         static constexpr auto PATTERN_CAPS = 1 + 1;
 
         if (nullptr == yyyymmddhhmmssf9)
             return Traits::null();
-        auto const ymdhmsf = std::regex_replace(yyyymmddhhmmssf9, separator, "");
+        auto const ymdhmsf = regex_replace(yyyymmddhhmmssf9, separator, "");
         if (PATTERN_LEN != ymdhmsf.length())
             return Traits::null();
 
-        std::smatch matches;
-        if (!std::regex_match(ymdhmsf, matches, pattern))
+        smatch matches;
+        if (!regex_match(ymdhmsf, matches, pattern))
             return Traits::null();
         assert(1 + PATTERN_CAPS == matches.size());
 
         auto const date = q::TypeTraits<q::kDate>::parse(matches.str(1).c_str());
-        auto const time = q::TypeTraits<q::kTimespan>::parse(std::stoll(matches.str(2)));
+        auto const time = q::TypeTraits<q::kTimespan>::parse(stoll(matches.str(2)));
         if (q::TypeTraits<q::kDate>::null() == date || q::TypeTraits<q::kTimespan>::null() == time)
             return Traits::null();
         return compose_timestamp(date, time);
@@ -81,13 +82,13 @@ noexcept
     if (raw)
         return parse_raw_timestamp(ymdhmsf);
 
-    static const std::regex pattern{ R"(^([^D]+)(?:D([^p]+))?p?$)" };
+    static const regex pattern{ R"(^([^D]+)(?:D([^p]+))?p?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1;
 
     if (nullptr == ymdhmsf)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern))
+    cmatch matches;
+    if (!regex_match(ymdhmsf, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
@@ -144,18 +145,18 @@ noexcept
 {
     using Traits = TypeTraits<kMonth>;
 
-    static std::regex const pattern{ R"(^(\d{4})[.\-/](\d\d?)m?$)" };
+    static regex const pattern{ R"(^(\d{4})[.\-/](\d\d?)m?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1;
 
     if (nullptr == ym)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(ym, matches, pattern))
+    cmatch matches;
+    if (!regex_match(ym, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
-    auto const year = std::stoi(matches.str(1));
-    auto const month = std::stoi(matches.str(2));
+    auto const year = stoi(matches.str(1));
+    auto const month = stoi(matches.str(2));
     return encode(year, month);
 }
 
@@ -200,19 +201,19 @@ q::TypeTraits<q::kDate>::parse(char const* ymd) noexcept
 {
     using Traits = TypeTraits<kDate>;
 
-    static std::regex const pattern{ R"(^(\d{4})([.\-/]?)(\d\d?)\2(\d\d?)d?$)" };
+    static regex const pattern{ R"(^(\d{4})([.\-/]?)(\d\d?)\2(\d\d?)d?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1;
 
     if (nullptr == ymd)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(ymd, matches, pattern))
+    cmatch matches;
+    if (!regex_match(ymd, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
-    auto const year = std::stoi(matches.str(1));
-    auto const month = std::stoi(matches.str(3));
-    auto const day = std::stoi(matches.str(4));
+    auto const year = stoi(matches.str(1));
+    auto const month = stoi(matches.str(3));
+    auto const day = stoi(matches.str(4));
     return encode(year, month, day);
 }
 
@@ -256,7 +257,7 @@ q::TypeTraits<q::kDatetime>::decode(q::TypeTraits<q::kDatetime>::const_reference
 noexcept
 {
     return DateTime{ Date{ Epoch } } + milliseconds{
-        (long long)(std::round(z * time_scale_v<milliseconds, date::days>)) };
+        (long long)(round(z * time_scale_v<milliseconds, date::days>)) };
 }
 
 q::TypeTraits<q::kDatetime>::value_type
@@ -274,13 +275,13 @@ noexcept
 {
     using Traits = TypeTraits<kDatetime>;
 
-    static const std::regex pattern{ R"(^([^T]+)(?:T([^z]+))?z?$)" };
+    static const regex pattern{ R"(^([^T]+)(?:T([^z]+))?z?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1;
 
     if (nullptr == ymdhmsf)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(ymdhmsf, matches, pattern))
+    cmatch matches;
+    if (!regex_match(ymdhmsf, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
@@ -327,8 +328,8 @@ q::TypeTraits<q::kTimespan>::value_type
 q::TypeTraits<q::kTimespan>::parse(long long hhmmssf9)
 noexcept
 {
-    auto const nanos = std::abs(hhmmssf9) % 1000'000'000uLL;
-    auto const hhmmss = std::abs(hhmmssf9) / 1000'000'000uLL;
+    auto const nanos = abs(hhmmssf9) % 1000'000'000uLL;
+    auto const hhmmss = abs(hhmmssf9) / 1000'000'000uLL;
     return std_ext::signum(hhmmssf9)
         * encode(0, hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100, nanos);
 }
@@ -339,24 +340,24 @@ noexcept
 {
     using Traits = TypeTraits<kTimespan>;
 
-    static const std::regex
+    static const regex
         pattern{ R"(^(-?)(?:(\d+)D)?(\d+)(?::(\d\d?)(?::(\d\d?)(?:\.(\d{1,9}))?)?)?n?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1 + 1 + 1;
 
     if (nullptr == dhmsf)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(dhmsf, matches, pattern))
+    cmatch matches;
+    if (!regex_match(dhmsf, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
-    auto const day = 0 < matches.length(2) ? std::stoll(matches.str(2)) : 0;
-    auto const hour = std::stoll(matches.str(3));
-    auto const minute = 0 < matches.length(4) ? std::stoll(matches.str(4)) : 0;
-    auto const second = 0 < matches.length(5) ? std::stoll(matches.str(5)) : 0;
+    auto const day = 0 < matches.length(2) ? stoll(matches.str(2)) : 0;
+    auto const hour = stoll(matches.str(3));
+    auto const minute = 0 < matches.length(4) ? stoll(matches.str(4)) : 0;
+    auto const second = 0 < matches.length(5) ? stoll(matches.str(5)) : 0;
     auto const nanos = 0 < matches.length(6) ?
-        static_cast<long long>(std::stold("0." + matches.str(6)) * 1e9) : 0;
+        static_cast<long long>(stold("0." + matches.str(6)) * 1e9) : 0;
     return sign * encode(day, hour, minute, second, nanos);
 }
 
@@ -384,7 +385,7 @@ q::TypeTraits<q::kMinute>::temporal_type
 q::TypeTraits<q::kMinute>::decode(q::TypeTraits<q::kMinute>::const_reference u)
 noexcept
 {
-    return std::chrono::duration_cast<Seconds>(std::chrono::minutes{ u });
+    return duration_cast<Seconds>(minutes{ u });
 }
 
 q::TypeTraits<q::kMinute>::value_type
@@ -400,19 +401,19 @@ noexcept
 {
     using Traits = TypeTraits<kMinute>;
 
-    static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)u?$)" };
+    static regex const pattern{ R"(^(-?)(\d+):(\d\d?)u?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1 + 1;
 
     if (nullptr == hm)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(hm, matches, pattern))
+    cmatch matches;
+    if (!regex_match(hm, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
-    auto const hour = std::stoi(matches.str(2));
-    auto const minute = std::stoi(matches.str(3));
+    auto const hour = stoi(matches.str(2));
+    auto const minute = stoi(matches.str(3));
     return sign * encode(hour, minute);
 }
 
@@ -457,20 +458,20 @@ noexcept
 {
     using Traits = TypeTraits<kSecond>;
 
-    static std::regex const pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?))?v?$)" };
+    static regex const pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?))?v?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1;
 
     if (nullptr == hms)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(hms, matches, pattern))
+    cmatch matches;
+    if (!regex_match(hms, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
-    auto const hour = std::stoi(matches.str(2));
-    auto const minute = std::stoi(matches.str(3));
-    auto const second = 0 < matches.length(4) ? std::stoi(matches.str(4)) : 0;
+    auto const hour = stoi(matches.str(2));
+    auto const minute = stoi(matches.str(3));
+    auto const second = 0 < matches.length(4) ? stoi(matches.str(4)) : 0;
     return sign * encode(hour, minute, second);
 }
 
@@ -485,7 +486,7 @@ noexcept
     auto const t = ((hour * time_scale_v<minutes, hours> + minute
             ) * time_scale_v<seconds, minutes> + second
         ) * time_scale_v<milliseconds, seconds> + millis;
-    assert(std::numeric_limits<::I>::min() <= t && t <= std::numeric_limits<::I>::max());
+    assert(numeric_limits<::I>::min() <= t && t <= numeric_limits<::I>::max());
     return static_cast<::I>(t);
 }
 
@@ -521,23 +522,23 @@ noexcept
 {
     using Traits = TypeTraits<kTime>;
 
-    static std::regex const
+    static regex const
         pattern{ R"(^(-?)(\d+):(\d\d?)(?::(\d\d?)(?:\.(\d{1,3}))?)?t?$)" };
     static constexpr auto PATTERN_CAPS = 1 + 1 + 1 + 1 + 1;
 
     if (nullptr == hmsf)
         return Traits::null();
-    std::cmatch matches;
-    if (!std::regex_match(hmsf, matches, pattern))
+    cmatch matches;
+    if (!regex_match(hmsf, matches, pattern))
         return Traits::null();
     assert(1 + PATTERN_CAPS == matches.size());
 
     auto const sign = 0 < matches.length(1) ? -1 : 1;
-    auto const hour = std::stoi(matches.str(2));
-    auto const minute = std::stoi(matches.str(3));
-    auto const second = 0 < matches.length(4) ? std::stoi(matches.str(4)) : 0;
+    auto const hour = stoi(matches.str(2));
+    auto const minute = stoi(matches.str(3));
+    auto const second = 0 < matches.length(4) ? stoi(matches.str(4)) : 0;
     auto const millis = 0 < matches.length(5) ?
-        static_cast<int>(std::stof("0." + matches.str(5)) * 1000) : 0;
+        static_cast<int>(stof("0." + matches.str(5)) * 1000) : 0;
     return sign * encode(hour, minute, second, millis);
 }
 

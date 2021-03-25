@@ -24,6 +24,8 @@
 #   error FIXME: add unit test for this platform...
 #endif
 
+using namespace std;
+
 extern "C"
 {
 
@@ -32,8 +34,8 @@ extern "C"
         Type Abi add_##Type##_##AbiName(Type a, Type b)    \
         {   \
 			auto const c = a + b;   \
-			std::cout << "In add_" #Type "_" #AbiName " with "  \
-                << '(' << a << ") + (" << b << ") = (" << c << ')' << std::endl;    \
+			cout << "In add_" #Type "_" #AbiName " with "   \
+                << '(' << a << ") + (" << b << ") = (" << c << ')' << endl; \
             return c;   \
         }
 
