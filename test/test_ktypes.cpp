@@ -393,8 +393,8 @@ namespace q
             }
         };
 
-        size_t const strlen = strlen(sample);
-        str_check(K_ptr{ Traits::list(sample) }, strlen);
+        size_t const len = strlen(sample);
+        str_check(K_ptr{ Traits::list(sample) }, len);
 
         size_t const length = extent_v<decltype(sample), 0> - 1;   // less trailing '\0'
         str_check(K_ptr{ Traits::list(sample, length) }, length);
