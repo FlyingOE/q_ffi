@@ -1,8 +1,10 @@
 #pragma once
 
+#include "q_ffi.h"
+
 namespace q_ffi
 {
-    class DLLoader
+    class q_ffi_API DLLoader
     {
         void* dll_;
 
