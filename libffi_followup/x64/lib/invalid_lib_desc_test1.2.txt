@@ -1,0 +1,186 @@
+
+closures.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 p .pdata
+0000000000000000 r .rdata$zzz
+0000000000000000 t .text
+0000000000000000 r .xdata
+0000000000000000 T ffi_closure_alloc
+000000000000003e T ffi_closure_free
+000000000000005a T ffi_data_to_code_pointer
+                 U free
+                 U malloc
+
+java_raw_api.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 p .pdata
+0000000000000000 r .rdata
+0000000000000000 r .rdata$zzz
+0000000000000000 t .text
+0000000000000000 r .xdata
+                 U ___chkstk_ms
+                 U abort
+                 U ffi_call
+0000000000000131 T ffi_java_ptrarray_to_raw
+00000000000002e8 T ffi_java_raw_call
+0000000000000000 T ffi_java_raw_size
+0000000000000092 T ffi_java_raw_to_ptrarray
+00000000000002d9 t ffi_java_raw_to_rvalue
+00000000000002ca t ffi_java_rvalue_to_raw
+0000000000000381 t ffi_java_translate_args
+                 U ffi_prep_closure_loc
+0000000000000491 T ffi_prep_java_raw_closure
+0000000000000428 T ffi_prep_java_raw_closure_loc
+
+prep_cif.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 p .pdata
+0000000000000000 r .rdata$zzz
+0000000000000000 t .text
+0000000000000000 r .xdata
+000000000000039e T ffi_get_struct_offsets
+00000000000002b9 T ffi_prep_cif
+00000000000001b1 T ffi_prep_cif_core
+                 U ffi_prep_cif_machdep
+0000000000000309 T ffi_prep_cif_var
+0000000000000359 T ffi_prep_closure
+                 U ffi_prep_closure_loc
+0000000000000000 t initialize_aggregate
+
+raw_api.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 p .pdata
+0000000000000000 r .rdata
+0000000000000000 r .rdata$zzz
+0000000000000000 t .text
+0000000000000000 r .xdata
+                 U ___chkstk_ms
+                 U ffi_call
+                 U ffi_prep_closure_loc
+00000000000004b6 T ffi_prep_raw_closure
+000000000000044d T ffi_prep_raw_closure_loc
+0000000000000151 T ffi_ptrarray_to_raw
+000000000000032d T ffi_raw_call
+0000000000000000 T ffi_raw_size
+0000000000000084 T ffi_raw_to_ptrarray
+00000000000003b6 t ffi_translate_args
+                 U memcpy
+
+types.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 r .rdata
+0000000000000000 r .rdata$zzz
+0000000000000000 t .text
+0000000000000010 d ffi_elements_complex_double
+0000000000000000 d ffi_elements_complex_float
+0000000000000020 d ffi_elements_complex_longdouble
+00000000000001c0 R ffi_type_complex_double
+00000000000001a0 R ffi_type_complex_float
+00000000000001e0 R ffi_type_complex_longdouble
+0000000000000160 R ffi_type_double
+0000000000000140 R ffi_type_float
+0000000000000180 R ffi_type_longdouble
+0000000000000120 R ffi_type_pointer
+0000000000000080 R ffi_type_sint16
+00000000000000c0 R ffi_type_sint32
+0000000000000100 R ffi_type_sint64
+0000000000000040 R ffi_type_sint8
+0000000000000060 R ffi_type_uint16
+00000000000000a0 R ffi_type_uint32
+00000000000000e0 R ffi_type_uint64
+0000000000000020 R ffi_type_uint8
+0000000000000000 R ffi_type_void
+
+ffi64.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 p .pdata
+0000000000000000 r .rdata
+0000000000000000 r .rdata$.refptr.ffi_closure_unix64
+0000000000000000 r .rdata$.refptr.ffi_closure_unix64_sse
+0000000000000000 r .rdata$.refptr.ffi_go_closure_unix64
+0000000000000000 r .rdata$.refptr.ffi_go_closure_unix64_sse
+0000000000000000 r .rdata$zzz
+0000000000000000 R .refptr.ffi_closure_unix64
+0000000000000000 R .refptr.ffi_closure_unix64_sse
+0000000000000000 R .refptr.ffi_go_closure_unix64
+0000000000000000 R .refptr.ffi_go_closure_unix64_sse
+0000000000000000 t .text
+0000000000000000 r .xdata
+                 U ___chkstk_ms
+                 U abort
+00000000000000b9 t classify_argument
+000000000000058b t examine_argument
+0000000000000e61 T ffi_call
+                 U ffi_call_efi64
+0000000000000edd T ffi_call_go
+                 U ffi_call_go_efi64
+0000000000000a59 t ffi_call_int
+                 U ffi_call_unix64
+                 U ffi_closure_unix64
+0000000000001055 T ffi_closure_unix64_inner
+                 U ffi_closure_unix64_sse
+                 U ffi_go_closure_unix64
+                 U ffi_go_closure_unix64_sse
+0000000000000665 T ffi_prep_cif_machdep
+                 U ffi_prep_cif_machdep_efi64
+0000000000000f62 T ffi_prep_closure_loc
+                 U ffi_prep_closure_loc_efi64
+00000000000013ba T ffi_prep_go_closure
+                 U ffi_prep_go_closure_efi64
+                 U memcpy
+0000000000000000 t merge_classes
+0000000000000130 r trampoline.0
+
+unix64.S.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 t .text
+                 U abort
+0000000000000000 T ffi_call_unix64
+00000000000001a0 T ffi_closure_unix64
+                 U ffi_closure_unix64_inner
+000000000000015e T ffi_closure_unix64_sse
+00000000000002dc T ffi_go_closure_unix64
+000000000000029a T ffi_go_closure_unix64_sse
+
+ffiw64.c.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 p .pdata
+0000000000000000 r .rdata
+0000000000000000 r .rdata$.refptr.ffi_closure_win64
+0000000000000000 r .rdata$.refptr.ffi_go_closure_win64
+0000000000000000 r .rdata$zzz
+0000000000000000 R .refptr.ffi_closure_win64
+0000000000000000 R .refptr.ffi_go_closure_win64
+0000000000000000 t .text
+0000000000000000 r .xdata
+                 U ___chkstk_ms
+00000000000003aa T ffi_call_efi64
+00000000000003f0 T ffi_call_go_efi64
+0000000000000111 t ffi_call_int
+                 U ffi_call_win64
+                 U ffi_closure_win64
+0000000000000519 T ffi_closure_win64_inner
+                 U ffi_go_closure_win64
+0000000000000000 T ffi_prep_cif_machdep_efi64
+0000000000000436 T ffi_prep_closure_loc_efi64
+00000000000004c6 T ffi_prep_go_closure_efi64
+0000000000000000 r trampoline.0
+
+win64.S.o:
+0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 N .debug_frame
+0000000000000000 t .text
+                 U abort
+0000000000000000 T ffi_call_win64
+0000000000000128 T ffi_closure_win64
+                 U ffi_closure_win64_inner
+0000000000000100 T ffi_go_closure_win64

@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.15)
+project (ffi_test)
+add_executable(ffi_add case3.c)
+find_package(libffi CONFIG REQUIRED)
+target_link_libraries(ffi_add PRIVATE libffi)
