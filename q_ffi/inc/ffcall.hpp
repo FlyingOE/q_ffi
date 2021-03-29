@@ -1,12 +1,9 @@
 #pragma once
 
-#include "q_ffi.h"
 #include <limits>
 #include <vector>
 #include <ffi.h>
-#include "kerror.hpp"
-#include "ktype_traits.hpp"
-#include "type_convert.hpp"
+#include "dlloader.hpp"
 #include "ffargs.hpp"
 
 namespace q_ffi
@@ -15,36 +12,47 @@ namespace q_ffi
     class Invocator
     {
     public:
-        using function_type = void (*)();
+        using function_type = void(*)();
         using argument_type = std::unique_ptr<Argument>;
 
     private:
+        DLLoader dll_;
         function_type func_;
-
-        ffi_cif cif_;
-        std::unique_ptr<ffi_type*[]> args_;
-
         argument_type return_;
-        std::vector<argument_type> params_;
+        std::vector<argument_type> args_;
+
+        struct FFICache
+        {
+            ffi_cif cif;
+            ffi_type* ret_type;
+            std::unique_ptr<ffi_type*[]> arg_types;
+        };
+        FFICache ffi_;
 
     public:
-        Invocator(function_type func, char resType, char const* argTypes,
+        Invocator(char const* dll);
+
+        std::size_t arity() const;
+
+        void load(char const* func, char retType, char const* argTypes,
             char const* abiType = nullptr);
 
-        Invocator(function_type func, char resType, std::string const& argTypes,
-            char const* abi = nullptr)
-            : Invocator(func, resType, argTypes.c_str(), abi)
-        {}
-
-        ::K operator()(std::vector<::K> const& params) noexcept(false);
+        ::K operator()(std::vector<::K> const& params);
+        ::K operator()(::K params);
 
     private:
+        /// @brief Regenerates FFI cache
         void prepareFuncSpec(ffi_abi abi);
 
-        static argument_type mapReturnSpec(char type);
-        static std::vector<argument_type> mapArgumentSpecs(char const* types);
+        static argument_type mapReturnSpec(char typeCode);
+        static std::vector<argument_type> mapArgumentSpecs(char const* typeCodes);
+
+        static ffi_abi mapABI(char const* abiType, char const* funcName);
+        static ffi_abi guessABI(char const* funcName);
 
         static Argument* createArgument(char typeCode);
+
+        ::K invoke(void* params[]);
     };
 
 }//namespace q_ffi

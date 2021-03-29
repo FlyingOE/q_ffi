@@ -85,7 +85,7 @@ namespace q {
                 throw std::logic_error("IndexableType should implement its own index(::K)!");
             }
 
-            static ::K list(std::initializer_list<value_type> const& vs) noexcept
+            static ::K list(std::initializer_list<value_type> vs) noexcept
             { return Tr::list(vs.begin(), vs.end()); }
 
             template<typename It>

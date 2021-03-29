@@ -3,6 +3,8 @@
 
 DLL:`:q_ffi;
 
+.ffi.load1:DLL 2:(`load;5);
+
 /// @brief Load a function from a DLL with the given signature.
 /// @param dllSym   A file symbol pointing to the target DLL (sans the file extension).
 /// @param fName    The target function name.
@@ -14,8 +16,8 @@ DLL:`:q_ffi;
 /// @code{.q}
 ///	.ffi.load[;;;]
 /// @endcode
-.ffi.load:{[dllSym;fName;resType;parTypes]
-  };
+.ffi.load:
+  .ffi.load1[;;`;;];
 
 /// @brief DLL version/build information.
 /// @code{.q}
