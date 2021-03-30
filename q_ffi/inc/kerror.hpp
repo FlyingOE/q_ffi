@@ -9,6 +9,8 @@ namespace q
     {
         q_ffi_API std::string q2error(::K const what);
 
+        q_ffi_API std::string q2error(K_ptr const& what);
+
     }//namespace q::details
 
     class K_error : public std::runtime_error
@@ -20,12 +22,14 @@ namespace q
             : runtime_error(ex)
         {}
 
-        explicit K_error(::K const what)
-            : K_error{ details::q2error(what) }
+        explicit K_error(::K const what) : K_error{ details::q2error(what) }
+        {}
+
+        explicit K_error(K_ptr const& what) : K_error{ details::q2error(what) }
         {}
 
         /// @return Always @c Nil (result of what() will be signaled to kdb+ host)
-        ::K report() const noexcept;
+        K_ptr report() const noexcept;
     };
 
 }//namespace q

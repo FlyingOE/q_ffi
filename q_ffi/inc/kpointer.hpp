@@ -25,7 +25,6 @@ namespace q {
         return K_ptr{ nullptr == k ? nullptr : ::r1(k) };
     }
 
-    /// @brief Duplicate a @c K_ptr (incrementing its internal reference count)
     inline K_ptr dup_K(K_ptr const& pk) noexcept
     {
         return dup_K(pk.get());

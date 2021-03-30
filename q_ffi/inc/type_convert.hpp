@@ -9,23 +9,89 @@
 namespace q
 {
     q_ffi_API long long q2Decimal(::K x, bool dryRun = false) noexcept(false);
+
+    inline long long q2Decimal(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2Decimal(x.get(), dryRun);
+    }
+
     q_ffi_API std::vector<long long> q2Decimals(::K x, bool dryRun = false) noexcept(false);
 
+    inline std::vector<long long> q2Decimals(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2Decimals(x.get(), dryRun);
+    }
+
     q_ffi_API double q2Real(::K x, bool dryRun = false) noexcept(false);
+
+    inline double q2Real(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2Real(x.get(), dryRun);
+    }
+
     q_ffi_API std::vector<double> q2Reals(::K x, bool dryRun = false) noexcept(false);
 
+    inline std::vector<double> q2Reals(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2Reals(x.get(), dryRun);
+    }
+
+    q_ffi_API char q2Char(::K x, bool dryRun = false) noexcept(false);
+
+    inline char q2Char(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2Char(x.get(), dryRun);
+    }
+
     q_ffi_API std::string q2String(::K x, bool dryRun = false) noexcept(false);
+
+    inline std::string q2String(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2String(x.get(), dryRun);
+    }
+
     q_ffi_API std::vector<std::string> q2Strings(::K x, bool dryRun = false) noexcept(false);
+
+    inline std::vector<std::string> q2Strings(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2Strings(x.get(), dryRun);
+    }
 
     template<typename TimePt>
     TimePt q2TimePoint(::K x, bool dryRun = false) noexcept(false);
+
+    template<typename TimePt>
+    TimePt q2TimePoint(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2TimePoint<TimePt>(x.get(), dryRun);
+    }
+
     template<typename TimePt>
     std::vector<TimePt> q2TimePoints(::K x, bool dryRun = false) noexcept(false);
 
+    template<typename TimePt>
+    std::vector<TimePt> q2TimePoints(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2TimePoints<TimePt>(x.get(), dryRun);
+    }
+
     template<typename Duration>
     Duration q2TimeSpan(::K x, bool dryRun = false) noexcept(false);
+
+    template<typename Duration>
+    Duration q2TimeSpan(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2TimeSpan<Duration>(x.get(), dryRun);
+    }
+
     template<typename Duration>
     std::vector<Duration> q2TimeSpans(::K x, bool dryRun = false) noexcept(false);
+
+    template<typename Duration>
+    std::vector<Duration> q2TimeSpans(K_ptr const& x, bool dryRun = false) noexcept(false)
+    {
+        return q2TimeSpans<Duration>(x.get(), dryRun);
+    }
 
 }//namespace q
 

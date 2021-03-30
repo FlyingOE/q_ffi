@@ -36,16 +36,26 @@ namespace q {
             using pointer = value_type*;
             using const_pointer = value_type const*;
 
-            static ::K atom(TypeId tid, const_reference v) noexcept
+            static K_ptr atom(TypeId tid, const_reference v) noexcept
             {
                 K_ptr k{ ::ka(tid > 0 ? -tid : tid) };
                 Tr::value(k.get()) = v;
-                return k.release();
+                return k;
+            }
+
+            static reference value(K_ptr& k)
+            {
+                return Tr::value(k.get());
+            }
+
+            static const_reference value(K_ptr const& k)
+            {
+                return Tr::value(const_cast<K_ptr&>(k));
             }
 
             static reference value(::K)
             {
-                throw std::logic_error("ValueType should implement its own value(::K)!");
+                throw std::logic_error("ValueType should implement value(::K)!");
             }
 
             static std::string to_str(const_reference v);
@@ -80,22 +90,34 @@ namespace q {
             using pointer = typename ValueType<Tr, Value>::pointer;
             using const_pointer = typename ValueType<Tr, Value>::const_pointer;
 
-            static pointer index(::K)
+            static pointer index(K_ptr& k)
             {
-                throw std::logic_error("IndexableType should implement its own index(::K)!");
+                return Tr::index(k.get());
             }
 
-            static ::K list(std::initializer_list<value_type> vs) noexcept
-            { return Tr::list(vs.begin(), vs.end()); }
+            static const_pointer index(K_ptr const& k)
+            {
+                return Tr::index(const_cast<K_ptr&>(k));
+            }
+
+            static pointer index(::K)
+            {
+                throw std::logic_error("IndexableType should implement index(::K)!");
+            }
+
+            static K_ptr list(std::initializer_list<value_type> vs) noexcept
+            {
+                return Tr::list(vs.begin(), vs.end());
+            }
 
             template<typename It>
-            static ::K list(It begin, It end) noexcept
+            static K_ptr list(It begin, It end) noexcept
             {
                 auto const n = std::distance(begin, end);
                 assert(0 <= n && n <= std::numeric_limits<::J>::max());
                 K_ptr k{ ::ktn(Tr::type_id, n) };
-                std::copy(begin, end, Tr::index(k.get()));
-                return k.release();
+                std::copy(begin, end, Tr::index(k));
+                return k;
             }
         };
 
@@ -108,7 +130,7 @@ namespace q {
 
             static value_type inf(bool /*sign*/ = true)
             {
-                throw std::logic_error("NumericType should implement its own inf(bool)!");
+                throw std::logic_error("NumericType should implement inf(bool)!");
             }
 
             static bool is_inf(const_reference& v, bool sign = true) noexcept
@@ -133,12 +155,12 @@ namespace q {
 
             static value_type encode(temporal_type const&)
             {
-                throw std::logic_error("TemporalType should implement its own encode(temporal_type const&)!");
+                throw std::logic_error("TemporalType should implement encode(temporal_type const&)!");
             }
 
             static temporal_type decode(const_reference)
             {
-                throw std::logic_error("TemporalType should implement its own decode(const_reference)!");
+                throw std::logic_error("TemporalType should implement decode(const_reference)!");
             }
         };
 
@@ -163,16 +185,25 @@ namespace q {
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
 
-        static ::K atom(::K)
-        { throw std::logic_error("Not an atom!"); }
+        static K_ptr atom(::K)
+        {
+            throw std::logic_error("Not an atom!");
+        }
 
+        using ValueType::value;
         static reference value(::K)
-        { throw std::logic_error("Not an atom!"); }
+        {
+            throw std::logic_error("Not an atom!");
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return kK(k); }
+        {
+            assert(nullptr != k);
+            return kK(k);
+        }
     };
 
     template<>
@@ -189,16 +220,26 @@ namespace q {
 
         static_assert(sizeof(::G) == sizeof(value_type), "sizeof(G) == sizeof(<kBoolean>)");
 
-        static ::K atom(bool b) noexcept
-        { return ::kb(b); }
+        static K_ptr atom(bool b) noexcept
+        {
+            return K_ptr{ ::kb(b) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return k->g; }
+        {
+            assert(nullptr != k);
+            return k->g;
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return static_cast<pointer>(kG(k)); }
+        {
+            assert(nullptr != k);
+            return static_cast<pointer>(kG(k));
+        }
 
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
@@ -222,19 +263,31 @@ namespace q {
 
         static_assert(sizeof(::G) == sizeof(value_type), "sizeof(G) == sizeof(<kByte>)");
 
-        static ::K atom(value_type b) noexcept
-        { return ::kg(b); }
+        static K_ptr atom(value_type b) noexcept
+        {
+            return K_ptr{ ::kg(b) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return k->g; }
+        {
+            assert(nullptr != k);
+            return k->g;
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return (kG(k)); }
+        {
+            assert(nullptr != k);
+            return (kG(k));
+        }
 
         static constexpr value_type null() noexcept
-        { return 0x00; }
+        {
+            return 0x00;
+        }
 
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v)
@@ -263,22 +316,36 @@ namespace q {
 
         static_assert(sizeof(::H) == sizeof(value_type), "sizeof(H) == sizeof(<kShort>)");
 
-        static ::K atom(value_type h) noexcept
-        { return ::kh(h); }
+        static K_ptr atom(value_type h) noexcept
+        {
+            return K_ptr{ ::kh(h) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return k->h; }
+        {
+            assert(nullptr != k);
+            return k->h;
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return (kH(k)); }
+        {
+            assert(nullptr != k);
+            return (kH(k));
+        }
 
         static constexpr value_type null() noexcept
-        { return (nh); }
+        {
+            return (nh);
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return sign ? (wh) : -(wh); }
+        {
+            return sign ? (wh) : -(wh);
+        }
 
         using NumericType::print;
     };
@@ -297,22 +364,36 @@ namespace q {
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
 
-        static ::K atom(value_type i) noexcept
-        { return ::ki(i); }
+        static K_ptr atom(value_type i) noexcept
+        {
+            return K_ptr{ ::ki(i) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return k->i; }
+        {
+            assert(nullptr != k);
+            return k->i;
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return (kI(k)); }
+        {
+            assert(nullptr != k);
+            return (kI(k));
+        }
 
         static constexpr value_type null() noexcept
-        { return (ni); }
+        {
+            return (ni);
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return sign ? (wi) : -(wi); }
+        {
+            return sign ? (wi) : -(wi);
+        }
 
         using NumericType::print;
     };
@@ -333,22 +414,38 @@ namespace q {
 
         static_assert(sizeof(::J) == sizeof(value_type), "sizeof(J) == sizeof(<kLong>)");
 
-        static ::K atom(value_type j) noexcept
-        { return ::kj(j); }
+        static K_ptr atom(value_type j) noexcept
+        {
+            return K_ptr{ ::kj(j) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return (reference)(k->j); }   // int64_t & long long are different in GCC!
+        {
+            assert(nullptr != k);
+            // int64_t & long long are different in GCC!
+            return static_cast<reference>(k->j);
+        }
 
         using IndexableType::list;
 
-        static pointer index(K k) noexcept
-        { return (pointer)(kJ(k)); }    // int64_t & long long are different in GCC!
+        using IndexableType::index;
+        static pointer index(::K k) noexcept
+        {
+            assert(nullptr != k);
+            // int64_t & long long are different in GCC!
+            return static_cast<pointer>(kJ(k));
+        }
 
         static constexpr value_type null() noexcept
-        { return (nj); }
+        {
+            return (nj);
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return sign ? (wj) : -(wj); }
+        {
+            return sign ? (wj) : -(wj);
+        }
 
         using NumericType::print;
     };
@@ -371,26 +468,38 @@ namespace q {
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
 
-        static_assert(std::numeric_limits<value_type>::is_iec559,
-                    "<kReal> should be IEC 559/IEEE 754-compliant");
         static_assert(sizeof(::E) == sizeof(value_type), "sizeof(E) == sizeof(<kReal>)");
 
-        static ::K atom(value_type e) noexcept
-        { return ::ke(e); }
+        static K_ptr atom(value_type e) noexcept
+        {
+            return K_ptr{ ::ke(e) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return k->e; }
+        {
+            assert(nullptr != k);
+            return k->e;
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return (kE(k)); }
+        {
+            assert(nullptr != k);
+            return (kE(k));
+        }
 
         static value_type null() noexcept
-        { return static_cast<value_type>((nf)); }
+        {
+            return static_cast<value_type>((nf));
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return static_cast<value_type>(sign ? (wf) : -(wf)); }
+        {
+            return static_cast<value_type>(sign ? (wf) : -(wf));
+        }
 
         using NumericType::print;
     };
@@ -409,26 +518,38 @@ namespace q {
         using typename ValueType::pointer;
         using typename ValueType::const_pointer;
 
-        static_assert(std::numeric_limits<value_type>::is_iec559,
-                    "<kFloat> should be IEC 559/IEEE 754-compliant");
         static_assert(sizeof(::F) == sizeof(value_type), "sizeof(F) == sizeof(<kFloat>)");
 
-        static ::K atom(value_type f) noexcept
-        { return ::kf(f); }
+        static K_ptr atom(value_type f) noexcept
+        {
+            return K_ptr{ ::kf(f) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return k->f; }
+        {
+            assert(nullptr != k);
+            return k->f;
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return (kF(k)); }
+        {
+            assert(nullptr != k);
+            return (kF(k));
+        }
 
         static value_type null() noexcept
-        { return (nf); }
+        {
+            return (nf);
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return sign ? (wf) : -(wf); }
+        {
+            return sign ? (wf) : -(wf);
+        }
 
         using NumericType::print;
     };
@@ -452,28 +573,43 @@ namespace q {
 
         static_assert(sizeof(::C) == sizeof(value_type), "sizeof(C) == sizeof(<kChar>)");
 
-        static ::K atom(value_type c) noexcept
-        { return ::kc(c); }
+        static K_ptr atom(value_type c) noexcept
+        {
+            return K_ptr{ ::kc(c) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return (reference)(k->g); }
+        {
+            assert(nullptr != k);
+            return reinterpret_cast<reference>(k->g);
+        }
 
         using IndexableType::list;
+        static K_ptr list(char const* str) noexcept
+        {
+            return K_ptr{ ::kp(const_cast<::S>(str)) };
+        }
+        static K_ptr list(char const* str, std::size_t len) noexcept
+        {
+            return K_ptr{ ::kpn(const_cast<::S>(str), len) };
+        }
+        static K_ptr list(std::string const& str) noexcept
+        {
+            return list(str.c_str(), str.length());
+        }
 
-        static ::K list(char const* str) noexcept
-        { return ::kp(const_cast<::S>(str)); }
-
-        static ::K list(char const* str, std::size_t len) noexcept
-        { return ::kpn(const_cast<::S>(str), len); }
-
-        static ::K list(std::string const& str) noexcept
-        { return list(str.c_str(), str.length()); }
-
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return reinterpret_cast<pointer>(kG(k)); }
+        {
+            assert(nullptr != k);
+            return reinterpret_cast<pointer>(kG(k));
+        }
 
         static constexpr value_type null() noexcept
-        { return ' '; }
+        {
+            return ' ';
+        }
 
         using ValueType::print;
     };
@@ -496,16 +632,35 @@ namespace q {
             sizeof(std::remove_pointer_t<::S>) == sizeof(std::remove_pointer_t<value_type>),
             "sizeof(S::char) == sizeof(<kSymbol>::char)");
 
-        static ::K atom(value_type s) noexcept
-        { return ::ks(const_cast<::S>(s)); }
+        static K_ptr atom(value_type s) noexcept
+        {
+            return K_ptr{ ::ks(const_cast<::S>(s)) };
+        }
+        static K_ptr atom(std::string const& s) noexcept
+        {
+            return atom(s.c_str());
+        }
 
+        static value_type intern(value_type s) noexcept
+        {
+            return ::ss(const_cast<::S>(s));
+        }
+        static value_type intern(std::string const& s) noexcept
+        {
+            return intern(s.c_str());
+        }
+
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return (value_type&)(k->s); }
+        {
+            assert(nullptr != k);
+            return const_cast<value_type&>(k->s);
+        }
 
         using IndexableType::list;
 
         template<typename It>
-        static ::K list(It begin, It end) noexcept
+        static K_ptr list(It begin, It end) noexcept
         {
             auto const n = std::distance(begin, end);
             assert(0 <= n && n <= std::numeric_limits<::J>::max());
@@ -514,14 +669,20 @@ namespace q {
                 [](auto&& sym) {
                     return ::ss(const_cast<::S>(str_getter()(std::forward<decltype(sym)>(sym))));
                 });
-            return k.release();
+            return k;
         }
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return const_cast<pointer>(static_cast<char**>(kS(k))); }
+        {
+            assert(nullptr != k);
+            return const_cast<pointer>(static_cast<char**>(kS(k)));
+        }
 
         static constexpr value_type null() noexcept
-        { return ""; }
+        {
+            return "";
+        }
 
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, const_reference v);
@@ -558,22 +719,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type p) noexcept
-        { return ::ktj(-type_id, p); }
+        static K_ptr atom(value_type p) noexcept
+        {
+            return K_ptr{ ::ktj(-type_id, p) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(
             long long year, long long mon, long long day,
@@ -606,22 +779,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type m) noexcept
-        { return ValueType::atom(type_id, m); }
+        static K_ptr atom(value_type m) noexcept
+        {
+            return ValueType::atom(type_id, m);
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(int year, int month) noexcept;
 
@@ -654,22 +839,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type d) noexcept
-        { return ::kd(d); }
+        static K_ptr atom(value_type d) noexcept
+        {
+            return K_ptr{ ::kd(d) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(int year, int month, int day) noexcept;
 
@@ -705,22 +902,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type z) noexcept
-        { return ::kz(z); }
+        static K_ptr atom(value_type z) noexcept
+        {
+            return K_ptr{ ::kz(z) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(int year, int month, int day,
             int hour, int minute, int second, int millis) noexcept;
@@ -758,22 +967,33 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type n) noexcept
-        { return ::ktj(-type_id, n); }
+        static K_ptr atom(value_type n) noexcept
+        {
+            return K_ptr{ ::ktj(-type_id, n) }; }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(long long day,
             long long hour, long long minute, long long second, long long nanos) noexcept;
@@ -807,22 +1027,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type m) noexcept
-        { return ValueType::atom(type_id, m); }
+        static K_ptr atom(value_type m) noexcept
+        {
+            return ValueType::atom(type_id, m);
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(int hour, int minute) noexcept;
 
@@ -855,22 +1087,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type s) noexcept
-        { return ValueType::atom(type_id, s); }
+        static K_ptr atom(value_type s) noexcept
+        {
+            return ValueType::atom(type_id, s);
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(int hour, int minute, int second) noexcept;
 
@@ -903,22 +1147,34 @@ namespace q {
         using typename ValueType::const_pointer;
         using typename TemporalType::temporal_type;
 
-        static ::K atom(value_type t) noexcept
-        { return ::kt(t); }
+        static K_ptr atom(value_type t) noexcept
+        {
+            return K_ptr{ ::kt(t) };
+        }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return BaseTypeTraits::value(k); }
+        {
+            return BaseTypeTraits::value(k);
+        }
 
         using IndexableType::list;
 
+        using IndexableType::index;
         static pointer index(::K k) noexcept
-        { return BaseTypeTraits::index(k); }
+        {
+            return BaseTypeTraits::index(k);
+        }
 
         static constexpr value_type null() noexcept
-        { return BaseTypeTraits::null(); }
+        {
+            return BaseTypeTraits::null();
+        }
 
         static constexpr value_type inf(bool sign = true) noexcept
-        { return BaseTypeTraits::inf(sign); }
+        {
+            return BaseTypeTraits::inf(sign);
+        }
 
         q_ffi_API static value_type encode(
             int hour, int minute, int second, int millis) noexcept;
@@ -945,8 +1201,10 @@ namespace q {
         static constexpr TypeId type_id = kNil;
         using value_type = void;
 
-        static ::K atom(...) noexcept
-        { return ::ka(kNil); }
+        static K_ptr atom(...) noexcept
+        {
+            return K_ptr{ ::ka(kNil) };
+        }
     };
 
     template<>
@@ -960,19 +1218,20 @@ namespace q {
         using ValueType::pointer;
         using ValueType::const_pointer;
 
-        static_assert(sizeof(::S) == sizeof(value_type),
-            "sizeof(S) == sizeof(<kError>)");
+        static_assert(sizeof(::S) == sizeof(value_type), "sizeof(S) == sizeof(<kError>)");
 
         /// @return Always @c Nil (error will be signaled to kdb+ host)
-        static ::K atom(value_type msg, bool sys = false) noexcept
+        static K_ptr atom(value_type msg, bool sys = false) noexcept
         {
             static thread_local std::string message;
             message.assign(msg);
-            return (sys ? ::orr : ::krr)(const_cast<::S>(message.c_str()));
+            return K_ptr{ (sys ? ::orr : ::krr)(const_cast<::S>(message.c_str())) };
         }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
         {
+            assert(nullptr != k);
             static value_type str = k->s;
             return str;
         }
@@ -992,18 +1251,25 @@ namespace q {
         using ValueType::pointer;
         using ValueType::const_pointer;
 
-        static ::K atom(value_type func, std::size_t argc) noexcept
+        static K_ptr atom(value_type func, std::size_t argc) noexcept
         {
             assert(nullptr != func);
             assert(argc > 0);
-            return dl(func, argc);
+            return K_ptr{ ::dl(func, argc) };
         }
 
+        using ValueType::value;
         static reference value(::K k) noexcept
-        { return *reinterpret_cast<pointer>(k->G0); }
+        {
+            assert(nullptr != k);
+            return *reinterpret_cast<pointer>(k->G0);
+        }
 
         static std::size_t arity(::K k) noexcept
-        { return k->u; }
+        {
+            assert(nullptr != k);
+            return k->u;
+        }
 
         template<typename Elem, typename ElemTr>
         static void print(std::basic_ostream<Elem, ElemTr>& out, value_type const& v);

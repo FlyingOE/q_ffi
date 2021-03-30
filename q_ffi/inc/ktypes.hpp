@@ -1,10 +1,11 @@
 #pragma once
 
-#include "q_ffi.h"
 #include <unordered_map>
 #include <date/date.h>
-#include <k_compat.h>
 #include <iosfwd>
+#include "q_ffi.h"
+#include <k_compat.h>
+#include "kpointer.hpp"
 
 namespace q
 {
@@ -108,13 +109,18 @@ namespace q
 #   pragma region K object queries
 
     /// @brief Inspect type ID of a (potentially null) @c K object.
-    inline std::underlying_type_t<TypeId> type(::K const k) noexcept
+    constexpr std::underlying_type_t<TypeId> type(::K const k) noexcept
     {
         return nullptr == k ? q::kError : static_cast<TypeId>(k->t);
     }
 
+    constexpr std::underlying_type_t<TypeId> type(K_ptr const& k) noexcept
+    {
+        return type(k.get());
+    }
+
     /// @brief Inspect the element count of a (potentially null) @c K object. Atoms' size is 1.
-    inline std::size_t count(::K const k) noexcept
+    constexpr std::size_t count(::K const k) noexcept
     {
         if (nullptr == k) {
             return 0;
@@ -125,15 +131,22 @@ namespace q
         }
     }
 
+    constexpr std::size_t count(K_ptr const& k) noexcept
+    {
+        return count(k.get());
+    }
+
 #   pragma endregion
 
     /// @brief Report error into q host.
     /// @param sys If the error should be prepended with system error message.
-    q_ffi_API ::K error(char const* msg, bool sys = false) noexcept;
+    q_ffi_API K_ptr error(char const* msg, bool sys = false) noexcept;
 
     /// @brief Stringize any @c K object as much as possible.
     ///     If the q type is recognized, @c k is converted using the @c to_str method in the respective type traits.
     q_ffi_API std::string to_string(::K const k);
+
+    q_ffi_API std::string to_string(K_ptr const& k);
 
     /// @brief UDLs that are adapted from q literal suffices.
     inline namespace literals

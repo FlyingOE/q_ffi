@@ -11,9 +11,9 @@ void q::details::signalError(char const* message) noexcept(false)
     throw K_error(message);
 }
 
-#define GET_VALUE_TYPE(T, x, dryRun)    \
+#define GET_VALUE_TYPE(T, x)    \
     case -(T): \
-        return (dryRun) ? 0 : TypeTraits<(T)>::value((x))
+        return TypeTraits<(T)>::value((x))
 
 #define GET_VALUE_LIST(T, x, r, dryRun) \
     case (T):  \
@@ -24,18 +24,18 @@ void q::details::signalError(char const* message) noexcept(false)
 
 #pragma region q <==> C++ decimal
 
-long long q::q2Decimal(::K x, bool dryRun) noexcept(false)
+long long q::q2Decimal(::K x, bool /*dryRun*/) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil decimal");
     }
     switch (type(x))
     {
-        GET_VALUE_TYPE(kBoolean, x, dryRun);
-        GET_VALUE_TYPE(kByte, x, dryRun);
-        GET_VALUE_TYPE(kShort, x, dryRun);
-        GET_VALUE_TYPE(kInt, x, dryRun);
-        GET_VALUE_TYPE(kLong, x, dryRun);
+        GET_VALUE_TYPE(kBoolean, x);
+        GET_VALUE_TYPE(kByte, x);
+        GET_VALUE_TYPE(kShort, x);
+        GET_VALUE_TYPE(kInt, x);
+        GET_VALUE_TYPE(kLong, x);
     default:
         throw K_error("not a decimal");
     }
@@ -74,14 +74,14 @@ double q::q2Real(::K x, bool dryRun) noexcept(false)
     }
     switch (type(x))
     {
-        GET_VALUE_TYPE(kReal, x, dryRun);
-        GET_VALUE_TYPE(kFloat, x, dryRun);
+        GET_VALUE_TYPE(kReal, x);
+        GET_VALUE_TYPE(kFloat, x);
     case -kBoolean:
     case -kByte:
     case -kShort:
     case -kInt:
     case -kLong:
-        return static_cast<double>(q2Decimal(x));
+        return static_cast<double>(q2Decimal(x, dryRun));
     default:
         throw K_error("not a floating-point");
     }
@@ -115,6 +115,23 @@ vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
         throw K_error("not a floating-point list");
     }
     return result;
+}
+
+#pragma endregion
+
+#pragma region q <==> C++ char
+
+char q::q2Char(::K x, bool /*dryRun*/) noexcept(false)
+{
+    if (Nil == x) {
+        throw K_error("nil char");
+    }
+    switch (type(x)) {
+    case -kChar:
+        return TypeTraits<kChar>::value(x);
+    default:
+        throw K_error("not a char");
+    }
 }
 
 #pragma endregion

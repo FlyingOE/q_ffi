@@ -100,12 +100,12 @@ namespace q
     {
         K_ptr k = init_atom<Tr>(is_convertible<char const*, typename Tr::value_type>());
         if (notKError) {
-            ASSERT_NE(k.get(), nullptr)
+            ASSERT_NE(k.get(), Nil)
                 << "TypeTraits<" << Tr::type_id << ">::atom() failed";
-            EXPECT_EQ(type(k.get()), -Tr::type_id);
+            EXPECT_EQ(type(k), -Tr::type_id);
         }
         else {
-            ASSERT_EQ(k.get(), nullptr)
+            ASSERT_EQ(k.get(), Nil)
                 << "TypeTraits<" << Tr::type_id << ">::atom() should not return non-null error";
         }
     }
@@ -116,9 +116,9 @@ namespace q
     {
         K_ptr k = init_list<Tr>(integral_constant<bool,
             is_convertible_v<char const*, typename Tr::value_type>>());
-        ASSERT_NE(k.get(), nullptr)
+        ASSERT_NE(k.get(), Nil)
             << "TypeTraits<" << Tr::type_id << ">::list() failed";
-        EXPECT_EQ(type(k.get()), Tr::type_id);
+        EXPECT_EQ(type(k), Tr::type_id);
     }
 
     TYPED_TEST(TypeTraitsTests, qType)
@@ -349,10 +349,10 @@ namespace q
         for (auto const& sample : this->samples_) {
             K_ptr k{ Traits::atom(sample.first) };
             ASSERT_NE(k.get(), Nil);
-            EXPECT_EQ(type(k.get()), -TypeParam::type_id);
+            EXPECT_EQ(type(k), -TypeParam::type_id);
 
             SCOPED_TRACE("literal for atom");
-            this->expect_equal(Traits::value(k.get()), sample.first);
+            this->expect_equal(Traits::value(k), sample.first);
         }
     }
 
@@ -366,12 +366,12 @@ namespace q
 
         K_ptr k{ Traits::list(values.cbegin(), values.cend()) };
         ASSERT_NE(k.get(), Nil);
-        EXPECT_EQ(type(k.get()), TypeParam::type_id);
-        ASSERT_EQ(count(k.get()), values.size());
+        EXPECT_EQ(type(k), TypeParam::type_id);
+        ASSERT_EQ(count(k), values.size());
 
         auto s = values.cbegin();
         auto const e = values.cend();
-        auto p = Traits::index(k.get());
+        auto p = Traits::index(k);
         ASSERT_NE(p, nullptr);
         for (; s != e; ++p, ++s) {
             SCOPED_TRACE("literal list");
@@ -386,10 +386,10 @@ namespace q
 
         auto str_check = [&sample](K_ptr k, size_t length) {
             ASSERT_NE(k.get(), Nil);
-            EXPECT_EQ(type(k.get()), Traits::type_id);
-            ASSERT_EQ(count(k.get()), length);
+            EXPECT_EQ(type(k), Traits::type_id);
+            ASSERT_EQ(count(k), length);
             for (size_t i = 0; i < length; ++i) {
-                EXPECT_EQ(Traits::index(k.get())[i], sample[i]);
+                EXPECT_EQ(Traits::index(k)[i], sample[i]);
             }
         };
 
@@ -415,10 +415,10 @@ namespace q
 
         K_ptr k{ Traits::list(sample.cbegin(), sample.cend()) };
         ASSERT_NE(k.get(), Nil);
-        EXPECT_EQ(type(k.get()), Traits::type_id);
-        ASSERT_EQ(count(k.get()), length);
+        EXPECT_EQ(type(k), Traits::type_id);
+        ASSERT_EQ(count(k), length);
         for (size_t i = 0; i < length; ++i) {
-            EXPECT_STREQ(Traits::index(k.get())[i], sample[i].c_str());
+            EXPECT_STREQ(Traits::index(k)[i], sample[i].c_str());
         }
     }
 
@@ -437,7 +437,7 @@ namespace q
 
         for (auto const& sample : this->samples_) {
             K_ptr k{ Traits::atom(sample.first) };
-            EXPECT_EQ(to_string(k.get()), sample.second);
+            EXPECT_EQ(to_string(k), sample.second);
         }
     }
 

@@ -34,7 +34,8 @@ namespace q
 
 }//namespace q
 
-::K q::error(char const* msg, bool sys) noexcept
+q::K_ptr
+q::error(char const* msg, bool sys) noexcept
 {
     return TypeTraits<kError>::atom(msg, sys);
 }
@@ -131,7 +132,8 @@ namespace
 
 }//namespace <anonymous>
 
-string q::to_string(::K const k)
+string
+q::to_string(::K const k)
 {
 #define TO_STR_BY_TYPETRAITS(tid)   \
     case -(tid):   \
@@ -172,6 +174,13 @@ string q::to_string(::K const k)
         return any_to_str(k);
     }
 }
+
+string
+q::to_string(K_ptr const& k)
+{
+    return to_string(k.get());
+}
+
 #pragma endregion
 
 namespace q
