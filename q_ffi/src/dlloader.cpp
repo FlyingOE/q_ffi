@@ -54,5 +54,11 @@ q_ffi::DLLoader::locateProc(char const* funcName) const
 {
     assert(nullptr != funcName);
     verifyState();
-    return dlsym(dll_, funcName);
+    dlerror();  // clear error condition
+    auto const fp = dlsym(dll_, funcName);
+    string err{ dlerror() };
+    if (err.empty())
+        throw runtime_error(err);
+    else
+        return fp;
 }
