@@ -27,8 +27,8 @@ set(q_ffi_HEADERS
     ${target_header_dir}/ffi_api.h
     ${target_header_dir}/version.hpp
     ${target_header_dir}/dlloader.hpp
-    ${target_header_dir}/ffcall.hpp
     ${target_header_dir}/ffargs.hpp
+    ${target_header_dir}/ffcall.hpp
 )
 set(q_ffi_SOURCES
     ${target_source_dir}/dllmain.cpp
@@ -38,8 +38,8 @@ set(q_ffi_SOURCES
     ${target_source_dir}/kerror.cpp
     ${target_source_dir}/type_convert.cpp
     ${target_source_dir}/dlloader.cpp
-    ${target_source_dir}/ffcall.cpp
     ${target_source_dir}/ffargs.cpp
+    ${target_source_dir}/ffcall.cpp
 )
 set(q_ffi_ALWAYS_BUILD
     ${target_source_dir}/version.cpp

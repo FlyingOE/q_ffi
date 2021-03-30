@@ -34,7 +34,7 @@ extern "C"
         Type Abi add_##Type##_##AbiName(Type a, Type b)    \
         {   \
 			auto const c = a + b;   \
-			cout << "In add_" #Type "_" #AbiName " with "   \
+			cout << dec << "In add_" #Type "_" #AbiName " with "    \
                 << '(' << a << ") + (" << b << ") = (" << c << ')' << endl; \
             return c;   \
         }

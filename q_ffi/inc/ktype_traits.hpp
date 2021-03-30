@@ -708,7 +708,7 @@ namespace q {
         {
             assert(nullptr != k);
             assert(-type_id == type(k));
-            return const_cast<value_type&>(k->s);
+            return const_cast<reference>(k->s);
         }
 
         using IndexableType::list;

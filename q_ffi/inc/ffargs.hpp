@@ -3,7 +3,6 @@
 #include <functional>
 #include <ffi.h>
 #include "kerror.hpp"
-#include "kpointer.hpp"
 #include "ktype_traits.hpp"
 #include "type_convert.hpp"
 #include "ffargs.hpp"
@@ -24,25 +23,22 @@ namespace q_ffi
         {}
 
         /// @brief Return the FFI type of the argument
-        ffi_type& type() const
-        { return type_; }
+        ffi_type& type() const;
 
         /// @brief Return a pointer to the value of the parameter
         ///     (may or may not point to the K object, depending on type matching)
         virtual void* get(::K k) const = 0;
-
-        /// @brief Return a pointer to the value of the parameter from a q array
-        ///     (may or may not point to the K value, depending on type matching)
-        virtual void* get(::K k, std::size_t index) const = 0;
+        virtual void* get(q::K_ptr const& k) const;
 
         /// @brief Put an FFI argument's value back into the parameter
         virtual void set(::K k, ffi_arg const& x) const = 0;
+        virtual void set(q::K_ptr& k, ffi_arg const& x) const;
 
         /// @brief Size (in bytes) of the given argument type
         virtual std::size_t size() const = 0;
 
         /// @brief Create a new K oject of the given argument type
-        virtual ::K create() const = 0;
+        virtual q::K_ptr create() const = 0;
     };
 
     class VoidArgument : public Argument
@@ -51,21 +47,20 @@ namespace q_ffi
         VoidArgument() : Argument(ffi_type_void)
         {}
 
-        void* get(::K) const override
-        { return nullptr; }
+        void* get(::K) const override;
 
-        void* get(::K, std::size_t) const override
-        { return nullptr; }
+        void set(::K, ffi_arg const&) const override;
 
-        void set(::K, ffi_arg const&) const override
-        {}
+        std::size_t size() const override;
 
-        std::size_t size() const override
-        { return 0; }
-
-        ::K create() const override
-        { return q::Nil; }
+        q::K_ptr create() const override;
     };
+
+
+    namespace details
+    {
+        constexpr auto DUMMY_VALUE = 0xCCCC'CCCC'DEAD'BEEFuLL;
+    }
 
     template<typename Tr, typename S>
     class AtomArgument : public Argument
@@ -75,14 +70,15 @@ namespace q_ffi
         using list_converter_type = std::vector<S>(*)(::K, bool);
 
     private:
+        mutable q::K_ptr mapped_;
+
         converter_type convert_atom_;
         list_converter_type convert_list_;
-        mutable q::K_ptr mapped_;
 
     public:
         AtomArgument(ffi_type& type,
             converter_type convert_atom, list_converter_type convert_list)
-            : Argument(type), convert_atom_(convert_atom), convert_list_(convert_list)
+            : Argument(type), convert_atom_{ convert_atom }, convert_list_{ convert_list }
         {
             assert(nullptr != convert_atom_);
             assert(nullptr != convert_list_);
@@ -94,20 +90,9 @@ namespace q_ffi
                 return nullptr;
 
             if (-Tr::type_id == q::type(k))
-                return getDirect(k);
+                return get_direct(k);
             else
-                return getMapped(k);
-        }
-
-        void* get(::K k, std::size_t index) const override
-        {
-            if (q::Nil == k)
-                return nullptr;
-
-            if (Tr::type_id == q::type(k))
-                return getDirect(k, index);
-            else
-                return getMapped(k, index);
+                return get_mapped(k);
         }
 
         void set(::K k, ffi_arg const& x) const override
@@ -121,44 +106,32 @@ namespace q_ffi
             return sizeof(typename Tr::value_type);
         }
 
-        ::K create() const override
+        q::K_ptr create() const override
         {
-            static constexpr uint64_t DUMMY = 0xDEAD'BEEF'CCCC'CCCCuLL;
-            static_assert(sizeof(DUMMY) >= sizeof(typename Tr::value_type),
+            q::K_ptr val{ Tr::atom(0) };
+#       ifndef NDEBUG
+            static_assert(sizeof(details::DUMMY_VALUE) >= sizeof(typename Tr::value_type),
                 "ensure dummy bytes are filled");
-            mapped_.reset(Tr::atom(*reinterpret_cast<typename Tr::const_pointer>(&DUMMY)));
-            return mapped_.get();
+            Tr::value(val) =
+                *reinterpret_cast<typename Tr::const_pointer>(&details::DUMMY_VALUE);
+#       endif
+            return val;
         }
 
     private:
-        void* getDirect(::K k) const
+        void* get_direct(::K k) const
         {
-            mapped_.reset();
+            assert(-Tr::type_id == q::type(k));
             return &Tr::value(k);
         }
 
-        void* getMapped(::K k) const
+        void* get_mapped(::K k) const
         {
-            using value_type = Tr::value_type;
-            ::K k2 = create();
-            Tr::value(k2) = static_cast<value_type>(convert_atom_(k, false));
-            return &Tr::value(k2);
-        }
-
-        void* getDirect(::K k, std::size_t index) const
-        {
-            mapped_.reset();
-            assert(index < q::count(k));
-            return Tr::index(k) + index;
-        }
-
-        /// FIXME: Rather inefficient, as parameter list is converted multiple times!
-        void* getMapped(::K k, std::size_t index) const
-        {
-            using value_type = Tr::value_type;
-            ::K k2 = create();
-            Tr::value(k2) = static_cast<value_type>(convert_list_(k, false)[index]);
-            return &Tr::value(k2);
+            mapped_ = create();
+            assert(mapped_);
+            Tr::value(mapped_) =
+                static_cast<typename Tr::value_type>(convert_atom_(k, false));
+            return get_direct(mapped_.get());
         }
     };
 

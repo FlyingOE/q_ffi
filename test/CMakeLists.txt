@@ -16,7 +16,7 @@ target_sources(${target_name}
         test_temporals.cpp
         test_type_convert.cpp
         test_libffi.cpp     test_libffi_win.hpp     test_libffi_linux.hpp
-        test_ffcall.cpp
+#        test_ffcall.cpp
 )
 target_include_directories(${target_name}
     PRIVATE

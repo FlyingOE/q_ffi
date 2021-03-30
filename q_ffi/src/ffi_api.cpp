@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cctype>
+#include <mutex>
 #include <dlfcn.h>
 #include <ffi.h>
 #include "ktype_traits.hpp"
@@ -15,144 +16,166 @@ using namespace std;
 
 namespace
 {
-#pragma region Implementation details for loading FFI
+    namespace details
+    {
+        mutex MUTEX;
+        unordered_map<string, unique_ptr<q_ffi::Invocator>> INVOCATORS;
+    }
 
-    vector<unique_ptr<q_ffi::Invocator>> CALLERS;
-
-    q_ffi::Invocator* createCaller(string const& dllName)
+    q_ffi::Invocator& loadDLL(string const& dllName)
     {
         try {
-            auto caller = make_unique<q_ffi::Invocator>(dllName.c_str());
-            CALLERS.push_back(move(caller));
-            return CALLERS.rbegin()->get();
+            lock_guard<mutex> lock{ details::MUTEX };
+            auto const p = details::INVOCATORS.emplace(dllName,
+                make_unique<q_ffi::Invocator>(dllName.c_str()));
+#       ifndef NDEBUG
+            if (p.second) {
+                cout << "# <q_ffi> loaded "
+                    << details::INVOCATORS.size() << " foreign function(s)." << endl;
+            }
+#       endif
+            return *p.first->second;
         }
         catch (runtime_error const& ex) {
             throw K_error(ex);
         }
     }
 
-    char verifyReturnType(string const& retType)
+    q_ffi::Invocator& unwrapCaller(::K wrapped)
     {
-        switch (retType.size()) {
-        case 0:
-            return ' '; // default to `void' return
-        case 1:
-            return retType[0];
-        default:
-            throw K_error("invalid return type");
-        }
-    }
+        using wrapped_ptr = TypeTraits<kLong>;
+        constexpr auto ptr_size = sizeof(q_ffi::Invocator*);
+        static_assert(ptr_size <= sizeof(wrapped_ptr::value_type),
+            "unwrap q_ffi::Invocator* from ::J");
 
-    string verifyArgumentTypes(string const& argTypes)
-    {
-        // Special case: q functions reqiure at least 1 argument
-        if (argTypes.empty() || argTypes == " ")
-            return "";
+        if (Nil == wrapped)
+            throw K_error("nil FFI caller");
+        else if (-wrapped_ptr::type_id != type(wrapped))
+            throw K_error("invalid FFI caller");
+
+        q_ffi::Invocator* caller{ nullptr };
+        memcpy(&caller, &wrapped_ptr::value(wrapped), ptr_size);
+        if (nullptr == caller)
+            throw K_error("null FFI callre");
         else
-            return argTypes;
+            return *caller;
     }
 
-    string verifyABIType(string const& abiType)
+    ::K doCall(::K caller, initializer_list<::K> params)
     {
-        string abi{ abiType };
-        transform(abi.rbegin(), abi.rend(), abi.begin(),
-            [](char c) { return static_cast<char>(toupper(c)); });
-        return abi;
-    }
-
-    q_ffi::Invocator* loadFFI(
-        string const& dllName, string const& funcName, string const& abiType,
-        string const& retType, string const& argTypes)
-    {
-        auto caller = createCaller(dllName);
-        assert(nullptr != caller);
-
-        caller->load(funcName.c_str(),
-            verifyReturnType(retType), verifyArgumentTypes(argTypes).c_str(),
-            verifyABIType(abiType).c_str());
-        return caller;
-    }
-
-#pragma endregion
-
-#pragma region Implementation details for invoking FFI
-
-    q_ffi::Invocator* unwrapCaller(::K caller)
-    {
-        using wrapped_pointer = TypeTraits<kLong>;
-
-        if (caller == Nil)
-            throw K_error("nil FFI invocator");
-        else if (type(caller) != kLong)
-            throw K_error("invalid FFI invocator");
-
-        q_ffi::Invocator* invocator{ nullptr };
-        static_assert(sizeof(invocator) <= sizeof(wrapped_pointer::value_type),
-            "ensure storage for q_ffi::Invocator*");
-        memcpy(&invocator, &wrapped_pointer::value(caller), sizeof(invocator));
-        assert(nullptr != invocator);
-        return invocator;
-    }
-
-    ::K invoke(::K caller, ::K params)
-    {
-        using wrapped_pointer = TypeTraits<kLong>;
         try {
-            q_ffi::Invocator& invocator = *unwrapCaller(caller);
-
-            if (params == Nil)
-                throw K_error("nil parameter list");
-            if (type(params) == kMixed) {
-                using mixed_list = TypeTraits<kMixed>;
-                vector<::K> pars{ count(params) };
-                copy(mixed_list::index(params), mixed_list::index(params) + count(params),
-                    pars.begin());
-                return invocator(pars);
-            }
-            else if (type(params) > kMixed) {
-                return invocator(params);
-            }
-            else {
-                throw K_error("parameter list as an atom");
-            }
+            auto& call = unwrapCaller(caller);
+            return call(params).release();
         }
         catch (K_error const& ex) {
-            return ex.report();
+            return ex.report().release();
         }
     }
 
-    ::K wrapCaller(q_ffi::Invocator* caller)
+    ::K doCall1(::K caller, ::K p1)
+    { return doCall(caller, { p1 }); }
+
+    ::K doCall2(::K caller, ::K p1, ::K p2)
+    { return doCall(caller, { p1, p2 }); }
+
+    ::K doCall3(::K caller, ::K p1, ::K p2, ::K p3)
+    { return doCall(caller, { p1, p2, p3 }); }
+
+    ::K doCall4(::K caller, ::K p1, ::K p2, ::K p3, ::K p4)
+    { return doCall(caller, { p1, p2, p3, p4 }); }
+
+    ::K doCall5(::K caller, ::K p1, ::K p2, ::K p3, ::K p4, ::K p5)
+    { return doCall(caller, { p1, p2, p3, p4, p5 }); }
+
+    ::K doCall6(::K caller, ::K p1, ::K p2, ::K p3, ::K p4, ::K p5, ::K p6)
+    { return doCall(caller, { p1, p2, p3, p4, p5, p6 }); }
+
+    ::K doCall7(::K caller, ::K p1, ::K p2, ::K p3, ::K p4, ::K p5, ::K p6, ::K p7)
+    { return doCall(caller, { p1, p2, p3, p4, p5, p6, p7 }); }
+
+    K_ptr createFunctor(size_t argc)
     {
-        using wrapped_pointer = TypeTraits<kLong>;
-        assert(nullptr != caller);
-
-        K_ptr params{ wrapped_pointer::atom(0) };
-        static_assert(sizeof(caller) <= sizeof(wrapped_pointer::value_type),
-            "ensure storage for q_ffi::Invocator*");
-        memcpy(&wrapped_pointer::value(params.get()), &caller, sizeof(caller));
-        params.reset(::knk(1, params.release()));
-
-        K_ptr func{ ::dl(&invoke, 2) };
-        return ::dot(func.get(), params.get());
+        switch(argc) {
+        case 0:
+        case 1:
+            return K_ptr{ ::dl(&doCall1, 1 + 1) };
+        case 2:
+            return K_ptr{ ::dl(&doCall2, 2 + 1) };
+        case 3:
+            return K_ptr{ ::dl(&doCall3, 3 + 1) };
+        case 4:
+            return K_ptr{ ::dl(&doCall4, 4 + 1) };
+        case 5:
+            return K_ptr{ ::dl(&doCall5, 5 + 1) };
+        case 6:
+            return K_ptr{ ::dl(&doCall6, 6 + 1) };
+        case 7:
+            return K_ptr{ ::dl(&doCall7, 7 + 1) };
+        default:
+            assert(!"q_ffi::MAX_ARGC exceeded!");
+            return K_ptr{};
+        }
     }
 
-#pragma endregion
+    K_ptr wrapCaller(q_ffi::Invocator& caller)
+    {
+        using wrapped_ptr = TypeTraits<kLong>;
+        constexpr auto ptr_size = sizeof(q_ffi::Invocator*);
+        static_assert(ptr_size <= sizeof(wrapped_ptr::value_type),
+            "wrap q_ffi::Invocator* into ::J");
+
+        auto wrapped = wrapped_ptr::atom(0);
+        auto const pc = &caller;
+        memcpy(&wrapped_ptr::value(wrapped), &pc, ptr_size);
+
+        // .[doCall;enlist wrapped;::]
+        K_ptr call = createFunctor(caller.rank());
+        K_ptr pars{ ::knk(1, wrapped.release()) };
+        K_ptr applied{ ::ee(::dot(call.get(), pars.get())) };
+        if (kError == type(applied))
+            throw K_error(applied);
+        else
+            return applied;
+    }
 
 }//namespace /*anonymous*/
 
 ::K K4_DECL load(::K dllSym, ::K fName, ::K abi, ::K ret, ::K args)
 {
     try {
-        q_ffi::Invocator* caller = loadFFI(q2String(dllSym),
-            q2String(fName), q2String(abi), q2String(ret), q2String(args));
-        return wrapCaller(caller);
+        auto const dll = q2String(dllSym);
+        auto& caller = loadDLL(dll);
+
+        auto const func = q2String(fName);
+
+        auto const retType = q2Char(ret);
+
+        auto argTypes = q2String(args);
+        if (argTypes.empty() || argTypes == " ")
+            argTypes = "";  // q function requires at least 1 argument
+
+        auto abiType = q2String(abi);
+        transform(abiType.cbegin(), abiType.cend(), abiType.begin(),
+            [](char c) { return static_cast<char>(toupper(c)); });
+
+        caller.load(func.c_str(), retType, argTypes.c_str(), abiType.c_str());
+
+        // First argument is already occupied by q_ffi::Invocator*
+        if (caller.rank() >= q_ffi::MAX_ARGC) {
+            ostringstream buffer;
+            buffer << "too many arguments (<=" << (q_ffi::MAX_ARGC - 1) << " expected)";
+            throw K_error(buffer.str());
+        }
+        else {
+            return wrapCaller(caller).release();
+        }
     }
     catch (K_error const& ex) {
-        return ex.report();
+        return ex.report().release();
     }
 }
 
 ::K K4_DECL version(K)
 {
-	return TypeTraits<kChar>::list(q_ffi::version);
+	return TypeTraits<kChar>::list(q_ffi::version).release();
 }

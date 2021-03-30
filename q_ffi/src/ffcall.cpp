@@ -25,11 +25,11 @@ using namespace std;
 #endif
 
 q_ffi::Invocator::Invocator(char const* dll)
-    : dll_(dll), func_{ nullptr }, return_{}, args_{}, ffi_{}
+    : dll_(dll), func_{ nullptr }, ret_{}, args_{}, ffi_{}
 {}
 
 size_t
-q_ffi::Invocator::arity() const
+q_ffi::Invocator::rank() const
 {
     return args_.size();
 }
@@ -39,93 +39,75 @@ q_ffi::Invocator::load(char const* func, char retType, char const* argTypes, cha
 {
     try {
         func_ = dll_.locateProc<function_type>(func);
-        return_ = mapReturnSpec(retType);
-        args_ = mapArgumentSpecs(argTypes);
+        setReturnType(retType);
+        setArgumentTypes(argTypes);
         auto const abi = mapABI(abiType, func);
-        prepareFuncSpec(abi);
+#   ifdef PLATFORM_X86
+        verifyArgumentTypes(func, abi);
+#   endif
+        prepareFFI(abi);
     }
     catch (runtime_error const& ex) {
         throw K_error(ex);
     }
 }
 
-::K
-q_ffi::Invocator::operator()(vector<::K> const& params)
+K_ptr
+q_ffi::Invocator::operator()(initializer_list<::K> params)
 {
-    auto const arity = this->arity();
-    if (params.size() != arity && !(params.size() == 1 && arity == 0))
+    auto const rank = this->rank();
+    if (params.size() != rank && !(params.size() == 1 && rank == 0))
         throw K_error("rank");
 
-    auto pars = make_unique<void*[]>(arity);
-    auto p = params.cbegin();
-    for (auto i = 0u; i < arity; ++i, ++p) {
-        assert(args_[i]);
-        pars[i] = args_[i]->get(*p);
-        assert(nullptr != pars[i]);
-    }
+    auto pars = make_unique<void*[]>(rank);
+    transform(args_.cbegin(), args_.cend(), params.begin(), pars.get(),
+        [](auto const& arg, auto const& par) { return arg->get(par); });
+
     return invoke(pars.get());
 }
 
-::K
-q_ffi::Invocator::operator()(::K params)
-{
-    auto const arity = this->arity();
-    if (count(params) != arity && !(count(params) == 1 && arity == 0))
-        throw K_error("rank");
-
-    auto pars = make_unique<void*[]>(arity);
-    for (auto i = 0u; i < arity; ++i) {
-        assert(args_[i]);
-        pars[i] = args_[i]->get(params, i);
-        assert(nullptr != pars[i]);
-    }
-    return invoke(pars.get());
-}
-
-::K
+K_ptr
 q_ffi::Invocator::invoke(void* params[])
 {
-    assert(params);
-
-    // Prepare result
-    assert(return_);
-    K_ptr result{ return_->create() };
-    unique_ptr<ffi_arg> placeholder;
-    void* res;
-    if (result.get() == Nil) {
+    // Prepare result placeholder
+    assert(ret_);
+    K_ptr result{ ret_->create() };
+    ffi_arg placeholder{};
+    bool mapped = false;
+    void* res = nullptr;
+    if (Nil == result.get()) {
         res = nullptr;
     }
-    else if (return_->size() < sizeof(ffi_arg)) {
-        placeholder = make_unique<ffi_arg>();
-        res = placeholder.get();
+    else if (ret_->size() < sizeof(ffi_arg)) {
+        mapped = true;
+        res = &placeholder;
     }
     else {
-        res = return_->get(result.get());
+        res = ret_->get(result.get());
     }
 
     // FFI invocation
     ffi_call(&ffi_.cif, func_, res, params);
 
-    // Fetch result, if necessary
-    if (placeholder)
-        return_->set(result.get(), *placeholder);
+    // Fetch result
+    if (mapped)
+        ret_->set(result, placeholder);
 
-    return result.release();
+    return result;
 }
 
 void
-q_ffi::Invocator::prepareFuncSpec(ffi_abi abi)
+q_ffi::Invocator::prepareFFI(ffi_abi abi)
 {
-    assert(return_);
-    ffi_.ret_type = &return_->type();
+    assert(ret_);
+    ffi_.ret_type = &ret_->type();
 
-    auto const arity = this->arity();
-    ffi_.arg_types = make_unique<ffi_type*[]>(arity);
+    ffi_.arg_types = make_unique<ffi_type*[]>(rank());
     transform(args_.cbegin(), args_.cend(), ffi_.arg_types.get(),
         [](auto const& arg) { return &arg->type(); });
 
     auto const status = ffi_prep_cif(
-        &ffi_.cif, abi, args_.size(), ffi_.ret_type, ffi_.arg_types.get());
+        &ffi_.cif, abi, rank(), ffi_.ret_type, ffi_.arg_types.get());
     switch (status) {
     case FFI_OK:
         break;
@@ -138,25 +120,52 @@ q_ffi::Invocator::prepareFuncSpec(ffi_abi abi)
     }
 }
 
-q_ffi::Invocator::argument_type
-q_ffi::Invocator::mapReturnSpec(char typeCode)
+void
+q_ffi::Invocator::setReturnType(char typeCode)
 {
-    argument_type ret{ createArgument(typeCode) };
-    assert(ret);
-    return ret;
+    ret_ = mapType(typeCode);
+    assert(ret_);
 }
 
-vector<q_ffi::Invocator::argument_type>
-q_ffi::Invocator::mapArgumentSpecs(char const* typeCodes)
+void
+q_ffi::Invocator::setArgumentTypes(char const* typeCodes)
 {
     assert(nullptr != typeCodes);
     auto const arity = strlen(typeCodes);
-    vector<argument_type> args{ arity };
-    for (auto i = 0u; i < arity; ++i) {
-        args[i].reset(createArgument(typeCodes[i]));
-        assert(args[i]);
+    if (arity > MAX_ARGC)
+        throw K_error("too many arguments");
+
+    args_.resize(arity);
+    transform(typeCodes, typeCodes + arity, args_.begin(),
+        [](char t) { return mapType(t); });
+}
+
+void
+q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
+{
+#ifdef PLATFORM_X86
+    switch (abi) {
+    case FFI_STDCALL:
+    case FFI_FASTCALL: {
+            static const regex mangling{ R"([_@].+@(\d+))" };
+            static constexpr auto PATTERN_CAPS = 1;
+            cmatch matches;
+            if (regex_match(funcName, matches, mangling)) {
+                assert(matches.size() == 1 + PATTERN_CAPS);
+                auto const paramSize = stoi(matches[1]);
+                auto argSize = 0;
+                for (auto const& arg : args_)
+                    argSize += arg->size();
+                if (paramSize != argSize)
+                    throw K_error("incorrect argument spec?");
+            }
+        } break;
+    case FFI_MS_CDECL:
+    default:
+        // Function names not mangled
+        break;
     }
-    return args;
+#endif
 }
 
 ffi_abi
@@ -164,25 +173,28 @@ q_ffi::Invocator::mapABI(char const* abiType, char const* funcName)
 {
     ffi_abi abi = static_cast<ffi_abi>(FFI_FIRST_ABI - 1);
     if (nullptr != abiType) {
-#ifdef PLATFORM_X86
+#   ifdef PLATFORM_X86
+        static const unordered_map<string, ffi_abi> ABI_TYPES{
+            { "CDECL", FFI_MS_CDECL },
+            { "STDCALL", FFI_STDCALL },
+            { "FASTCALL", FFI_FASTCALL },
+        };
+
+        auto const t = ABI_TYPES.find(abiType);
         if (0 == strcmp(abiType, "")) {
             abi = guessABI(funcName);
         }
-        if (0 == strcmp(abiType, "CDECL")) {
-            abi = FFI_MS_CDECL;
-        }
-        else if (0 == strcmp(abiType, "STDCALL")) {
-            abi = FFI_STDCALL;
-        }
-        else if (0 == strcmp(abiType, "FASTCALL")) {
-            abi = FFI_FASTCALL;
-        }
-        else {
+        else if (t == ABI_TYPES.cend()) {
             ostringstream buffer;
-            buffer << "unknown ABI: `" << abiType << "'";
+            buffer << "unknown ABI type: `" << abiType << "'";
             throw K_error(buffer.str());
         }
-#endif
+        else {
+            return t->second;
+        }
+#   else
+        abi = guessABI(funcName);
+#   endif
     }
     else {
         abi = guessABI(funcName);
@@ -197,11 +209,11 @@ q_ffi::Invocator::guessABI(char const* funcName)
 #ifdef PLATFORM_X86
     assert(nullptr != funcName);
 
-    regex stdcall{ R"(_.+@\d+)" };
+    static const regex stdcall{ R"(_.+@(\d+))" };
     if (regex_match(funcName, stdcall))
         return FFI_STDCALL;
 
-    regex fastcall{ R"(@.+@\d+)" };
+    static const regex fastcall{ R"(@.+@(\d+))" };
     if (regex_match(funcName, fastcall))
         return FFI_FASTCALL;
 
@@ -211,40 +223,38 @@ q_ffi::Invocator::guessABI(char const* funcName)
 #endif
 }
 
-q_ffi::Argument*
-q_ffi::Invocator::createArgument(char typeCode)
+q_ffi::Invocator::argument_type
+q_ffi::Invocator::mapType(char typeCode)
 {
+    constexpr long long(*convert_decimal)(::K, bool) = &q2Decimal;
+    constexpr double(*convert_real)(::K, bool) = &q2Real;
+    constexpr vector<long long>(*convert_decimals)(::K, bool) = &q2Decimals;
+    constexpr vector<double>(*convert_reals)(::K, bool) = &q2Reals;
+
     switch (typeCode) {
     case ' ':
-        return new VoidArgument;
+        return make_unique<VoidArgument>();
     case 'b':
-        return new AtomArgument<TypeTraits<kBoolean>, long long>{
-            ffi_type_sint, &q2Decimal, &q2Decimals
-        };
+        return make_unique<AtomArgument<TypeTraits<kBoolean>, long long>>(
+            ffi_type_sint, convert_decimal, convert_decimals);
     case 'x':
-        return new AtomArgument<TypeTraits<kByte>, long long>{
-            ffi_type_uint8, &q2Decimal, &q2Decimals
-        };
+        return make_unique<AtomArgument<TypeTraits<kByte>, long long>>(
+            ffi_type_uint8, convert_decimal, convert_decimals);
     case 'h':
-        return new AtomArgument<TypeTraits<kShort>, long long>{
-            ffi_type_sint16, &q2Decimal, &q2Decimals
-        };
+        return make_unique<AtomArgument<TypeTraits<kShort>, long long>>(
+            ffi_type_sint16, convert_decimal, convert_decimals);
     case 'i':
-        return new AtomArgument<TypeTraits<kInt>, long long>{
-            ffi_type_sint32, &q2Decimal, &q2Decimals
-        };
+        return make_unique<AtomArgument<TypeTraits<kInt>, long long>>(
+            ffi_type_sint32, convert_decimal, convert_decimals);
     case 'j':
-        return new AtomArgument<TypeTraits<kLong>, long long>{
-            ffi_type_sint64, &q2Decimal, &q2Decimals
-        };
+        return make_unique<AtomArgument<TypeTraits<kLong>, long long>>(
+            ffi_type_sint64, convert_decimal, convert_decimals);
     case 'e':
-        return new AtomArgument<TypeTraits<kReal>, double>{
-            ffi_type_float, &q2Real, &q2Reals
-        };
+        return make_unique<AtomArgument<TypeTraits<kReal>, double>>(
+            ffi_type_float, convert_real, convert_reals);
     case 'f':
-        return new AtomArgument<TypeTraits<kFloat>, double>{
-            ffi_type_double, &q2Real, &q2Reals
-        };
+        return make_unique<AtomArgument<TypeTraits<kFloat>, double>>(
+            ffi_type_double, convert_real, convert_reals);
     default:
         ostringstream buffer;
         buffer << "unsupported type code: '" << typeCode << "'";
