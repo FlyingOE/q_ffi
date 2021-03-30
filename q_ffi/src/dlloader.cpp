@@ -26,7 +26,7 @@ q_ffi::DLLoader::DLLoader(char const* filename)
     }
     else {
 #   ifndef NDEBUG
-        cout << "Loaded DLL `" << filename << "' into 0x" << hex << dll_ << endl;
+        cout << "Loaded DLL `" << filename << "' into 0x" << dll_ << endl;
 #   endif
     }
 }
@@ -35,7 +35,7 @@ q_ffi::DLLoader::~DLLoader()
 {
     if (nullptr != dll_) {
 #   ifndef NDEBUG
-        cout << "Unloading DLL from 0x" << hex << dll_ << endl;
+        cout << "Unloading DLL from 0x" << dll_ << endl;
 #   endif
         dlclose(dll_);
         dll_ = nullptr;
@@ -56,9 +56,9 @@ q_ffi::DLLoader::locateProc(char const* funcName) const
     verifyState();
     dlerror();  // clear error condition
     auto const fp = dlsym(dll_, funcName);
-    string err{ dlerror() };
-    if (err.empty())
-        throw runtime_error(err);
-    else
+    auto err = dlerror();
+    if (nullptr == err)
         return fp;
+    else
+        throw runtime_error(err);
 }
