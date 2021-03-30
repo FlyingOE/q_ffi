@@ -202,6 +202,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return kK(k);
         }
     };
@@ -229,6 +230,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(-type_id == type(k));
             return k->g;
         }
 
@@ -238,6 +240,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return static_cast<pointer>(kG(k));
         }
 
@@ -272,6 +275,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(-type_id == type(k));
             return k->g;
         }
 
@@ -281,6 +285,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return (kG(k));
         }
 
@@ -325,6 +330,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(-type_id == type(k));
             return k->h;
         }
 
@@ -334,6 +340,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return (kH(k));
         }
 
@@ -372,7 +379,14 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
+            return value<type_id>(k);
+        }
+
+        template<TypeId subtype_id = type_id>
+        static reference value(::K k) noexcept
+        {
             assert(nullptr != k);
+            assert(-subtype_id == type(k));
             return k->i;
         }
 
@@ -381,7 +395,14 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
+            return index<type_id>(k);
+        }
+
+        template<TypeId subtype_id = type_id>
+        static pointer index(::K k) noexcept
+        {
             assert(nullptr != k);
+            assert(subtype_id == type(k));
             return (kI(k));
         }
 
@@ -422,7 +443,14 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
+            return value<type_id>(k);
+        }
+
+        template<TypeId subtype_id = type_id>
+        static reference value(::K k) noexcept
+        {
             assert(nullptr != k);
+            assert(-subtype_id == type(k));
             // int64_t & long long are different in GCC!
             return static_cast<reference>(k->j);
         }
@@ -432,7 +460,14 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
+            return index<type_id>(k);
+        }
+
+        template<TypeId subtype_id = type_id>
+        static pointer index(::K k) noexcept
+        {
             assert(nullptr != k);
+            assert(subtype_id == type(k));
             // int64_t & long long are different in GCC!
             return static_cast<pointer>(kJ(k));
         }
@@ -479,6 +514,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(-type_id == type(k));
             return k->e;
         }
 
@@ -488,6 +524,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return (kE(k));
         }
 
@@ -528,7 +565,14 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
+            return value<type_id>(k);
+        }
+
+        template<TypeId subtype_id = type_id>
+        static reference value(::K k) noexcept
+        {
             assert(nullptr != k);
+            assert(-subtype_id == type(k));
             return k->f;
         }
 
@@ -537,7 +581,14 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
+            return index<type_id>(k);
+        }
+
+        template<TypeId subtype_id = type_id>
+        static pointer index(::K k) noexcept
+        {
             assert(nullptr != k);
+            assert(subtype_id == type(k));
             return (kF(k));
         }
 
@@ -582,6 +633,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(-type_id == type(k));
             return reinterpret_cast<reference>(k->g);
         }
 
@@ -603,6 +655,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return reinterpret_cast<pointer>(kG(k));
         }
 
@@ -654,6 +707,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(-type_id == type(k));
             return const_cast<value_type&>(k->s);
         }
 
@@ -676,6 +730,7 @@ namespace q {
         static pointer index(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return const_cast<pointer>(static_cast<char**>(kS(k)));
         }
 
@@ -727,7 +782,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -735,7 +790,8 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            assert(type_id == type(k));
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -787,7 +843,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -795,7 +851,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -847,7 +903,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -855,7 +911,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -910,7 +966,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -918,7 +974,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static value_type null() noexcept
@@ -974,7 +1030,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -982,7 +1038,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -1035,7 +1091,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -1043,7 +1099,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -1095,7 +1151,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -1103,7 +1159,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -1155,7 +1211,7 @@ namespace q {
         using ValueType::value;
         static reference value(::K k) noexcept
         {
-            return BaseTypeTraits::value(k);
+            return BaseTypeTraits::value<type_id>(k);
         }
 
         using IndexableType::list;
@@ -1163,7 +1219,7 @@ namespace q {
         using IndexableType::index;
         static pointer index(::K k) noexcept
         {
-            return BaseTypeTraits::index(k);
+            return BaseTypeTraits::index<type_id>(k);
         }
 
         static constexpr value_type null() noexcept
@@ -1232,6 +1288,7 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             static value_type str = k->s;
             return str;
         }
@@ -1262,12 +1319,14 @@ namespace q {
         static reference value(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return *reinterpret_cast<pointer>(k->G0);
         }
 
-        static std::size_t arity(::K k) noexcept
+        static std::size_t rank(::K k) noexcept
         {
             assert(nullptr != k);
+            assert(type_id == type(k));
             return k->u;
         }
 
