@@ -698,6 +698,10 @@ namespace q {
         {
             return ::ss(const_cast<::S>(s));
         }
+        static value_type intern(value_type s, std::size_t len) noexcept
+        {
+            return ::sn(const_cast<::S>(s), len);
+        }
         static value_type intern(std::string const& s) noexcept
         {
             return intern(s.c_str());

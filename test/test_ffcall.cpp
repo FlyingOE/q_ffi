@@ -1,11 +1,9 @@
 #include <gtest/gtest.h>
-#include <random>
-#include "ffi_api.h"
-#include "kpointer.hpp"
-#include "ktype_traits.hpp"
-#include "type_convert.hpp"
+#include <cstdlib>
+#include <cstdio>
+#include <sstream>
+#include <fstream>
 
-using namespace q;
 using namespace std;
 
 #if defined(_WIN32)
@@ -47,61 +45,94 @@ namespace q_ffi
 
     class FFCallTests : public ::testing::Test
     {
+    protected:
+        string const QBINs
+#           ifdef PLATFORM_X86
+                [2]{ "q32", "q" };
+#           elif PLATFORM_X86_64
+                [2]{ "q64", "q" };
+#           else
+#               error FIXME
+#           endif
+        string const EXTRA_OPTS{ "-s 8" };
+        string const TEST_SCRIPT{ "test_ffcall.q" };
+        string const TEST_DUMP{ "test_ffcall.out" };
+
     private:
-        K_ptr DLL_NAME;
-
-    protected:
-        random_device rd_;  // seed generator
-
-    protected:
-        void SetUp() override {
-            using symbol_type = TypeTraits<kSymbol>;
-            DLL_NAME.reset(
-#       if defined(PLATFORM_WINDOWS)
-                symbol_type::atom("test_q_ffi_dll.dll")
-#       elif defined(PLATFORM_LINUX)
-                symbol_type::atom(getTestDllPath().c_str())
-#       else
-#           error FIXME: add unit test for this platform...
-#       endif
-            );
+        static bool exists(std::string const& filename)
+        {
+            ifstream f{ filename };
+            return f.good();
         }
 
-        void invoke(::K func, ::K retType, ::K argTypes, ::K abi,
-            K_ptr& result, K_ptr const& params)
+        void cleanUp(bool permissive = false)
         {
-            K_ptr functor{ load(DLL_NAME.get(), func, retType, argTypes, abi) };
-            ASSERT_TRUE(functor);
-            result.reset(::dot(functor.get(), params.get()));
+            if (exists(TEST_DUMP)) {
+                auto const status = remove(TEST_DUMP.c_str());
+                if (!permissive)
+                    ASSERT_EQ(status, 0) << strerror(status);
+            }
+        }
+
+        string makeCommand(string const& qbin)
+        {
+            ostringstream buffer;
+            buffer << qbin << ' ' << TEST_SCRIPT << ' ' << EXTRA_OPTS
+                << " 2>&1 > " << TEST_DUMP;
+            return buffer.str();
+        }
+
+        int runCommand(string const& cmd)
+        {
+            cleanUp();
+            cout.flush();
+            auto const status = system(cmd.c_str());
+            cout << ifstream(TEST_DUMP).rdbuf() << endl;
+            return status;
+        }
+
+    protected:
+        void SetUp() override
+        {
+#       if defined(PLATFORM_WINDOWS)
+#       elif defined(PLATFORM_LINUX)
+#       else
+#           error FIXME
+#       endif
+        }
+
+        void TearDown() override
+        {
+            cleanUp(true);
+        }
+
+        void runTest()
+        {
+            bool success = false;
+            for (auto const& qbin : QBINs) {
+                if (success)
+                    continue;
+                auto const status = runCommand(makeCommand(qbin));
+                switch (static_cast<errc>(status)) {
+                case errc{ 0 }:
+                    success = true;
+                    break;
+                case errc::operation_not_permitted:
+                    cerr << "# Failed to start test script with"
+                        << " `" << qbin << "', retrying..." << endl;
+                    continue;
+                default:
+                    ASSERT_EQ(status, 0) << strerror(status);
+                }
+            }
+            EXPECT_TRUE(success) << "Failed to start test script"
+                << " `" << TEST_SCRIPT << "'";
         }
     };
 
-    TEST_F(FFCallTests, add_cdecl)
+    TEST_F(FFCallTests, cdeclAdd)
     {
-#   ifdef PLATFORM_X86_64
-        K_ptr abi{ TypeTraits<kSymbol>::atom("") };
-        K_ptr func{ TypeTraits<kSymbol>::atom("add_double_cdecl") };
-#   else
-        K_ptr abi{ TypeTraits<kSymbol>::atom("cdecl") };
-        K_ptr func{ TypeTraits<kSymbol>::atom("add_double_cdecl") };
-#   endif
-        K_ptr retType{ TypeTraits<kChar>::atom('f') };
-        K_ptr argTypes{ TypeTraits<kChar>::list("ff") };
-        {
-            SCOPED_TRACE("__cdecl: homogeneous arguments, matching types");
-            using value_type = TypeTraits<kFloat>::value_type;
-            uniform_real_distribution<value_type> dist;
-            vector<value_type> pars{ dist(this->rd_), dist(this->rd_) };
-            K_ptr params{ TypeTraits<kFloat>::list(pars.cbegin(), pars.cend()) };
-            K_ptr result{};
-
-/*
-            this->invoke(func.get(), retType.get(), argTypes.get(), abi.get(),
-                result, params);
-            EXPECT_NE(result.get(), nullptr);
-            EXPECT_FLOAT_EQ(q2Real(result.get()), pars[0] + pars[1]);
-*/
-        }
+        runTest();
     }
 
 }//namespace q_ffi

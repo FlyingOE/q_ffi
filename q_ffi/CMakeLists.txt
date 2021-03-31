@@ -61,8 +61,8 @@ target_sources(${target_name}
         ${q_ffi_ALWAYS_BUILD}
 )
 set_target_properties(q_ffi PROPERTIES
-    RESOURCE      "${q_ffi_Q_SCRIPTS}"
-    PUBLIC_HEADER "${q_ffi_PUBLIC_API}"
+    RESOURCE      ${q_ffi_Q_SCRIPTS}
+    PUBLIC_HEADER ${q_ffi_PUBLIC_API}
 )
 target_compile_features(${target_name}
     PUBLIC

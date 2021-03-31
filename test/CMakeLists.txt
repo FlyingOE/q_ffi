@@ -7,6 +7,9 @@ include(GoogleTest)
 
 # Unit test implementation
 add_executable(${target_name})
+set_target_properties(${target_name} PROPERTIES
+    RESOURCE  test_ffcall.q
+)
 target_sources(${target_name}
     PRIVATE
         setup.cpp     setup.hpp
@@ -16,7 +19,7 @@ target_sources(${target_name}
         test_temporals.cpp
         test_type_convert.cpp
         test_libffi.cpp     test_libffi_win.hpp     test_libffi_linux.hpp
-#        test_ffcall.cpp
+        test_ffcall.cpp
 )
 target_include_directories(${target_name}
     PRIVATE
@@ -62,19 +65,27 @@ target_sources(${target_name}_dll
 add_custom_command(
     TARGET ${target_name}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E
-        copy_if_different $<TARGET_FILE:CapitalEdge::q_ffi> $<TARGET_FILE_DIR:${target_name}>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:CapitalEdge::q_ffi> $<TARGET_FILE_DIR:${target_name}>
     COMMENT "Copy all dependent DLLs to the test directory."
 )
 if(WIN32)
     add_custom_command(
         TARGET ${target_name}
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:kdb::C-exe> $<TARGET_FILE_DIR:${target_name}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:kdb::C-exe> $<TARGET_FILE_DIR:${target_name}>
         COMMENT "Copy kdb+ DLL to the test directory."
     )
 endif()
+add_custom_command(
+    TARGET ${target_name}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_PROPERTY:${target_name},SOURCE_DIR>/$<TARGET_PROPERTY:${target_name},RESOURCE>
+            $<TARGET_FILE_DIR:${target_name}>
+    COMMENT "Copy all dependent resources to the test directory."
+)
 
 # Test cases
 add_test(
