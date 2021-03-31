@@ -150,22 +150,29 @@ void
 q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
 {
 #ifdef PLATFORM_X86
+    static constexpr auto MIN_ARG_SIZE = 8; //FIXME: How is this determined?
+    static const regex mangling{ R"([_@].+@(\d+))" };
+    static constexpr auto PATTERN_CAPS = 1;
+    cmatch matches;
     switch (abi) {
     case FFI_STDCALL:
-    case FFI_FASTCALL: {
-            static const regex mangling{ R"([_@].+@(\d+))" };
-            static constexpr auto PATTERN_CAPS = 1;
-            cmatch matches;
-            if (regex_match(funcName, matches, mangling)) {
-                assert(matches.size() == 1 + PATTERN_CAPS);
-                auto const paramSize = stoi(matches[1]);
-                auto argSize = 0;
-                for (auto const& arg : args_)
-                    argSize += arg->size();
-                if (paramSize != argSize)
-                    throw K_error("incorrect argument spec?");
+    case FFI_FASTCALL:
+        if (regex_match(funcName, matches, mangling)) {
+            assert(matches.size() == 1 + PATTERN_CAPS);
+            auto const paramSize = stoi(matches[1]);
+            auto argSize = 0;
+            for (auto const& arg : args_)
+                argSize += arg->size();
+            argSize = max(argSize, MIN_ARG_SIZE);
+            if (paramSize != argSize) {
+                ostringstream buffer;
+                buffer << "incorrect argument spec? ("
+                    << "actual=" << paramSize << ' '
+                    << "expected=" << argSize << ')';
+                throw K_error(buffer.str());
             }
-        } break;
+        }
+        break;
     case FFI_MS_CDECL:
     default:
         // Function names not mangled
