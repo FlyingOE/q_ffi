@@ -4,9 +4,11 @@
 #include "ktype_traits.hpp"
 #include "kerror.hpp"
 
+using namespace q;
 using namespace std;
 
-void q::details::signalError(char const* message) noexcept(false)
+void
+q::details::signalError(char const* message) noexcept(false)
 {
     throw K_error(message);
 }
@@ -24,7 +26,8 @@ void q::details::signalError(char const* message) noexcept(false)
 
 #pragma region q <==> C++ decimal
 
-long long q::q2Decimal(::K x, bool /*dryRun*/) noexcept(false)
+long long
+q::q2Decimal(::K x, bool /*dryRun*/) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil decimal");
@@ -41,7 +44,8 @@ long long q::q2Decimal(::K x, bool /*dryRun*/) noexcept(false)
     }
 }
 
-vector<long long> q::q2Decimals(::K x, bool dryRun) noexcept(false)
+vector<long long>
+q::q2Decimals(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil decimal list");
@@ -67,7 +71,8 @@ vector<long long> q::q2Decimals(::K x, bool dryRun) noexcept(false)
 
 #pragma region q <==> C++ floating-point
 
-double q::q2Real(::K x, bool dryRun) noexcept(false)
+double
+q::q2Real(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil floating-point");
@@ -87,7 +92,8 @@ double q::q2Real(::K x, bool dryRun) noexcept(false)
     }
 }
 
-vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
+vector<double>
+q::q2Reals(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil floating-point list");
@@ -121,7 +127,8 @@ vector<double> q::q2Reals(::K x, bool dryRun) noexcept(false)
 
 #pragma region q <==> C++ char
 
-char q::q2Char(::K x, bool /*dryRun*/) noexcept(false)
+char
+q::q2Char(::K x, bool /*dryRun*/) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil char");
@@ -138,7 +145,8 @@ char q::q2Char(::K x, bool /*dryRun*/) noexcept(false)
 
 #pragma region q <==> C++ string
 
-string q::q2String(::K x, bool dryRun) noexcept(false)
+string
+q::q2String(::K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil symbol/char list");
@@ -156,7 +164,8 @@ string q::q2String(::K x, bool dryRun) noexcept(false)
     }
 }
 
-vector<string> q::q2Strings(K x, bool dryRun) noexcept(false)
+vector<string>
+q::q2Strings(K x, bool dryRun) noexcept(false)
 {
     if (Nil == x) {
         throw K_error("nil symbol list/char lists");

@@ -2,6 +2,7 @@
 #include <regex>
 #include "kerror.hpp"
 
+using namespace q;
 using namespace std;
 using namespace std::chrono;
 
@@ -11,12 +12,12 @@ namespace
 {
     ::J compose_timestamp(long long date, long long time) noexcept
     {
-        return date * q::time_scale_v<nanoseconds, date::days> + time;
+        return date * time_scale_v<nanoseconds, date::days> + time;
     }
 
     ::J parse_raw_timestamp(char const* yyyymmddhhmmssf9) noexcept
     {
-        using Traits = q::TypeTraits<q::kTimestamp>;
+        using Traits = TypeTraits<kTimestamp>;
 
         static const regex separator{ "'" };
         static const regex pattern{ R"(^(\d{8})(\d{6}\d{9})$)" };
@@ -34,17 +35,17 @@ namespace
             return Traits::null();
         assert(1 + PATTERN_CAPS == matches.size());
 
-        auto const date = q::TypeTraits<q::kDate>::parse(matches.str(1).c_str());
-        auto const time = q::TypeTraits<q::kTimespan>::parse(stoll(matches.str(2)));
-        if (q::TypeTraits<q::kDate>::null() == date || q::TypeTraits<q::kTimespan>::null() == time)
+        auto const date = TypeTraits<kDate>::parse(matches.str(1).c_str());
+        auto const time = TypeTraits<kTimespan>::parse(stoll(matches.str(2)));
+        if (TypeTraits<kDate>::null() == date || TypeTraits<kTimespan>::null() == time)
             return Traits::null();
         return compose_timestamp(date, time);
     }
 
 }//namespace /*anonymous*/
 
-q::TypeTraits<q::kTimestamp>::value_type
-q::TypeTraits<q::kTimestamp>::encode(long long year, long long month, long long day,
+TypeTraits<kTimestamp>::value_type
+TypeTraits<kTimestamp>::encode(long long year, long long month, long long day,
     long long hour, long long minute, long long second, long long nanos)
 noexcept
 {
@@ -54,8 +55,8 @@ noexcept
     return compose_timestamp(date, time);
 }
 
-q::TypeTraits<q::kTimestamp>::value_type
-q::TypeTraits<q::kTimestamp>::encode(q::TypeTraits<q::kTimestamp>::temporal_type const& p)
+TypeTraits<kTimestamp>::value_type
+TypeTraits<kTimestamp>::encode(TypeTraits<kTimestamp>::temporal_type const& p)
 noexcept
 {
     auto const d = floor<date::days>(p);
@@ -66,15 +67,15 @@ noexcept
         hmsf.subseconds().count());
 }
 
-q::TypeTraits<q::kTimestamp>::temporal_type
-q::TypeTraits<q::kTimestamp>::decode(q::TypeTraits<q::kTimestamp>::const_reference p)
+TypeTraits<kTimestamp>::temporal_type
+TypeTraits<kTimestamp>::decode(TypeTraits<kTimestamp>::const_reference p)
 noexcept
 {
-    return Timestamp{ q::Date{ Epoch } } + Nanoseconds{ p };
+    return Timestamp{ Date{ Epoch } } + Nanoseconds{ p };
 }
 
-q::TypeTraits<q::kTimestamp>::value_type
-q::TypeTraits<q::kTimestamp>::parse(char const* ymdhmsf, bool raw)
+TypeTraits<kTimestamp>::value_type
+TypeTraits<kTimestamp>::parse(char const* ymdhmsf, bool raw)
 noexcept
 {
     using Traits = TypeTraits<kTimestamp>;
@@ -103,24 +104,24 @@ noexcept
 
 #pragma region <kMonth> conversions
 
-q::TypeTraits<q::kMonth>::value_type
-q::TypeTraits<q::kMonth>::encode(int year, int month)
+TypeTraits<kMonth>::value_type
+TypeTraits<kMonth>::encode(int year, int month)
 noexcept
 {
     return (year - int(Epoch.year())) * time_scale_v<date::months, date::years>
         + (month - 1);
 }
 
-q::TypeTraits<q::kMonth>::value_type
-q::TypeTraits<q::kMonth>::encode(q::TypeTraits<q::kMonth>::temporal_type const& m)
+TypeTraits<kMonth>::value_type
+TypeTraits<kMonth>::encode(TypeTraits<kMonth>::temporal_type const& m)
 noexcept
 {
     date::year_month_day const ym{ m };
     return encode(int(ym.year()), unsigned(ym.month()));
 }
 
-q::TypeTraits<q::kMonth>::temporal_type
-q::TypeTraits<q::kMonth>::decode(q::TypeTraits<q::kMonth>::const_reference m)
+TypeTraits<kMonth>::temporal_type
+TypeTraits<kMonth>::decode(TypeTraits<kMonth>::const_reference m)
 noexcept
 {
     auto yyyy = (m + 1) / time_scale_v<date::months, date::years> + int(Epoch.year());
@@ -132,15 +133,15 @@ noexcept
     return Date{ date::year{ yyyy } / mm / 1 };
 }
 
-q::TypeTraits<q::kMonth>::value_type
-q::TypeTraits<q::kMonth>::parse(int yyyymm)
+TypeTraits<kMonth>::value_type
+TypeTraits<kMonth>::parse(int yyyymm)
 noexcept
 {
     return encode(yyyymm / 100, yyyymm % 100);
 }
 
-q::TypeTraits<q::kMonth>::value_type
-q::TypeTraits<q::kMonth>::parse(char const* ym)
+TypeTraits<kMonth>::value_type
+TypeTraits<kMonth>::parse(char const* ym)
 noexcept
 {
     using Traits = TypeTraits<kMonth>;
@@ -164,23 +165,23 @@ noexcept
 
 #pragma region <kDate> conversions
 
-q::TypeTraits<q::kDate>::value_type
-q::TypeTraits<q::kDate>::encode(int year, int month, int day)
+TypeTraits<kDate>::value_type
+TypeTraits<kDate>::encode(int year, int month, int day)
 noexcept
 {
     return ::ymd(year, month, day);
 }
 
-q::TypeTraits<q::kDate>::value_type
-q::TypeTraits<q::kDate>::encode(q::TypeTraits<q::kDate>::temporal_type const& d)
+TypeTraits<kDate>::value_type
+TypeTraits<kDate>::encode(TypeTraits<kDate>::temporal_type const& d)
 noexcept
 {
     ::date::year_month_day const ymd{ d };
     return encode(int(ymd.year()), unsigned(ymd.month()), unsigned(ymd.day()));
 }
 
-q::TypeTraits<q::kDate>::temporal_type
-q::TypeTraits<q::kDate>::decode(q::TypeTraits<q::kDate>::const_reference d)
+TypeTraits<kDate>::temporal_type
+TypeTraits<kDate>::decode(TypeTraits<kDate>::const_reference d)
 noexcept
 {
     auto yyyymmdd = ::dj(d);
@@ -189,15 +190,15 @@ noexcept
     return Date{ date::year{ y } / (yyyymmdd / 100) / (yyyymmdd % 100) };
 }
 
-q::TypeTraits<q::kDate>::value_type
-q::TypeTraits<q::kDate>::parse(int yyyymmdd)
+TypeTraits<kDate>::value_type
+TypeTraits<kDate>::parse(int yyyymmdd)
 noexcept
 {
     return encode(yyyymmdd / 100'00, yyyymmdd / 100 % 100, yyyymmdd % 100);
 }
 
-q::TypeTraits<q::kDate>::value_type
-q::TypeTraits<q::kDate>::parse(char const* ymd) noexcept
+TypeTraits<kDate>::value_type
+TypeTraits<kDate>::parse(char const* ymd) noexcept
 {
     using Traits = TypeTraits<kDate>;
 
@@ -225,13 +226,13 @@ namespace
 {
     ::F compose_datetime(int date, int time) noexcept
     {
-        return date + time / ::F(q::time_scale_v<milliseconds, date::days>);
+        return date + time / ::F(time_scale_v<milliseconds, date::days>);
     }
 
 }//namespace /*anonymous* /
 
-q::TypeTraits<q::kDatetime>::value_type
-q::TypeTraits<q::kDatetime>::encode(int year, int month, int day,
+TypeTraits<kDatetime>::value_type
+TypeTraits<kDatetime>::encode(int year, int month, int day,
     int hour, int minute, int second, int millis)
 noexcept
 {
@@ -240,8 +241,8 @@ noexcept
     return compose_datetime(date, time);
 }
 
-q::TypeTraits<q::kDatetime>::value_type
-q::TypeTraits<q::kDatetime>::encode(q::TypeTraits<q::kDatetime>::temporal_type const& z)
+TypeTraits<kDatetime>::value_type
+TypeTraits<kDatetime>::encode(TypeTraits<kDatetime>::temporal_type const& z)
 noexcept
 {
     auto const d = floor<date::days>(z);
@@ -252,16 +253,16 @@ noexcept
         int(hmsf.subseconds().count()));
 }
 
-q::TypeTraits<q::kDatetime>::temporal_type
-q::TypeTraits<q::kDatetime>::decode(q::TypeTraits<q::kDatetime>::const_reference z)
+TypeTraits<kDatetime>::temporal_type
+TypeTraits<kDatetime>::decode(TypeTraits<kDatetime>::const_reference z)
 noexcept
 {
     return DateTime{ Date{ Epoch } } + milliseconds{
         (long long)(round(z * time_scale_v<milliseconds, date::days>)) };
 }
 
-q::TypeTraits<q::kDatetime>::value_type
-q::TypeTraits<q::kDatetime>::parse(long long yyyymmddhhmmssf3)
+TypeTraits<kDatetime>::value_type
+TypeTraits<kDatetime>::parse(long long yyyymmddhhmmssf3)
 noexcept
 {
     auto const date = TypeTraits<kDate>::parse(static_cast<::I>(yyyymmddhhmmssf3 / 100'00'00'000LL));
@@ -269,8 +270,8 @@ noexcept
     return compose_datetime(date, time);
 }
 
-q::TypeTraits<q::kDatetime>::value_type
-q::TypeTraits<q::kDatetime>::parse(char const* ymdhmsf)
+TypeTraits<kDatetime>::value_type
+TypeTraits<kDatetime>::parse(char const* ymdhmsf)
 noexcept
 {
     using Traits = TypeTraits<kDatetime>;
@@ -296,8 +297,8 @@ noexcept
 
 #pragma region <kTimespan> conversions
 
-q::TypeTraits<q::kTimespan>::value_type
-q::TypeTraits<q::kTimespan>::encode(long long day,
+TypeTraits<kTimespan>::value_type
+TypeTraits<kTimespan>::encode(long long day,
     long long hour, long long minute, long long second, long long nanos)
 noexcept
 {
@@ -307,8 +308,8 @@ noexcept
         ) * time_scale_v<nanoseconds, seconds> + nanos;
 }
 
-q::TypeTraits<q::kTimespan>::value_type
-q::TypeTraits<q::kTimespan>::encode(q::TypeTraits<q::kTimespan>::temporal_type const& n)
+TypeTraits<kTimespan>::value_type
+TypeTraits<kTimespan>::encode(TypeTraits<kTimespan>::temporal_type const& n)
 noexcept
 {
     date::hh_mm_ss<nanoseconds> const hmsf{ n };
@@ -317,15 +318,15 @@ noexcept
             hmsf.seconds().count(), hmsf.subseconds().count());
 }
 
-q::TypeTraits<q::kTimespan>::temporal_type
-q::TypeTraits<q::kTimespan>::decode(q::TypeTraits<q::kTimespan>::const_reference n)
+TypeTraits<kTimespan>::temporal_type
+TypeTraits<kTimespan>::decode(TypeTraits<kTimespan>::const_reference n)
 noexcept
 {
     return Nanoseconds{ n };
 }
 
-q::TypeTraits<q::kTimespan>::value_type
-q::TypeTraits<q::kTimespan>::parse(long long hhmmssf9)
+TypeTraits<kTimespan>::value_type
+TypeTraits<kTimespan>::parse(long long hhmmssf9)
 noexcept
 {
     auto const nanos = abs(hhmmssf9) % 1000'000'000uLL;
@@ -334,8 +335,8 @@ noexcept
         * encode(0, hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100, nanos);
 }
 
-q::TypeTraits<q::kTimespan>::value_type
-q::TypeTraits<q::kTimespan>::parse(char const* dhmsf)
+TypeTraits<kTimespan>::value_type
+TypeTraits<kTimespan>::parse(char const* dhmsf)
 noexcept
 {
     using Traits = TypeTraits<kTimespan>;
@@ -365,15 +366,15 @@ noexcept
 
 #pragma region <kMinute> conversions
 
-q::TypeTraits<q::kMinute>::value_type
-q::TypeTraits<q::kMinute>::encode(int hour, int minute)
+TypeTraits<kMinute>::value_type
+TypeTraits<kMinute>::encode(int hour, int minute)
 noexcept
 {
     return hour * time_scale_v<minutes, hours> + minute;
 }
 
-q::TypeTraits<q::kMinute>::value_type
-q::TypeTraits<q::kMinute>::encode(q::TypeTraits<q::kMinute>::temporal_type const& u)
+TypeTraits<kMinute>::value_type
+TypeTraits<kMinute>::encode(TypeTraits<kMinute>::temporal_type const& u)
 noexcept
 {
     date::hh_mm_ss<Seconds> hms{ u };
@@ -381,22 +382,22 @@ noexcept
         * encode(hms.hours().count(), hms.minutes().count());
 }
 
-q::TypeTraits<q::kMinute>::temporal_type
-q::TypeTraits<q::kMinute>::decode(q::TypeTraits<q::kMinute>::const_reference u)
+TypeTraits<kMinute>::temporal_type
+TypeTraits<kMinute>::decode(TypeTraits<kMinute>::const_reference u)
 noexcept
 {
     return duration_cast<Seconds>(minutes{ u });
 }
 
-q::TypeTraits<q::kMinute>::value_type
-q::TypeTraits<q::kMinute>::parse(int hhmm)
+TypeTraits<kMinute>::value_type
+TypeTraits<kMinute>::parse(int hhmm)
 noexcept
 {
     return encode(hhmm / 100, hhmm % 100);
 }
 
-q::TypeTraits<q::kMinute>::value_type
-q::TypeTraits<q::kMinute>::parse(char const* hm)
+TypeTraits<kMinute>::value_type
+TypeTraits<kMinute>::parse(char const* hm)
 noexcept
 {
     using Traits = TypeTraits<kMinute>;
@@ -421,16 +422,16 @@ noexcept
 
 #pragma region <kSecond> conversions
 
-q::TypeTraits<q::kSecond>::value_type
-q::TypeTraits<q::kSecond>::encode(int hour, int minute, int second)
+TypeTraits<kSecond>::value_type
+TypeTraits<kSecond>::encode(int hour, int minute, int second)
 noexcept
 {
     return (hour * time_scale_v<minutes, hours> + minute
         ) * time_scale_v<seconds, minutes> + second;
 }
 
-q::TypeTraits<q::kSecond>::value_type
-q::TypeTraits<q::kSecond>::encode(q::TypeTraits<q::kSecond>::temporal_type const& v)
+TypeTraits<kSecond>::value_type
+TypeTraits<kSecond>::encode(TypeTraits<kSecond>::temporal_type const& v)
 noexcept
 {
     date::hh_mm_ss<Seconds> const hms{ v };
@@ -438,22 +439,22 @@ noexcept
         * encode(hms.hours().count(), hms.minutes().count(), int(hms.seconds().count()));
 }
 
-q::TypeTraits<q::kSecond>::temporal_type
-q::TypeTraits<q::kSecond>::decode(q::TypeTraits<q::kSecond>::const_reference v)
+TypeTraits<kSecond>::temporal_type
+TypeTraits<kSecond>::decode(TypeTraits<kSecond>::const_reference v)
 noexcept
 {
     return Seconds{ v };
 }
 
-q::TypeTraits<q::kSecond>::value_type
-q::TypeTraits<q::kSecond>::parse(int hhmmss)
+TypeTraits<kSecond>::value_type
+TypeTraits<kSecond>::parse(int hhmmss)
 noexcept
 {
     return encode(hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100);
 }
 
-q::TypeTraits<q::kSecond>::value_type
-q::TypeTraits<q::kSecond>::parse(char const* hms)
+TypeTraits<kSecond>::value_type
+TypeTraits<kSecond>::parse(char const* hms)
 noexcept
 {
     using Traits = TypeTraits<kSecond>;
@@ -479,8 +480,8 @@ noexcept
 
 #pragma region <kTime> conversions
 
-q::TypeTraits<q::kTime>::value_type
-q::TypeTraits<q::kTime>::encode(int hour, int minute, int second, int millis)
+TypeTraits<kTime>::value_type
+TypeTraits<kTime>::encode(int hour, int minute, int second, int millis)
 noexcept
 {
     auto const t = ((hour * time_scale_v<minutes, hours> + minute
@@ -490,8 +491,8 @@ noexcept
     return static_cast<::I>(t);
 }
 
-q::TypeTraits<q::kTime>::value_type
-q::TypeTraits<q::kTime>::encode(q::TypeTraits<q::kTime>::temporal_type const& t)
+TypeTraits<kTime>::value_type
+TypeTraits<kTime>::encode(TypeTraits<kTime>::temporal_type const& t)
 noexcept
 {
     date::hh_mm_ss<Milliseconds> hmsf{ t };
@@ -500,15 +501,15 @@ noexcept
             int(hmsf.seconds().count()), int(hmsf.subseconds().count()));
 }
 
-q::TypeTraits<q::kTime>::temporal_type
-q::TypeTraits<q::kTime>::decode(q::TypeTraits<q::kTime>::const_reference t)
+TypeTraits<kTime>::temporal_type
+TypeTraits<kTime>::decode(TypeTraits<kTime>::const_reference t)
 noexcept
 {
     return Milliseconds{ t };
 }
 
-q::TypeTraits<q::kTime>::value_type
-q::TypeTraits<q::kTime>::parse(int hhmmssf3)
+TypeTraits<kTime>::value_type
+TypeTraits<kTime>::parse(int hhmmssf3)
 noexcept
 {
     auto const millis = hhmmssf3 % 1000;
@@ -516,8 +517,8 @@ noexcept
     return encode(hhmmss / 100'00, hhmmss / 100 % 100, hhmmss % 100, millis);
 }
 
-q::TypeTraits<q::kTime>::value_type
-q::TypeTraits<q::kTime>::parse(char const* hmsf)
+TypeTraits<kTime>::value_type
+TypeTraits<kTime>::parse(char const* hmsf)
 noexcept
 {
     using Traits = TypeTraits<kTime>;

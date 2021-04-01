@@ -1,6 +1,7 @@
 #include "ktype_traits.hpp"
 #include <regex>
 
+using namespace q;
 using namespace std;
 using namespace std::string_literals;
 
@@ -34,7 +35,7 @@ namespace q
 
 }//namespace q
 
-q::K_ptr
+K_ptr
 q::error(char const* msg, bool sys) noexcept
 {
     return TypeTraits<kError>::atom(msg, sys);
@@ -43,27 +44,27 @@ q::error(char const* msg, bool sys) noexcept
 #pragma region *_to_str implementations
 namespace
 {
-    template<q::TypeId tid>
+    template<TypeId tid>
     string atom_to_str(::K const k)
     {
-        using Traits = q::TypeTraits<tid>;
-        assert(nullptr != k && 0 > q::type(k));
+        using Traits = TypeTraits<tid>;
+        assert(nullptr != k && 0 > type(k));
         return Traits::to_str(Traits::value(k));
     }
 
-    template<q::TypeId tid>
+    template<TypeId tid>
     string list_to_str(::K const k)
     {
-        using Traits = q::TypeTraits<tid>;
-        assert(nullptr != k && 0 < q::type(k));
-        auto const len = q::count(k);
+        using Traits = TypeTraits<tid>;
+        assert(nullptr != k && 0 < type(k));
+        auto const len = count(k);
         if (0 == len) return "";
 
         char const* delimiter{ nullptr };
         switch (tid)
         {
-        case q::kChar:
-        case q::kSymbol:
+        case kChar:
+        case kSymbol:
             delimiter = "";
             break;
         default:
@@ -79,48 +80,48 @@ namespace
 
     string mixed_to_str(::K const k)
     {
-        assert(nullptr != k && q::kMixed == q::type(k));
+        assert(nullptr != k && kMixed == type(k));
         return "<kMixed>";
     }
 
     string table_to_str(::K const k)
     {
-        assert(nullptr != k && q::kTable == q::type(k));
+        assert(nullptr != k && kTable == type(k));
         return "<kTable>";
     }
 
     string dict_to_str(::K const k)
     {
-        assert(nullptr != k && q::kDict == q::type(k));
+        assert(nullptr != k && kDict == type(k));
         return "<kDict>";
     }
 
     string any_to_str(::K const k)
     {
-        assert(nullptr != k && 0 != q::type(k));
-        auto const scalar = 0 > q::type(k);
+        assert(nullptr != k && 0 != type(k));
+        auto const scalar = 0 > type(k);
 
         ostringstream buffer;
         buffer << '{';
 
         // Attribute & data type
         if (k->u) buffer << k->u << '#';
-        buffer << '<' << q::type(k) << '>';
+        buffer << '<' << type(k) << '>';
 
         // Contents & pointer/count
         if (scalar) {
             auto const bytes = max({ sizeof(k->j), sizeof(k->f), sizeof(k->s), sizeof(k->k) });
-            auto const p = &q::TypeTraits<q::kByte>::value(k);
+            auto const p = &TypeTraits<kByte>::value(k);
             for (auto i = 0u; i < bytes; ++i)
-                buffer << q::TypeTraits<q::kByte>::to_str(p[i]);
+                buffer << TypeTraits<kByte>::to_str(p[i]);
         }
         else {
             auto const bytes = sizeof(kG(k));
-            auto const p = (typename q::TypeTraits<q::kByte>::const_pointer)(&(kG(k)));
+            auto const p = (typename TypeTraits<kByte>::const_pointer)(&(kG(k)));
             if (!scalar) buffer << '*';
             for (auto i = 0u; i < bytes; ++i)
-                buffer << q::TypeTraits<q::kByte>::to_str(p[i]);
-            buffer << '[' << q::count(k) << ']';
+                buffer << TypeTraits<kByte>::to_str(p[i]);
+            buffer << '[' << count(k) << ']';
         }
 
         // Reference count
