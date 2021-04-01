@@ -149,7 +149,7 @@ namespace q_ffi
                 if (0 == status)
                     break;
             }
-            EXPECT_EQ(status, 0) << "Test script `" << TEST_SCRIPT << "' failed";
+            ASSERT_EQ(status, 0) << "Test script `" << TEST_SCRIPT << "' failed";
         }
     };
 

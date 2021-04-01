@@ -24,7 +24,7 @@ mem[mid+:1]:.mem.sample[]
 mem_check .mem.verify;
 
 .test.log hr#"-";
-TESTS:{x$y%10}[RET_TYPE;](0N;count ARG_TYPES)#(100*count ARG_TYPES)?RET_TYPE$1e300
+TESTS:{x$y%10}[RET_TYPE;](0N;count ARG_TYPES)#(100*count ARG_TYPES)?RET_TYPE$1e30
 mem[mid :0]:.mem.sample[]
 results:tester ./:TESTS
 mem[mid+:1]:.mem.sample[]
@@ -41,15 +41,15 @@ results:.[tester;]peach TESTS
 mem[mid+:1]:.mem.sample[]
 .test.log"\n",.Q.s enlist mem_check .mem.delta;
 
-demote:$[   // Truncate values to reverse q's auto type promotion
-  "x"~RET_TYPE;(last 0x0 vs)each;
-  "h"~RET_TYPE;(0x0 sv -2#0x0 vs)each;
-  "i"~RET_TYPE;(0x0 sv -4#0x0 vs)each;
-  "j"~RET_TYPE;::;
-  "e"~RET_TYPE;`real$;
-  "f"~RET_TYPE;::;
+simulate:$[ // Truncate values to reverse q's auto type promotion
+  "x"~RET_TYPE;(last 0x0 vs(+).)each;
+  "h"~RET_TYPE;(0x0 sv -2#0x0 vs(+).)each;
+  "i"~RET_TYPE;(0x0 sv -4#0x0 vs(+).)each;
+  "j"~RET_TYPE;(+)./:;
+  "e"~RET_TYPE;`real$(+)./:;
+  "f"~RET_TYPE;(+)./:;
     '"nyi: add support for type \"",RET_TYPE,"\"" ]
-expected:demote(+). flip TESTS;
+expected:simulate TESTS;
 if[any not ok:results=expected;
   errs:{ "\t",.Q.s1(TESTS;results;expected)@\:x }each where not ok;
   '"incorrect result(s):\n","\n"sv errs ]
