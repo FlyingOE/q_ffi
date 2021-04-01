@@ -1,0 +1,8 @@
+/# vim: set et noai ts=2 sw=2 syntax=cmake:
+
+@TEST_LIB@
+/////////////////////////////////////////////////////////////////////////////
+
+if[not system"s";
+  '"Start ",string[.z.f]," with -s!" ];
+

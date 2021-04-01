@@ -1,49 +1,10 @@
+/# vim: set et noai ts=2 sw=2 syntax=cmake:
+
+@TEST_LIB@
+/////////////////////////////////////////////////////////////////////////////
+
 if[not system"s";
   '"Start ",string[.z.f]," with -s!" ];
-
-/////////////////////////////////////////////////////////////////////////////
-\d .util
-
-lib:{ `$$[.z.o like"w*";"";"lib"],$[-11h=type x;string x;x] }
-
-/////////////////////////////////////////////////////////////////////////////
-\d .
-
-DLL:.util.lib`q_ffi
-LOADER:`load
-
-TEST_DLL:.util.lib`test_q_ffi_dll
-if[4>count .z.x; show .z.x;
-  '"q test_ffcall.q -q -s 4 <func> <abi> <retType> <argTypes>" ]
-TEST_FUNC:`$.z.x 0
-ABI:`$.z.x 1
-RET_TYPE:first .z.x 2
-ARG_TYPES:.z.x 3
-
-/////////////////////////////////////////////////////////////////////////////
-\d .test
-
-.test.log:{ -2"# ",$[10h=type x;x;.Q.s1 x]; }
-indent:{ "\n"sv"\t",/:"\n"vs x }
-
-assert:{[cond;msg] if[not cond;'msg]; }
-assert_eq:{[x;y] assert[    x~y;"(",.Q.s1[x],") != (",.Q.s1[y],")"] }
-assert_ne:{[x;y] assert[not x~y;"(",.Q.s1[x],") == (",.Q.s1[y],")"] }
-
-/////////////////////////////////////////////////////////////////////////////
-\d .mem
-
-sample:.Q.w
-
-delta:{[m0;m1] where[0<>d]#d:m1-m0 }
-
-verify:{[m0;m1]
-  .test.assert[not count d;
-    "unexpected memory overhead:\n",.test.indent .Q.s d:delta[m0;m1] ]
- }
-
-/////////////////////////////////////////////////////////////////////////////
-\d .
 
 mem:{.mem.sample[]}each til 10
 mid:-1

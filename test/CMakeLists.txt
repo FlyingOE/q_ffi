@@ -7,9 +7,6 @@ include(GoogleTest)
 
 # Unit test implementation
 add_executable(${target_name})
-set_target_properties(${target_name} PROPERTIES
-    RESOURCE  test_ffcall.q
-)
 target_sources(${target_name}
     PRIVATE
         setup.cpp     setup.hpp
@@ -51,7 +48,7 @@ if(WIN32)
     )
 endif()
 
-# Extra test assets
+# Test DLL
 add_library(${target_name}_dll SHARED)
 add_dependencies(${target_name}
     ${target_name}_dll
@@ -61,30 +58,47 @@ target_sources(${target_name}_dll
         dll/test_dll.cpp    dll/test_dll_win.hpp    dll/test_dll_linux.hpp
 )
 
+# q test scripst
+set(test_scripts
+    test_ffcall_add.q
+    test_ffcall_args.q
+)
+set(test_scripts_src
+    test.lib.q
+)
+foreach(script ${test_scripts})
+    list(APPEND test_scripts_src ${script}.in)
+endforeach()
+set_target_properties(${target_name} PROPERTIES
+    RESOURCE  "${test_scripts_src}"
+)
+
 # Copy test dependencies
-add_custom_command(
-    TARGET ${target_name}
-    POST_BUILD
+add_custom_target(${target_name}.q_ffi ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:CapitalEdge::q_ffi> $<TARGET_FILE_DIR:${target_name}>
-    COMMENT "Copy all dependent DLLs to the test directory."
+    DEPENDS CapitalEdge::q_ffi
+    COMMENT "Copy all q_ffi binaries into the test directory."
+    VERBATIM
 )
 if(WIN32)
-    add_custom_command(
-        TARGET ${target_name}
-        POST_BUILD
+    add_custom_target(${target_name}.kdb ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 $<TARGET_FILE:kdb::C-exe> $<TARGET_FILE_DIR:${target_name}>
-        COMMENT "Copy kdb+ DLL to the test directory."
+        DEPENDS kdb::C-exe
+        COMMENT "Copy kdb+ runtime into the test directory."
+        VERBATIM
     )
 endif()
-add_custom_command(
-    TARGET ${target_name}
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_PROPERTY:${target_name},SOURCE_DIR>/$<TARGET_PROPERTY:${target_name},RESOURCE>
-            $<TARGET_FILE_DIR:${target_name}>
-    COMMENT "Copy all dependent resources to the test directory."
+add_custom_target(${target_name}.test-scripts ALL
+    COMMAND ${CMAKE_COMMAND}
+            -D "test_scripts=${test_scripts}"
+            -D "binary_dir=${CMAKE_CURRENT_BINARY_DIR}"
+            -P test_ffcall.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${test_scripts_src}
+    COMMENT "Generate q test scripts into the test directory."
+    VERBATIM
 )
 
 # Test cases
