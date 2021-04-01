@@ -700,7 +700,8 @@ namespace q {
         }
         static value_type intern(value_type s, std::size_t len) noexcept
         {
-            return ::sn(const_cast<::S>(s), len);
+            assert(len <= std::numeric_limits<::I>::max());
+            return ::sn(const_cast<::S>(s), static_cast<::I>(len));
         }
         static value_type intern(std::string const& s) noexcept
         {

@@ -39,7 +39,7 @@ namespace q_ffi
     public:
         Invocator(char const* dll);
 
-        std::size_t rank() const;
+        unsigned int rank() const;
 
         void load(char const* func,
             char retType, char const* argTypes, char const* abiType = nullptr);

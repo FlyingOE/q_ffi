@@ -34,10 +34,11 @@ q_ffi::Invocator::Invocator(char const* dll)
     : dll_(dll), func_{ nullptr }, ret_{}, args_{}, ffi_{}
 {}
 
-size_t
+unsigned int
 q_ffi::Invocator::rank() const
 {
-    return args_.size();
+    assert(args_.size() <= numeric_limits<unsigned int>::max());
+    return static_cast<unsigned int>(args_.size());
 }
 
 void
@@ -48,9 +49,7 @@ q_ffi::Invocator::load(char const* func, char retType, char const* argTypes, cha
         setReturnType(retType);
         setArgumentTypes(argTypes);
         auto const abi = mapABI(abiType, func);
-#   ifdef PLATFORM_X86
         verifyArgumentTypes(func, abi);
-#   endif
         prepareFFI(abi);
     }
     catch (runtime_error const& ex) {
@@ -178,6 +177,11 @@ q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
         // Function names not mangled
         break;
     }
+#else
+#   ifdef _MSC_VER
+        funcName;   // C4100
+        abi;        // C4100
+#   endif
 #endif
 }
 
@@ -232,6 +236,9 @@ q_ffi::Invocator::guessABI(char const* funcName)
 
     return FFI_MS_CDECL;
 #else
+#   ifdef _MSC_VER
+        funcName;   // C4100
+#   endif
     return FFI_DEFAULT_ABI;
 #endif
 }

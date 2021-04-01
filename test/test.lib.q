@@ -35,8 +35,11 @@ sample:.Q.w
 delta:{[m0;m1] where[0<>d]#d:m1-m0 }
 
 verify:{[m0;m1]
+  d:delta[m0;m1];
+  if[.z.o like"w64";  /FIXME: w64 "used" memory always increases after 2:
+    :.test.log"\n",.Q.s enlist d ];
   .test.assert[not count d;
-    "unexpected memory overhead:\n",.test.indent .Q.s d:delta[m0;m1] ]
+    "unexpected memory overhead:\n",.test.indent .Q.s enlist d ]
  }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -20,43 +20,25 @@ using namespace std;
 #   else
 #       define PLATFORM_X86
 #   endif
-#   include <unistd.h>
 #else
 #   error FIXME: add unit test for this platform...
 #endif
 
 namespace q_ffi
 {
-#ifdef PLATFORM_LINUX
-    static string getTestDllPath()
-    {
-        char path[PATH_MAX + 1]{};
-        auto n = readlink("/proc/self/exe", path, PATH_MAX);
-        assert(n <= PATH_MAX);
-
-        char* p = strrchr(path, '/');
-        assert(p != nullptr && p <= path + PATH_MAX);
-
-        auto const DLL_NAME = "libtest_q_ffi_dll.so";
-        strncpy(p + 1, DLL_NAME, PATH_MAX - strlen(path));
-        return path;
-    }
-#endif
-
     class FFCallTests : public ::testing::Test
     {
     protected:
         string const QBINs
-#           ifdef PLATFORM_X86
+#           if defined(PLATFORM_X86)
                 [2]{ "q32", "q" };
-#           elif PLATFORM_X86_64
+#           elif defined(PLATFORM_X86_64)
                 [2]{ "q64", "q" };
 #           else
 #               error FIXME
 #           endif
         string const EXTRA_OPTS{ "-s 8" };
-        string const TEST_SCRIPT{ "test_ffcall.q" };
-        string const TEST_DUMP{ "test_ffcall.out" };
+        string const TEST_SCRIPT{ "test_ffcall_add.q" };
 
         struct TestInfo
         {
@@ -65,27 +47,44 @@ namespace q_ffi
             string retType_;
             string argTypes_;
             bool noThrow_;
+
+            string name() const
+            {
+                ostringstream buffer;
+                buffer << retType_ << ' ' << func_ << '[';
+                bool first = true;
+                for (char a : argTypes_) {
+                    if (first)
+                        first = false;
+                    else
+                        buffer << ';';
+                    buffer << a;
+                }
+                buffer << ']';
+                return buffer.str();
+            }
         };
 
         static vector<TestInfo> TEST_CASES;
 
     private:
-        static bool exists(std::string const& filename)
+        static bool exists(string const& filename)
         {
             ifstream f{ filename };
             return f.good();
         }
 
-        void cleanUp(bool permissive = false)
+        static void cleanUp(string const& filename, bool ignoreError = false)
         {
-            if (exists(TEST_DUMP)) {
-                auto const status = remove(TEST_DUMP.c_str());
-                if (!permissive)
+            if (exists(filename)) {
+                auto const status = remove(filename.c_str());
+                if (!ignoreError)
                     ASSERT_EQ(status, 0) << strerror(status);
             }
         }
 
-        string makeCommand(string const& qbin, vector<string> const& params)
+        string makeCommand(string const& qbin, string const& testDump,
+            vector<string> const& params)
         {
             ostringstream buffer;
             buffer << qbin << ' ' << TEST_SCRIPT << " -q " << EXTRA_OPTS;
@@ -96,16 +95,16 @@ namespace q_ffi
                 else
                     buffer << p;
             }
-            buffer << " 2>&1 > " << TEST_DUMP;
+            buffer << " 2>&1 > " << testDump;
             return buffer.str();
         }
 
-        int runCommand(string const& cmd)
+        int runCommand(string const& cmd, string const& testDump)
         {
-            cleanUp();
+            cleanUp(testDump);
             cout.flush();
             auto const status = system(cmd.c_str());
-            cout << ifstream(TEST_DUMP).rdbuf() << endl;
+            cout << ifstream(testDump).rdbuf() << endl;
             return status;
         }
 
@@ -119,21 +118,22 @@ namespace q_ffi
 #       endif
         }
 
-        void TearDown() override
-        {
-            cleanUp(true);
-        }
-
         void runTest(string const& func,
             string const& abi, string const& retType, string const& argTypes)
         {
+            auto const testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
+            ostringstream testDump;
+            testDump << testInfo->test_suite_name() << '.' << testInfo->name() << ".out";
+
             int status = -1;
             for (auto const& qbin : QBINs) {
-                auto const cmd = makeCommand(qbin, { func, abi, retType, argTypes });
+                auto const cmd = makeCommand(qbin, testDump.str(), {
+                    func, abi, retType, argTypes
+                });
 #           ifndef NDEBUG
                 cout << "RUNNING: " << cmd << endl;
 #           endif
-                status = runCommand(cmd);
+                status = runCommand(cmd, testDump.str());
                 if (0 == status)
                     break;
             }
@@ -184,38 +184,46 @@ namespace q_ffi
 #   endif
     };
 
-    TEST_F(FFCallTests, cdeclAdd)
+    TEST_F(FFCallTests, defaultAddQ)
     {
         for (auto const& testCase : TEST_CASES) {
-            if (testCase.abi_ != "" && testCase.abi_ != "cdecl")
+            if (testCase.abi_ != "")
                 continue;
-            ostringstream buffer;
-            buffer << testCase.func_ << '[' << testCase.argTypes_ << ']';
-            SCOPED_TRACE(buffer.str());
+
+            SCOPED_TRACE(testCase.name());
             runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }
 
-    TEST_F(FFCallTests, stdcallAdd)
+    TEST_F(FFCallTests, cdeclAddQ)
+    {
+        for (auto const& testCase : TEST_CASES) {
+            if (testCase.abi_ != "cdecl")
+                continue;
+
+            SCOPED_TRACE(testCase.name());
+            runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+        }
+    }
+
+    TEST_F(FFCallTests, stdcallAddQ)
     {
         for (auto const& testCase : TEST_CASES) {
             if (testCase.abi_ != "stdcall")
                 continue;
-            ostringstream buffer;
-            buffer << testCase.func_ << '[' << testCase.argTypes_ << ']';
-            SCOPED_TRACE(buffer.str());
+
+            SCOPED_TRACE(testCase.name());
             runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }
 
-    TEST_F(FFCallTests, fastcallAdd)
+    TEST_F(FFCallTests, fastcallAddQ)
     {
         for (auto const& testCase : TEST_CASES) {
             if (testCase.abi_ != "fastcall")
                 continue;
-            ostringstream buffer;
-            buffer << testCase.func_ << '[' << testCase.argTypes_ << ']';
-            SCOPED_TRACE(buffer.str());
+
+            SCOPED_TRACE(testCase.name());
             runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }

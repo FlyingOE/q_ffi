@@ -61,6 +61,11 @@ cmake --build build --target install
 
 `q_ffi` is tested with [GoogleTest](https://github.com/google/googletest).
 
+All tests ending with "Q" (`--gtest_filter=*Q`) require proper q environment (with the correct `QHOME` environment variable) to run. In order to differentiate 32-/64-bit q environments, such tests will try the following commands in sequence when running q test scripts:
+1. `q32` or `q64`
+2. `q`
+3. If none of the above works, test cases fail.
+
 ### Testing with Visual Studio
 
 GoogleTest is [natively supported][4] since Visual Studio 2017.
