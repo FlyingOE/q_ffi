@@ -145,10 +145,10 @@ q_ffi::Invocator::setArgumentTypes(char const* typeCodes)
         [](char t) { return mapType(t); });
 }
 
+#ifdef PLATFORM_X86
 void
 q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
 {
-#ifdef PLATFORM_X86
     static constexpr auto MIN_ARG_SIZE = 8; //FIXME: How is this determined?
     static const regex mangling{ R"([_@].+@(\d+))" };
     static constexpr auto PATTERN_CAPS = 1;
@@ -177,13 +177,12 @@ q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
         // Function names not mangled
         break;
     }
-#else
-#   ifdef _MSC_VER
-        funcName;   // C4100
-        abi;        // C4100
-#   endif
-#endif
 }
+#else
+void
+q_ffi::Invocator::verifyArgumentTypes(char const* /*funcName*/, ffi_abi /*abi*/)
+{}
+#endif
 
 ffi_abi
 q_ffi::Invocator::mapABI(char const* abiType, char const* funcName)
@@ -220,10 +219,10 @@ q_ffi::Invocator::mapABI(char const* abiType, char const* funcName)
     return abi;
 }
 
+#ifdef PLATFORM_X86
 ffi_abi
 q_ffi::Invocator::guessABI(char const* funcName)
 {
-#ifdef PLATFORM_X86
     assert(nullptr != funcName);
 
     static const regex stdcall{ R"(_.+@(\d+))" };
@@ -235,13 +234,14 @@ q_ffi::Invocator::guessABI(char const* funcName)
         return FFI_FASTCALL;
 
     return FFI_MS_CDECL;
-#else
-#   ifdef _MSC_VER
-        funcName;   // C4100
-#   endif
-    return FFI_DEFAULT_ABI;
-#endif
 }
+#else
+ffi_abi
+q_ffi::Invocator::guessABI(char const* /*funcName*/)
+{
+    return FFI_DEFAULT_ABI;
+}
+#endif
 
 q_ffi::Invocator::argument_type
 q_ffi::Invocator::mapType(char typeCode)
@@ -384,19 +384,19 @@ namespace
         switch (argc) {
         case 0:
         case 1:
-            return K_ptr{ ::dl(&doCall1, 1 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall1);
         case 2:
-            return K_ptr{ ::dl(&doCall2, 2 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall2);
         case 3:
-            return K_ptr{ ::dl(&doCall3, 3 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall3);
         case 4:
-            return K_ptr{ ::dl(&doCall4, 4 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall4);
         case 5:
-            return K_ptr{ ::dl(&doCall5, 5 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall5);
         case 6:
-            return K_ptr{ ::dl(&doCall6, 6 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall6);
         case 7:
-            return K_ptr{ ::dl(&doCall7, 7 + 1) };
+            return TypeTraits<kDLL>::atom(&doCall7);
         default:
             assert(!"q_ffi::MAX_ARGC exceeded!");
             return K_ptr{};

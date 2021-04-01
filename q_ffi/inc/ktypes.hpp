@@ -114,7 +114,7 @@ namespace q
         return nullptr == k ? q::kError : static_cast<TypeId>(k->t);
     }
 
-    constexpr std::underlying_type_t<TypeId> type(K_ptr const& k) noexcept
+    inline std::underlying_type_t<TypeId> type(K_ptr const& k) noexcept
     {
         return type(k.get());
     }
@@ -131,7 +131,7 @@ namespace q
         }
     }
 
-    constexpr std::size_t count(K_ptr const& k) noexcept
+    inline std::size_t count(K_ptr const& k) noexcept
     {
         return count(k.get());
     }

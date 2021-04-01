@@ -451,8 +451,11 @@ namespace q {
         {
             assert(nullptr != k);
             assert(-subtype_id == type(k));
-            // int64_t & long long are different in GCC!
-            return static_cast<reference>(k->j);
+#       ifdef __GNUC__  // int64_t & long long are different types (of same size) in GCC!
+            return *reinterpret_cast<pointer>(&k->j);
+#       else
+            return k->j;
+#       endif
         }
 
         using IndexableType::list;
@@ -468,8 +471,11 @@ namespace q {
         {
             assert(nullptr != k);
             assert(subtype_id == type(k));
-            // int64_t & long long are different in GCC!
-            return static_cast<pointer>(kJ(k));
+#       ifdef __GNUC__  // int64_t & long long are different types (of same size) in GCC!
+            return reinterpret_cast<pointer>(kJ(k));
+#       else
+            return (kJ(k));
+#       endif
         }
 
         static constexpr value_type null() noexcept
@@ -700,7 +706,7 @@ namespace q {
         }
         static value_type intern(value_type s, std::size_t len) noexcept
         {
-            assert(len <= std::numeric_limits<::I>::max());
+            assert(len <= static_cast<std::size_t>(std::numeric_limits<::I>::max()));
             return ::sn(const_cast<::S>(s), static_cast<::I>(len));
         }
         static value_type intern(std::string const& s) noexcept
@@ -1318,6 +1324,55 @@ namespace q {
             assert(nullptr != func);
             assert(argc > 0);
             return K_ptr{ ::dl(func, argc) };
+        }
+
+        static K_ptr atom(::K(*func)(::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 1);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 2);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 3);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K, ::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 4);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K, ::K, ::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 5);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K, ::K, ::K, ::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 6);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K, ::K, ::K, ::K, ::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 7);
+        }
+        static K_ptr atom(::K(*func)(::K, ::K, ::K, ::K, ::K, ::K, ::K, ::K)) noexcept
+        {
+            static_assert(sizeof(func) == sizeof(value_type), "func == <value_type>");
+            assert(nullptr != func);
+            return atom(reinterpret_cast<value_type>(func), 8);
         }
 
         using ValueType::value;
