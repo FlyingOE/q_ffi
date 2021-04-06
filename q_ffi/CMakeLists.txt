@@ -120,10 +120,6 @@ if(WIN32)
         PRIVATE
             /W4 /WX     # warning level - compulsory
     )
-    target_link_options(${target_name}
-        PRIVATE
-            /NODEFAULTLIB:MSVCRT
-    )
 elseif(UNIX AND NOT APPLE)
     target_compile_options(${target_name}
         PRIVATE

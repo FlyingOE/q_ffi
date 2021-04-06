@@ -78,6 +78,8 @@ namespace
         return buffer.str();
     }
 
+#   pragma warning(disable: 4100)
+
     string mixed_to_str(::K const k)
     {
         assert(nullptr != k && kMixed == type(k));
@@ -95,6 +97,8 @@ namespace
         assert(nullptr != k && kDict == type(k));
         return "<kDict>";
     }
+
+#   pragma warning(default: 4100)
 
     string any_to_str(::K const k)
     {

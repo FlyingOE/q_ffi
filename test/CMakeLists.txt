@@ -34,10 +34,6 @@ target_link_libraries(${target_name}
         CapitalEdge::q_ffi
 )
 if(WIN32)
-    target_link_options(${target_name}
-        PRIVATE
-            /NODEFAULTLIB:MSVCRT
-    )
     target_include_directories(${target_name}
         PRIVATE
             dlfcn-win32::dl
