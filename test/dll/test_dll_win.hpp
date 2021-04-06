@@ -3,6 +3,7 @@
 #include <thread>
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 
 #define CALL_CDECL    __cdecl

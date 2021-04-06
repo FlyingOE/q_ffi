@@ -1,3 +1,4 @@
+/# vim: set et noai ts=2 sw=2 syntax=q:
 /////////////////////////////////////////////////////////////////////////////
 \d .util
 
@@ -10,12 +11,6 @@ DLL:.util.lib`q_ffi
 LOADER:`load
 
 TEST_DLL:.util.lib`test_q_ffi_dll
-if[4>count .z.x; show .z.x;
-  '"q test_ffcall.q -q -s 4 <func> <abi> <retType> <argTypes>" ]
-TEST_FUNC:`$.z.x 0
-ABI:`$.z.x 1
-RET_TYPE:first .z.x 2
-ARG_TYPES:.z.x 3
 
 /////////////////////////////////////////////////////////////////////////////
 \d .test

@@ -61,8 +61,11 @@ K_ptr
 q_ffi::Invocator::operator()(initializer_list<::K> params)
 {
     auto const rank = this->rank();
-    if (params.size() != rank && !(params.size() == 1 && rank == 0))
-        throw K_error("rank");
+    if (params.size() != rank && !(params.size() == 1 && rank == 0)) {
+        ostringstream buffer;
+        buffer << "rank (" << rank << " expected)";
+        throw K_error(buffer.str());
+    }
 
     auto pars = make_unique<void*[]>(rank);
     transform(args_.cbegin(), args_.cend(), params.begin(), pars.get(),
@@ -149,7 +152,6 @@ q_ffi::Invocator::setArgumentTypes(char const* typeCodes)
 void
 q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
 {
-    static constexpr auto MIN_ARG_SIZE = 8; //FIXME: How is this determined?
     static const regex mangling{ R"([_@].+@(\d+))" };
     static constexpr auto PATTERN_CAPS = 1;
     cmatch matches;
@@ -161,8 +163,7 @@ q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
             auto const paramSize = stoi(matches[1]);
             auto argSize = 0;
             for (auto const& arg : args_)
-                argSize += arg->size();
-            argSize = max(argSize, MIN_ARG_SIZE);
+                argSize += max(arg->size(), sizeof(ffi_arg));
             if (paramSize != argSize) {
                 ostringstream buffer;
                 buffer << "incorrect argument spec? ("
@@ -170,6 +171,9 @@ q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
                     << "expected=" << argSize << ')';
                 throw K_error(buffer.str());
             }
+        }
+        else {
+            //FIXME: Not MSVC default mangling
         }
         break;
     case FFI_MS_CDECL:
@@ -294,15 +298,15 @@ namespace
         unordered_map<string, unique_ptr<q_ffi::Invocator>> INVOCATORS;
     }
 
-    q_ffi::Invocator& loadDLL(string const& dllName)
+    q_ffi::Invocator& createCaller(string const& id, string const& dllName)
     {
         try {
             lock_guard<mutex> lock{ details::MUTEX };
-            auto const p = details::INVOCATORS.emplace(dllName,
+            auto const p = details::INVOCATORS.emplace(id,
                 make_unique<q_ffi::Invocator>(dllName.c_str()));
 #       ifndef NDEBUG
             if (p.second) {
-                cout << "# <q_ffi> loaded "
+                cout << "# <q_ffi> has loaded "
                     << details::INVOCATORS.size() << " foreign function(s)." << endl;
             }
 #       endif
@@ -430,17 +434,34 @@ q_ffi::load(::K dllSym, ::K fName, ::K abi, ::K ret, ::K args)
 noexcept(false)
 {
     auto const dll = q2String(dllSym);
-    auto& caller = loadDLL(dll);
-
     auto const func = q2String(fName);
+    auto& caller = createCaller(func, dll);
 
     auto const retType = q2Char(ret);
 
-    auto argTypes = q2String(args);
+    string argTypes;
+    try {
+        argTypes = q2String(args);
+    }
+    catch (K_error const&) {
+        if (-kChar != type(args))
+            throw;
+        else
+            argTypes += q2Char(args);
+    }
     if (argTypes.empty() || argTypes == " ")
         argTypes = "";  // q function requires at least 1 argument
 
-    auto abiType = q2String(abi);
+    string abiType;
+    try {
+        abiType = q2String(abi);
+    }
+    catch (K_error const&) {
+        if (kNil != type(abi))
+            throw;
+        else
+            abiType = "";
+    }
     transform(abiType.cbegin(), abiType.cend(), abiType.begin(),
         [](char c) { return static_cast<char>(toupper(c)); });
 

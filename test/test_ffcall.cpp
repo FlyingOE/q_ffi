@@ -50,8 +50,8 @@ namespace q_ffi
 #               error FIXME
 #           endif
         string const EXTRA_OPTS{ "-s 8" };
-        string const TEST_SCRIPT{ "test_ffcall_add.q" };
 
+    private:
         struct TestInfo
         {
             string func_;
@@ -77,9 +77,9 @@ namespace q_ffi
             }
         };
 
-        static vector<TestInfo> TEST_CASES;
+    protected:
+        static vector<TestInfo> ABI_TEST_CASES;
 
-    private:
         static bool exists(string const& filename)
         {
             ifstream f{ filename };
@@ -95,11 +95,19 @@ namespace q_ffi
             }
         }
 
+        string outputName() const
+        {
+            auto const testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
+            ostringstream testDump;
+            testDump << testInfo->test_suite_name() << '.' << testInfo->name() << ".out";
+            return testDump.str();
+        }
+
         string makeCommand(string const& qbin, string const& testDump,
-            vector<string> const& params)
+            string const& testScript, vector<string> const& params) const
         {
             ostringstream buffer;
-            buffer << qbin << ' ' << TEST_SCRIPT << " -q " << EXTRA_OPTS;
+            buffer << qbin << ' ' << testScript << " -q " << EXTRA_OPTS;
             for (auto const& p : params) {
                 buffer << ' ';
                 if (p.empty() || string::npos != p.find(' '))
@@ -120,7 +128,6 @@ namespace q_ffi
             return status;
         }
 
-    protected:
         void SetUp() override
         {
 #       if defined(PLATFORM_WINDOWS)
@@ -130,31 +137,31 @@ namespace q_ffi
 #       endif
         }
 
-        void runTest(string const& func,
+        void runAbiTest(string const& func,
             string const& abi, string const& retType, string const& argTypes)
         {
-            auto const testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
-            ostringstream testDump;
-            testDump << testInfo->test_suite_name() << '.' << testInfo->name() << ".out";
-
+            auto const testDump = outputName();
+            static constexpr auto testScript = "test_ffcall_add.q";
             int status = -1;
             for (auto const& qbin : QBINs) {
-                auto const cmd = makeCommand(qbin, testDump.str(), {
+                auto const cmd = makeCommand(qbin, testDump, testScript, {
                     func, abi, retType, argTypes
                 });
 #           ifndef NDEBUG
                 cout << "RUNNING: " << cmd << endl;
 #           endif
-                status = runCommand(cmd, testDump.str());
+                status = runCommand(cmd, testDump);
                 if (0 == status)
                     break;
             }
-            ASSERT_EQ(status, 0) << "Test script `" << TEST_SCRIPT << "' failed";
+            ASSERT_EQ(status, 0) << "Test script `" << testScript << "' failed";
         }
     };
 
+#pragma region Tests for different calling conventions (ABIs)
+
     vector<FFCallTests::TestInfo>
-    FFCallTests::TEST_CASES = {
+    FFCallTests::ABI_TEST_CASES = {
         { "add_char_cdecl"   , "", "x", "xx", true },
         { "add_int16_t_cdecl", "", "h", "hh", true },
         { "add_int32_t_cdecl", "", "i", "ii", true },
@@ -198,46 +205,68 @@ namespace q_ffi
 
     TEST_F(FFCallTests, defaultAddQ)
     {
-        for (auto const& testCase : TEST_CASES) {
+        for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "")
                 continue;
 
             SCOPED_TRACE(testCase.name());
-            runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }
 
     TEST_F(FFCallTests, cdeclAddQ)
     {
-        for (auto const& testCase : TEST_CASES) {
+        for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "cdecl")
                 continue;
 
             SCOPED_TRACE(testCase.name());
-            runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }
 
     TEST_F(FFCallTests, stdcallAddQ)
     {
-        for (auto const& testCase : TEST_CASES) {
+        for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "stdcall")
                 continue;
 
             SCOPED_TRACE(testCase.name());
-            runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }
 
     TEST_F(FFCallTests, fastcallAddQ)
     {
-        for (auto const& testCase : TEST_CASES) {
+        for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "fastcall")
                 continue;
 
             SCOPED_TRACE(testCase.name());
-            runTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
         }
     }
 
+#pragma endregion
+
+#pragma region Tests for different argument/type combinations
+
+    TEST_F(FFCallTests, nArgsQ)
+    {
+        auto const testDump = outputName();
+        static constexpr auto testScript = "test_ffcall_args.q";
+        int status = -1;
+        for (auto const& qbin : QBINs) {
+            auto const cmd = makeCommand(qbin, testDump, testScript, {});
+#       ifndef NDEBUG
+            cout << "RUNNING: " << cmd << endl;
+#       endif
+            status = runCommand(cmd, testDump);
+            if (0 == status)
+                break;
+        }
+        ASSERT_EQ(status, 0) << "Test script `" << testScript << "' failed";
+    }
+
+#pragma endregion
 }//namespace q_ffi
