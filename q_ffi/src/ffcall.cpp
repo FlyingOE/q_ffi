@@ -292,38 +292,37 @@ q_ffi::Invocator::guessABI(char const* /*funcName*/)
 q_ffi::Invocator::argument_type
 q_ffi::Invocator::mapType(char typeCode)
 {
-    constexpr long long(*convert_decimal)(::K, bool) = &q2Decimal;
-    constexpr double(*convert_real)(::K, bool) = &q2Real;
-    constexpr vector<long long>(*convert_decimals)(::K, bool) = &q2Decimals;
-    constexpr vector<double>(*convert_reals)(::K, bool) = &q2Reals;
+    constexpr char (*convert_char)(::K, bool) = &q2Char;
+    constexpr long long (*convert_decimal)(::K, bool) = &q2Decimal;
+    constexpr double (*convert_real)(::K, bool) = &q2Real;
 
     switch (typeCode) {
     case ' ':
         return make_unique<VoidArgument>();
     case 'b':
-        return make_unique<AtomArgument<TypeTraits<kBoolean>, long long>>(
-            ffi_type_sint, convert_decimal, convert_decimals);
+        return make_unique<SimpleArgument<TypeTraits<kBoolean>, long long>>(
+            ffi_type_sint, convert_decimal);
     case 'x':
-        return make_unique<AtomArgument<TypeTraits<kByte>, long long>>(
-            ffi_type_uint8, convert_decimal, convert_decimals);
+        return make_unique<SimpleArgument<TypeTraits<kByte>, long long>>(
+            ffi_type_uint8, convert_decimal);
     case 'c':
-        return make_unique<AtomArgument<TypeTraits<kChar>, long long>>(
-            ffi_type_uchar, convert_decimal, convert_decimals);
+        return make_unique<SimpleArgument<TypeTraits<kChar>, char>>(
+            ffi_type_uchar, convert_char);
     case 'h':
-        return make_unique<AtomArgument<TypeTraits<kShort>, long long>>(
-            ffi_type_sint16, convert_decimal, convert_decimals);
+        return make_unique<SimpleArgument<TypeTraits<kShort>, long long>>(
+            ffi_type_sint16, convert_decimal);
     case 'i':
-        return make_unique<AtomArgument<TypeTraits<kInt>, long long>>(
-            ffi_type_sint32, convert_decimal, convert_decimals);
+        return make_unique<SimpleArgument<TypeTraits<kInt>, long long>>(
+            ffi_type_sint32, convert_decimal);
     case 'j':
-        return make_unique<AtomArgument<TypeTraits<kLong>, long long>>(
-            ffi_type_sint64, convert_decimal, convert_decimals);
+        return make_unique<SimpleArgument<TypeTraits<kLong>, long long>>(
+            ffi_type_sint64, convert_decimal);
     case 'e':
-        return make_unique<AtomArgument<TypeTraits<kReal>, double>>(
-            ffi_type_float, convert_real, convert_reals);
+        return make_unique<SimpleArgument<TypeTraits<kReal>, double>>(
+            ffi_type_float, convert_real);
     case 'f':
-        return make_unique<AtomArgument<TypeTraits<kFloat>, double>>(
-            ffi_type_double, convert_real, convert_reals);
+        return make_unique<SimpleArgument<TypeTraits<kFloat>, double>>(
+            ffi_type_double, convert_real);
     default:
         ostringstream buffer;
         buffer << "unsupported type code: '" << typeCode << "'";

@@ -56,32 +56,22 @@ namespace q_ffi
         q::K_ptr create() const override;
     };
 
-
-    namespace details
-    {
-        constexpr auto DUMMY_VALUE = 0x8BAD'F00D'DEAD'BEEFuLL;
-    }
-
     template<typename Tr, typename S>
-    class AtomArgument : public Argument
+    class SimpleArgument : public Argument
     {
     public:
         using converter_type = S(*)(::K, bool);
-        using list_converter_type = std::vector<S>(*)(::K, bool);
 
     private:
         mutable q::K_ptr mapped_;
 
         converter_type convert_atom_;
-        list_converter_type convert_list_;
 
     public:
-        AtomArgument(ffi_type& type,
-            converter_type convert_atom, list_converter_type convert_list)
-            : Argument(type), convert_atom_{ convert_atom }, convert_list_{ convert_list }
+        SimpleArgument(ffi_type& type, converter_type convert_atom)
+            : Argument(type), convert_atom_{ convert_atom }
         {
             assert(nullptr != convert_atom_);
-            assert(nullptr != convert_list_);
         }
 
         void* get(::K k) const override
@@ -110,10 +100,11 @@ namespace q_ffi
         {
             q::K_ptr val{ Tr::atom(0) };
 #       ifndef NDEBUG
-            static_assert(sizeof(details::DUMMY_VALUE) >= sizeof(typename Tr::value_type),
+            constexpr auto DUMMY_VALUE = 0x8BAD'F00D'DEAD'BEEFuLL;
+            static_assert(sizeof(DUMMY_VALUE) >= sizeof(typename Tr::value_type),
                 "ensure dummy bytes are filled");
             Tr::value(val) =
-                *reinterpret_cast<typename Tr::const_pointer>(&details::DUMMY_VALUE);
+                *reinterpret_cast<typename Tr::const_pointer>(&DUMMY_VALUE);
 #       endif
             return val;
         }
