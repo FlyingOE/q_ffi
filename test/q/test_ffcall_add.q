@@ -1,7 +1,8 @@
 /# vim: set et noai ts=2 sw=2 syntax=q:
-if[not system"s"; '"Start ",string[.z.f]," with -s!" ];
+/////////////////////////////////////////////////////////////////////////////
+system"l ",string .Q.dd[first` vs hsym .z.f;`test.lib.q]
 
-@TEST_LIB@
+if[not system"s"; '"Start ",string[.z.f]," with -s!" ];
 
 if[4>count .z.x; show .z.x;
   '"q ",string[.z.f]," -q -s 4 <func> <abi> <retType> <argTypes>" ]
@@ -10,6 +11,7 @@ ABI:`$.z.x 1
 RET_TYPE:first .z.x 2
 ARG_TYPES:.z.x 3
 
+/////////////////////////////////////////////////////////////////////////////
 mem:{.mem.sample[]}each til 10
 mid:-1
 mem_check:{[check] check . mem mid+-1 0 }
@@ -18,7 +20,7 @@ hr:40
 /////////////////////////////////////////////////////////////////////////////
 .test.log hr#"-";
 loader:0N!DLL 2:(LOADER;5)
-.test.log"After loading DLL ",.Q.s1[LOADER];
+.test.log"After loading DLL ",.Q.s1[DLL];
 
 .test.log hr#"-";
 tester:0N!loader[TEST_DLL;TEST_FUNC;ABI;RET_TYPE;ARG_TYPES]

@@ -156,6 +156,22 @@ namespace q_ffi
             }
             ASSERT_EQ(status, 0) << "Test script `" << testScript << "' failed";
         }
+
+        void runGenericTest(string const& testScript)
+        {
+            auto const testDump = outputName();
+            int status = -1;
+            for (auto const& qbin : QBINs) {
+                auto const cmd = makeCommand(qbin, testDump, testScript, {});
+#           ifndef NDEBUG
+                cout << "RUNNING: " << cmd << endl;
+#           endif
+                status = runCommand(cmd, testDump);
+                if (0 == status)
+                    break;
+            }
+            ASSERT_EQ(status, 0) << "Test script `" << testScript << "' failed";
+        }
     };
 
 #pragma region Tests for different calling conventions (ABIs)
@@ -203,7 +219,7 @@ namespace q_ffi
 #   endif
     };
 
-    TEST_F(FFCallTests, defaultAddQ)
+    TEST_F(FFCallTests, addQ)
     {
         for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "")
@@ -214,7 +230,7 @@ namespace q_ffi
         }
     }
 
-    TEST_F(FFCallTests, cdeclAddQ)
+    TEST_F(FFCallTests, addCdeclQ)
     {
         for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "cdecl")
@@ -225,7 +241,7 @@ namespace q_ffi
         }
     }
 
-    TEST_F(FFCallTests, stdcallAddQ)
+    TEST_F(FFCallTests, addStdcallQ)
     {
         for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "stdcall")
@@ -236,7 +252,7 @@ namespace q_ffi
         }
     }
 
-    TEST_F(FFCallTests, fastcallAddQ)
+    TEST_F(FFCallTests, addFastcallQ)
     {
         for (auto const& testCase : ABI_TEST_CASES) {
             if (testCase.abi_ != "fastcall")
@@ -251,21 +267,20 @@ namespace q_ffi
 
 #pragma region Tests for different argument/type combinations
 
-    TEST_F(FFCallTests, nArgsQ)
+    TEST_F(FFCallTests, argsQ)
     {
-        auto const testDump = outputName();
-        static constexpr auto testScript = "test_ffcall_args.q";
-        int status = -1;
-        for (auto const& qbin : QBINs) {
-            auto const cmd = makeCommand(qbin, testDump, testScript, {});
-#       ifndef NDEBUG
-            cout << "RUNNING: " << cmd << endl;
-#       endif
-            status = runCommand(cmd, testDump);
-            if (0 == status)
-                break;
-        }
-        ASSERT_EQ(status, 0) << "Test script `" << testScript << "' failed";
+        SCOPED_TRACE("foreign-function argument combos");
+        runGenericTest("test_ffcall_args.q");
+    }
+
+#pragma endregion
+
+#pragma region Tests for different variable types
+
+    TEST_F(FFCallTests, varsQ)
+    {
+        SCOPED_TRACE("foreign variables");
+        runGenericTest("test_ffcall_vars.q");
     }
 
 #pragma endregion

@@ -11,8 +11,16 @@ namespace q_ffi
     /// @brief Maximum argument count of a q function.
     constexpr std::size_t MAX_ARGC = 8;
 
-    /// @brief Implementation of <code>.ffi.load</code>
-    q_ffi_API q::K_ptr load(::K dllSym, ::K fName, ::K abi, ::K ret, ::K args)
+    /// @brief Implementation of <code>.ffi.loadFun</code>
+    q_ffi_API q::K_ptr loadFun(::K dllSym, ::K funName, ::K abi, ::K ret, ::K args)
+        noexcept(false);
+
+    /// @brief Implementation of <code>.ffi.getVar</code>
+    q_ffi_API q::K_ptr getVar(::K dllSym, ::K varName, ::K typeCode)
+        noexcept(false);
+
+    /// @brief Implementation of <code>.ffi.setVar</code>
+    q_ffi_API q::K_ptr setVar(::K dllSym, ::K varName, ::K typeCode, ::K val)
         noexcept(false);
 
     /// @brief Foreign Function invocator
@@ -24,7 +32,10 @@ namespace q_ffi
 
     private:
         DLLoader dll_;
-        function_type func_;
+        union {
+            function_type func;
+            void* var;
+        } sym_;
         argument_type ret_;
         std::vector<argument_type> args_;
 
@@ -39,12 +50,21 @@ namespace q_ffi
     public:
         Invocator(char const* dll);
 
+#   pragma region FFI function
+        void load(char const* func, char retType, char const* argTypes,
+            char const* abiType = nullptr);
+
         unsigned int rank() const;
 
-        void load(char const* func,
-            char retType, char const* argTypes, char const* abiType = nullptr);
-
         q::K_ptr operator()(std::initializer_list<::K> params);
+#   pragma endregion
+
+#   pragma region FFI variable
+        void load(char const* var, char varType);
+
+        q::K_ptr operator()();
+        void operator()(::K val);
+#   pragma endregion
 
     private:
         /// @brief Regenerates FFI info cache

@@ -59,7 +59,7 @@ namespace q_ffi
 
     namespace details
     {
-        constexpr auto DUMMY_VALUE = 0xCCCC'CCCC'DEAD'BEEFuLL;
+        constexpr auto DUMMY_VALUE = 0x8BAD'F00D'DEAD'BEEFuLL;
     }
 
     template<typename Tr, typename S>

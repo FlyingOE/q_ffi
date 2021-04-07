@@ -4,8 +4,11 @@
 #   test_scripts - list of script files to be generated
 #   binary_dir   - output directory for the generated scripts
 #############################################################################
-file(READ test.lib.q TEST_LIB)
-
 foreach(script ${test_scripts})
-    configure_file(${script}.in ${binary_dir}/${script} @ONLY)
+    if(${CMAKE_VERSION} VERSION_LESS "3.20")
+        get_filename_component(script_file ${script} NAME)
+    else()
+        cmake_path(GET ${script} FILENAME script_file)
+    endif()
+    configure_file(${script} ${binary_dir}/${script_file} COPYONLY)
 endforeach()

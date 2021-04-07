@@ -56,17 +56,11 @@ target_sources(${target_name}_dll
 
 # q test scripst
 set(test_scripts
-    test_ffcall_add.q
-    test_ffcall_args.q
+    q/test.lib.q
+    q/test_ffcall_add.q     q/test_ffcall_args.q    q/test_ffcall_vars.q
 )
-set(test_scripts_src
-    test.lib.q
-)
-foreach(script ${test_scripts})
-    list(APPEND test_scripts_src ${script}.in)
-endforeach()
 set_target_properties(${target_name} PROPERTIES
-    RESOURCE  "${test_scripts_src}"
+    RESOURCE  "${test_scripts}"
 )
 
 # Copy test dependencies
@@ -90,7 +84,7 @@ add_custom_target(${target_name}.test-scripts ALL
     COMMAND ${CMAKE_COMMAND}
             -D "test_scripts=${test_scripts}"
             -D "binary_dir=${CMAKE_CURRENT_BINARY_DIR}"
-            -P test_ffcall.cmake
+            -P q/tests.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${test_scripts_src}
     COMMENT "Generate q test scripts into the test directory."
