@@ -131,6 +131,8 @@ elseif(UNIX AND NOT APPLE)
                 -Wno-unknown-pragmas         # g++ bails upon `#pragma region'
                 -Wno-deprecated-declarations # std::uncaught_exception deprecated
             PRIVATE
+                -Wno-unused-parameter
+                -Wno-unused-variable
                 -fdiagnostics-color=always
         )
     endif()

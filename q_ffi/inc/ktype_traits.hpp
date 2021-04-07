@@ -452,7 +452,9 @@ namespace q {
             assert(nullptr != k);
             assert(-subtype_id == type(k));
 #       ifdef __GNUC__  // int64_t & long long are different types (of same size) in GCC!
-            return *reinterpret_cast<pointer>(&k->j);
+            char* const p = reinterpret_cast<char*>(&k->j); // avoid type aliasing warning
+            assert(nullptr != p);
+            return *reinterpret_cast<pointer>(p);
 #       else
             return k->j;
 #       endif
@@ -472,7 +474,9 @@ namespace q {
             assert(nullptr != k);
             assert(subtype_id == type(k));
 #       ifdef __GNUC__  // int64_t & long long are different types (of same size) in GCC!
-            return reinterpret_cast<pointer>(kJ(k));
+            char* const p = reinterpret_cast<char*>(kJ(k)); // avoid type aliasing warning
+            assert(nullptr != p);
+            return reinterpret_cast<pointer>(p);
 #       else
             return (kJ(k));
 #       endif

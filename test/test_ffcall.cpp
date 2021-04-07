@@ -24,13 +24,13 @@ using namespace std;
 #   include <k_compat.h>
     extern "C"
     {   
-        void nyi() { throw logic_error("'nyi: use of dll-only function outside of q"); }
+        ::K nyi() { throw logic_error("'nyi: use of dll-only function outside of q"); }
         /**
          * Following functions are only available in q, but not in dll.
          * In order to use libq_ffi.so outside of q, we need dummy implementations for them!
          */
-        ::K dl(::V*, ::J) { nyi(); }
-        ::K dot(::K, ::K) { nyi(); }
+        ::K dl(::V*, ::J) { return nyi(); }
+        ::K dot(::K, ::K) { return nyi(); }
     }
 #else
 #   error FIXME: add unit test for this platform...
