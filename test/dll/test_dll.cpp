@@ -202,18 +202,25 @@ int32_t CALL_FASTCALL f7_fastcall(float a, char b, int32_t c, int16_t d, int64_t
 
 #pragma region Tests for different variable types
 
-extern "C" API_EXPORT char v_char = 'C';
+extern "C" API_EXPORT char v_char;
+char v_char = 'C';
 
-extern "C" API_EXPORT int8_t v_byte = 0xCC;
+extern "C" API_EXPORT int8_t v_byte;
+int8_t v_byte = 0xCC;
 
-extern "C" API_EXPORT int16_t v_short = 0xDEAD;
+extern "C" API_EXPORT int16_t v_short;
+int16_t v_short = 0xDEAD;
 
-extern "C" API_EXPORT int32_t v_int = 0xDEAD'BEEF;
+extern "C" API_EXPORT int32_t v_int;
+int32_t v_int = 0xDEAD'BEEF;
 
-extern "C" API_EXPORT int64_t v_long = 0xDEAD'BEEF'8BAD'F00Dll;
+extern "C" API_EXPORT int64_t v_long;
+int64_t v_long = 0xDEAD'BEEF'8BAD'F00Dll;
 
-extern "C" API_EXPORT float v_real = 3.14159265f;
+extern "C" API_EXPORT float v_real;
+float v_real = 3.14159265f;
 
-extern "C" API_EXPORT double v_float = 3.141592653589793;
+extern "C" API_EXPORT double v_float;
+double v_float = 3.141592653589793;
 
 #pragma endregion
