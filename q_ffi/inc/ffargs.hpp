@@ -146,16 +146,7 @@ namespace q_ffi
         q::K_ptr create() const override;
 
         template<q::TypeId tid>
-        static q::K_ptr getAddr(::K k)
-        {
-            validate<tid>(k);
-            auto const ptr = q::TypeTraits<tid>::index(k);
-            return pointer_traits::atom(
-                *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
-        }
-
-        template<>
-        static q::K_ptr getAddr<q::kSymbol>(::K k);
+        static q::K_ptr getAddr(::K k);
 
     private:
         template<std::underlying_type_t<q::TypeId> tid>
@@ -173,3 +164,21 @@ namespace q_ffi
     };
 
 }//namespace q_ffi
+
+#pragma region q_ffi::PointerArgument implementations
+
+template<q::TypeId tid>
+q::K_ptr
+q_ffi::PointerArgument::getAddr(::K k)
+{
+    validate<tid>(k);
+    auto const ptr = q::TypeTraits<tid>::index(k);
+    return pointer_traits::atom(
+        *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
+}
+
+template<>
+q::K_ptr
+q_ffi::PointerArgument::getAddr<q::kSymbol>(::K k);
+
+#pragma endregion
