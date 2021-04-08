@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <ffi.h>
 #include "kerror.hpp"
 #include "ktype_traits.hpp"
@@ -9,6 +8,23 @@
 
 namespace q_ffi
 {
+    q::K_ptr getAddr(::K typ, ::K k) noexcept(false);
+
+    template<std::size_t nBytes>
+    struct TypeCode;
+
+    template<>
+    struct TypeCode<sizeof(q::TypeTraits<q::kInt>::value_type)>
+    {
+        using traits = q::TypeTraits<q::kInt>;
+    };
+
+    template<>
+    struct TypeCode<sizeof(q::TypeTraits<q::kLong>::value_type)>
+    {
+        using traits = q::TypeTraits<q::kLong>;
+    };
+
     /// @brief FFI callback argument descriptor
     class Argument
     {
@@ -79,10 +95,8 @@ namespace q_ffi
         {
             validate(k);
 
-            auto const p = reinterpret_cast<char const*>(&x);
-            assert(nullptr != p);
-            assert(sizeof(ffi_arg) > size());
-            TypeTraits::value(k) = *reinterpret_cast<const_pointer>(p);
+            TypeTraits::value(k) =
+                *misc::ptr_alias<typename TypeTraits::const_pointer>(&x);
         }
 
         std::size_t size() const override
@@ -95,10 +109,8 @@ namespace q_ffi
             q::K_ptr k{ TypeTraits::atom(0) };
 #       ifndef NDEBUG
             constexpr auto DUMMY_BYTES = 0x8BAD'F00D'DEAD'BEEFuLL;
-            auto const p = reinterpret_cast<char const*>(&DUMMY_BYTES);
-            assert(nullptr != p);
-            assert(sizeof(DUMMY_BYTES) >= size());
-            TypeTraits::value(k) = *reinterpret_cast<const_pointer>(p);
+            TypeTraits::value(k) =
+                *misc::ptr_alias<typename TypeTraits::const_pointer>(&DUMMY_BYTES);
 #       endif
             return k;
         }
@@ -113,6 +125,48 @@ namespace q_ffi
                 std::ostringstream buffer;
                 buffer << "type: simple argument"
                     " (" << -TypeTraits::type_id << "h expected)";
+                throw q::K_error(buffer.str());
+            }
+        }
+    };
+
+    class PointerArgument : public Argument
+    {
+    private:
+        using pointer_traits = TypeCode<sizeof(void*)>::traits;
+
+    public:
+        PointerArgument() : Argument(ffi_type_pointer)
+        {}
+
+        void* get(::K k) const override;
+        void set(::K k, ffi_arg const& x) const override;
+
+        std::size_t size() const override;
+        q::K_ptr create() const override;
+
+        template<q::TypeId tid>
+        static q::K_ptr getAddr(::K k)
+        {
+            validate<tid>(k);
+            auto const ptr = q::TypeTraits<tid>::index(k);
+            return pointer_traits::atom(
+                *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
+        }
+
+        template<>
+        static q::K_ptr getAddr<q::kSymbol>(::K k);
+
+    private:
+        template<std::underlying_type_t<q::TypeId> tid>
+        static void validate(::K k)
+        {
+            if (q::Nil == k)
+                throw q::K_error("nil: pointer argument");
+
+            if (tid != q::type(k)) {
+                std::ostringstream buffer;
+                buffer << "type: pointer argument (" << tid << "h expected)";
                 throw q::K_error(buffer.str());
             }
         }

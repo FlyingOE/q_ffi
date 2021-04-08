@@ -24,3 +24,29 @@ namespace std_ext
     }
 
 }//namespace std_ext
+
+namespace misc
+{
+    /// @brief Alias a pointer.
+    ///
+    /// NOTE: Beware of the strict aliasing rule in modern C/C++ implementations!
+    ///
+    /// Users of this template is expected to be aware of and to take care of the
+    /// potential memory layout difference between From and To types.
+    template<typename To, typename From,
+        typename = std::enable_if_t<
+            std::is_pointer_v<To> && std::is_pointer_v<From> && sizeof(To) <= sizeof(From)
+        >>
+    inline constexpr To ptr_alias(From p) noexcept
+    {
+        union aliaser
+        {
+            From fptr;
+            To tptr;
+        };
+        aliaser a{};
+        a.fptr = p;
+        return a.tptr;
+    }
+
+}//namespace misc

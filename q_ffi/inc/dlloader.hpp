@@ -1,6 +1,7 @@
 #pragma once
 
 #include "q_ffi.h"
+#include "std_ext.hpp"
 
 namespace q_ffi
 {
@@ -17,7 +18,7 @@ namespace q_ffi
         template<typename ProcType>
         ProcType locateProc(char const* funcName) const
         {
-            return reinterpret_cast<ProcType>(locateProc(funcName));
+            return misc::ptr_alias<ProcType>(locateProc(funcName));
         }
 
     private:

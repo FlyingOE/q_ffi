@@ -311,9 +311,11 @@ q_ffi::Invocator::mapType(char typeCode)
         return make_unique<SimpleArgument<kReal>>(ffi_type_float);
     case 'f':
         return make_unique<SimpleArgument<kFloat>>(ffi_type_double);
+    case '&':
+        return make_unique<PointerArgument>();
     default:
         ostringstream buffer;
-        buffer << "unsupported type code: '" << typeCode << "'";
+        buffer << "invalid type for FFI argument: '" << typeCode << "'";
         throw K_error(buffer.str());
     }
 }
@@ -351,18 +353,14 @@ namespace
 
     q_ffi::Invocator& unwrapCaller(::K wrapped)
     {
-        using wrapped_ptr = TypeTraits<kLong>;
-        constexpr auto ptr_size = sizeof(q_ffi::Invocator*);
-        static_assert(ptr_size <= sizeof(wrapped_ptr::value_type),
-            "unwrap q_ffi::Invocator* from ::J");
+        using wrapped_ptr = q_ffi::TypeCode<sizeof(q_ffi::Invocator*)>::traits;
 
         if (Nil == wrapped)
             throw K_error("nil FFI caller");
         else if (-wrapped_ptr::type_id != type(wrapped))
             throw K_error("invalid FFI caller");
 
-        q_ffi::Invocator* caller{ nullptr };
-        memcpy(&caller, &wrapped_ptr::value(wrapped), ptr_size);
+        auto caller = *misc::ptr_alias<q_ffi::Invocator**>(&wrapped_ptr::value(wrapped));
         if (nullptr == caller)
             throw K_error("null FFI callre");
         else
@@ -441,14 +439,11 @@ namespace
 
     K_ptr wrapCaller(q_ffi::Invocator& caller)
     {
-        using wrapped_ptr = TypeTraits<kLong>;
-        constexpr auto ptr_size = sizeof(&caller);
-        static_assert(ptr_size <= sizeof(wrapped_ptr::value_type),
-            "wrap q_ffi::Invocator* into ::J");
+        using wrapped_ptr = q_ffi::TypeCode<sizeof(&caller)>::traits;
 
         auto wrapped = wrapped_ptr::list({ 0 });
         auto const pc = &caller;
-        memcpy(wrapped_ptr::index(wrapped), &pc, ptr_size);
+        *wrapped_ptr::index(wrapped) = *misc::ptr_alias<wrapped_ptr::const_pointer>(&pc);
 
         // .[doCall;enlist wrapped;::]
         auto call = createFunctor(caller.rank());
