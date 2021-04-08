@@ -56,73 +56,65 @@ namespace q_ffi
         q::K_ptr create() const override;
     };
 
-    template<typename Tr, typename S>
+    template<q::TypeId tid>
     class SimpleArgument : public Argument
     {
-    public:
-        using converter_type = S(*)(::K, bool);
-
     private:
-        mutable q::K_ptr mapped_;
-
-        converter_type convert_atom_;
+        using TypeTraits = q::TypeTraits<tid>;
+        using value_type = typename TypeTraits::value_type;
+        using const_reference = typename TypeTraits::const_reference;
+        using const_pointer = typename TypeTraits::const_pointer;
 
     public:
-        SimpleArgument(ffi_type& type, converter_type convert_atom)
-            : Argument(type), convert_atom_{ convert_atom }
-        {
-            assert(nullptr != convert_atom_);
-        }
+        SimpleArgument(ffi_type& type) : Argument(type)
+        {}
 
         void* get(::K k) const override
         {
-            if (q::Nil == k)
-                return nullptr;
-
-            if (-Tr::type_id == q::type(k))
-                return get_direct(k);
-            else
-                return get_mapped(k);
+            validate(k);
+            return &TypeTraits::value(k);
         }
 
         void set(::K k, ffi_arg const& x) const override
         {
-            assert(size() < sizeof(ffi_arg));
-            Tr::value(k) = *reinterpret_cast<typename Tr::const_pointer>(&x);
+            validate(k);
+
+            auto const p = reinterpret_cast<char const*>(&x);
+            assert(nullptr != p);
+            assert(sizeof(ffi_arg) > size());
+            TypeTraits::value(k) = *reinterpret_cast<const_pointer>(p);
         }
 
         std::size_t size() const override
         {
-            return sizeof(typename Tr::value_type);
+            return sizeof(value_type);
         }
 
         q::K_ptr create() const override
         {
-            q::K_ptr val{ Tr::atom(0) };
+            q::K_ptr k{ TypeTraits::atom(0) };
 #       ifndef NDEBUG
-            constexpr auto DUMMY_VALUE = 0x8BAD'F00D'DEAD'BEEFuLL;
-            static_assert(sizeof(DUMMY_VALUE) >= sizeof(typename Tr::value_type),
-                "ensure dummy bytes are filled");
-            Tr::value(val) =
-                *reinterpret_cast<typename Tr::const_pointer>(&DUMMY_VALUE);
+            constexpr auto DUMMY_BYTES = 0x8BAD'F00D'DEAD'BEEFuLL;
+            auto const p = reinterpret_cast<char const*>(&DUMMY_BYTES);
+            assert(nullptr != p);
+            assert(sizeof(DUMMY_BYTES) >= size());
+            TypeTraits::value(k) = *reinterpret_cast<const_pointer>(p);
 #       endif
-            return val;
+            return k;
         }
 
     private:
-        void* get_direct(::K k) const
+        static void validate(::K k)
         {
-            assert(-Tr::type_id == q::type(k));
-            return &Tr::value(k);
-        }
+            if (q::Nil == k)
+                throw q::K_error("nil: simple argument");
 
-        void* get_mapped(::K k) const
-        {
-            mapped_ = create();
-            assert(mapped_);
-            Tr::value(mapped_) =
-                static_cast<typename Tr::value_type>(convert_atom_(k, false));
-            return get_direct(mapped_.get());
+            if (-TypeTraits::type_id != q::type(k)) {
+                std::ostringstream buffer;
+                buffer << "type: simple argument"
+                    " (" << -TypeTraits::type_id << "h expected)";
+                throw q::K_error(buffer.str());
+            }
         }
     };
 

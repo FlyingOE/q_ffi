@@ -67,59 +67,58 @@ ABIs:``std`fast
 { test_log[x;y];
   .test.assert_eq[FUN[x;y]["x"$"a"];"x"$"W"];
   .test.assert_eq[FUN[x;y][   0x61];"x"$"W"];   / anything integral is casted to target type
-  .test.assert_eq[FUN[x;y][   -159];"x"$"W"];   / unsigned integers are treated as 2's-complement
   .test.assert[.[FUN[x;y];(`a;"A");::]like"rank*";"'rank expected"];
  }/:[1;ABIs];
 
 { test_log[x;y];
-  .test.assert_eq[FUN[x;y][0x61;   0];"x"$"a"];
-  .test.assert_eq[FUN[x;y][0x61;  -1];   0x61];
-  .test.assert_eq[FUN[x;y][0x61;0xFF];   0x9E];
+  .test.assert_eq[FUN[x;y][0x61;  0];"x"$"a"];
+  .test.assert_eq[FUN[x;y][0x61; -1];0x61];
+  .test.assert_eq[FUN[x;y][0x61;255];0x9E];
   .test.assert[.[FUN[x;y];(`a;"A";0);::]like"rank*";"'rank expected"];
   .test.assert_eq[type FUN[x;y][`a];104h];      / projection cannot detect parameter error
  }/:[2;ABIs];
 
 { test_log[x;y];
-  .test.assert_eq[FUN[x;y][0x61;   0; 0];  "h"$"a"    ];
-  .test.assert_eq[FUN[x;y][0x61;  -1;-1];0x0 sv 0xFF9E];
-  .test.assert_eq[FUN[x;y][0x61;0xFF;-1];0x0 sv 0x009E];
-  .test.assert_eq[FUN[x;y][0x61;0xFF;-2];0x0 sv 0x009F];
+  .test.assert_eq[FUN[x;y][0x61;  0h; 0];  "h"$"a"    ];
+  .test.assert_eq[FUN[x;y][0x61; -1h;-1];0x0 sv 0xFF9E];
+  .test.assert_eq[FUN[x;y][0x61;255h;-1];0x0 sv 0x009E];
+  .test.assert_eq[FUN[x;y][0x61;255h;-2];0x0 sv 0x009F];
   .test.assert[.[FUN[x;y];(`a;"A";0;0);::]like"rank*";"'rank expected"];
   .test.assert_eq[type FUN[x;y][`a;"A"];104h];  / projection cannot detect parameter error
  }/:[3;ABIs];
 
 { test_log[x;y];
-  .test.assert_eq[FUN[x;y][0x61;   0; 0; 0]; "h"$"a"     ];
-  .test.assert_eq[FUN[x;y][0x61;  -1;-1;-1];0x0 sv 0xFF9E];
-  .test.assert_eq[FUN[x;y][0x61;0xFF;-1;-1];0x0 sv 0xFF61];
-  .test.assert_eq[FUN[x;y][0x61;0xFF;-2;-2];0x0 sv 0xFF61];
+  .test.assert_eq[FUN[x;y][0x61;  0i; 0h; 0]; "h"$"a"     ];
+  .test.assert_eq[FUN[x;y][0x61; -1i;-1h;-1];0x0 sv 0xFF9E];
+  .test.assert_eq[FUN[x;y][0x61;255i;-1h;-1];0x0 sv 0xFF61];
+  .test.assert_eq[FUN[x;y][0x61;255i;-2h;-2];0x0 sv 0xFF61];
   .test.assert[.[FUN[x;y];(`a;"A";0;0;0);::]like"rank*";"'rank expected"];
   .test.assert_eq[type FUN[x;y][`a;"A";0];104h];
  }/:[4;ABIs];
 
 { test_log[x;y];
-  .test.assert_eq[FUN[x;y][0x61; 1   ;   0; 0; 0]; "h"$"a"     ];
-  .test.assert_eq[FUN[x;y][0x61;  .5 ;  -1;-1;-1];0x0 sv 0xFFCF];
-  .test.assert_eq[FUN[x;y][0x61;-1   ;0xFF;-1;-1];0x0 sv 0x009F];
-  .test.assert_eq[FUN[x;y][0x61; 2.5f;0xFF;-2;-2];0x0 sv 0xFE73];
+  .test.assert_eq[FUN[x;y][0x61; 1. ;  0i; 0h; 0]; "h"$"a"     ];
+  .test.assert_eq[FUN[x;y][0x61;  .5; -1i;-1h;-1];0x0 sv 0xFFCF];
+  .test.assert_eq[FUN[x;y][0x61;-1. ;255i;-1h;-1];0x0 sv 0x009F];
+  .test.assert_eq[FUN[x;y][0x61; 2.5;255i;-2h;-2];0x0 sv 0xFE73];
   .test.assert[.[FUN[x;y];(`a;"A";0;0;0;"A");::]like"rank*";"'rank expected"];
   .test.assert_eq[type FUN[x;y][`a;"A";0;0];104h];
  }/:[5;ABIs];
 
 { test_log[x;y];
-  .test.assert_eq[FUN[x;y][ 1  ;0x61;   0; 0; 0; 1  ]; "h"$"a"     ];
-  .test.assert_eq[FUN[x;y][  .5;0x61;  -1;-1;-1;  .5];0x0 sv 0xFF9E];
-  .test.assert_eq[FUN[x;y][-1  ;0x61;0xFF;-1;-1; 1  ];0x0 sv 0x009F];
-  .test.assert_eq[FUN[x;y][1%3.;0x61;0xFF;-2;-2;-2. ];0x0 sv 0x001A];
+  .test.assert_eq[FUN[x;y][ 1e    ;0x61;  0i; 0h; 0; 1. ]; "h"$"a"     ];
+  .test.assert_eq[FUN[x;y][  .5e  ;0x61; -1i;-1h;-1;  .5];0x0 sv 0xFF9E];
+  .test.assert_eq[FUN[x;y][-1e    ;0x61;255i;-1h;-1; 1. ];0x0 sv 0x009F];
+  .test.assert_eq[FUN[x;y]["e"$1%3;0x61;255i;-2h;-2;-2. ];0x0 sv 0x001A];
   .test.assert[.[FUN[x;y];(`a;"A";0;0;0;"A";());::]like"rank*";"'rank expected"];
   .test.assert_eq[type FUN[x;y][`a;"A";0;0;0];104h];
  }/:[6;ABIs];
 
 { test_log[x;y];
-  .test.assert_eq[FUN[x;y][ 1  ;0x61;   0; 0; 0; 1  ;"\000"]; "i"$"a"         ];
-  .test.assert_eq[FUN[x;y][  .5;0x61;  -1;-1;-1;  .5;"\377"];0x0 sv 0xFFFFFF61];
-  .test.assert_eq[FUN[x;y][-1  ;0x61;0xFF;-1;-1; 1  ;"\001"];0x0 sv 0xFFFFFF61];
-  .test.assert_eq[FUN[x;y][1%3.;0x61;0xFF;-2;-2;-2. ;"\000"];0x0 sv 0xFFFFFFE6];
+  .test.assert_eq[FUN[x;y][ 1e    ;0x61;  0i; 0h; 0; 1. ;"\000"]; "i"$"a"         ];
+  .test.assert_eq[FUN[x;y][  .5e  ;0x61; -1i;-1h;-1;  .5;"\377"];0x0 sv 0xFFFFFF61];
+  .test.assert_eq[FUN[x;y][-1e    ;0x61;255i;-1h;-1; 1. ;"\001"];0x0 sv 0xFFFFFF61];
+  .test.assert_eq[FUN[x;y]["e"$1%3;0x61;255i;-2h;-2;-2. ;"\000"];0x0 sv 0xFFFFFFE6];
   .test.assert[.[FUN[x;y];(`a;"A";0;0;0;"A";();::);::]like"rank*";"'rank expected"];
   .test.assert_eq[type FUN[x;y][`a;"A";0;0;0;"A"];104h];
  }/:[7;ABIs];

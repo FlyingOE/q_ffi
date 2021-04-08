@@ -292,37 +292,25 @@ q_ffi::Invocator::guessABI(char const* /*funcName*/)
 q_ffi::Invocator::argument_type
 q_ffi::Invocator::mapType(char typeCode)
 {
-    constexpr char (*convert_char)(::K, bool) = &q2Char;
-    constexpr long long (*convert_decimal)(::K, bool) = &q2Decimal;
-    constexpr double (*convert_real)(::K, bool) = &q2Real;
-
     switch (typeCode) {
     case ' ':
         return make_unique<VoidArgument>();
     case 'b':
-        return make_unique<SimpleArgument<TypeTraits<kBoolean>, long long>>(
-            ffi_type_sint, convert_decimal);
+        return make_unique<SimpleArgument<kBoolean>>(ffi_type_sint);
     case 'x':
-        return make_unique<SimpleArgument<TypeTraits<kByte>, long long>>(
-            ffi_type_uint8, convert_decimal);
+        return make_unique<SimpleArgument<kByte>>(ffi_type_uint8);
     case 'c':
-        return make_unique<SimpleArgument<TypeTraits<kChar>, char>>(
-            ffi_type_uchar, convert_char);
+        return make_unique<SimpleArgument<kChar>>(ffi_type_uchar);
     case 'h':
-        return make_unique<SimpleArgument<TypeTraits<kShort>, long long>>(
-            ffi_type_sint16, convert_decimal);
+        return make_unique<SimpleArgument<kShort>>(ffi_type_sint16);
     case 'i':
-        return make_unique<SimpleArgument<TypeTraits<kInt>, long long>>(
-            ffi_type_sint32, convert_decimal);
+        return make_unique<SimpleArgument<kInt>>(ffi_type_sint32);
     case 'j':
-        return make_unique<SimpleArgument<TypeTraits<kLong>, long long>>(
-            ffi_type_sint64, convert_decimal);
+        return make_unique<SimpleArgument<kLong>>(ffi_type_sint64);
     case 'e':
-        return make_unique<SimpleArgument<TypeTraits<kReal>, double>>(
-            ffi_type_float, convert_real);
+        return make_unique<SimpleArgument<kReal>>(ffi_type_float);
     case 'f':
-        return make_unique<SimpleArgument<TypeTraits<kFloat>, double>>(
-            ffi_type_double, convert_real);
+        return make_unique<SimpleArgument<kFloat>>(ffi_type_double);
     default:
         ostringstream buffer;
         buffer << "unsupported type code: '" << typeCode << "'";
