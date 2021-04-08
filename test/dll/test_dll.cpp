@@ -36,8 +36,8 @@ extern "C"
         API_EXPORT  \
         Type Abi add_##Type##_##AbiName(Type a, Type b)    \
         {   \
-			auto const c = a + b;   \
-			cout << dec << "In add_" #Type "_" #AbiName " with "    \
+            auto const c = a + b;   \
+            cout << dec << "In add_" #Type "_" #AbiName " with "    \
                 << '(' << a << ") + (" << b << ") = (" << c << ')' << endl; \
             return c;   \
         }
@@ -66,7 +66,7 @@ extern "C"
 }//extern "C"
 #pragma endregion
 
-#pragma region Tests for different argument/type combinations
+#pragma region Tests for various argument/type combinations
 
 namespace
 {
@@ -200,7 +200,7 @@ int32_t CALL_FASTCALL f7_fastcall(float a, char b, int32_t c, int16_t d, int64_t
 
 #pragma endregion
 
-#pragma region Tests for different variable types
+#pragma region Tests for various variable types
 
 extern "C" API_EXPORT char v_char;
 char v_char = 'C';
@@ -222,5 +222,12 @@ float v_real = 3.14159265f;
 
 extern "C" API_EXPORT double v_float;
 double v_float = 3.141592653589793;
+
+#pragma endregion
+
+#pragma region Tests for various pointer types
+
+//extern "C" API_EXPORT
+//std::size_t negate(int64)
 
 #pragma endregion

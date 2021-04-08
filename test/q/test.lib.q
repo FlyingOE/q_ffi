@@ -8,9 +8,13 @@ lib:{ `$$[.z.o like"w*";"";"lib"],$[-11h=type x;string x;x] }
 \d .
 
 DLL:.util.lib`q_ffi
-LOADER:`loadFun
-GETTER:`getVar
-SETTER:`setVar
+LOADER:`load_fun
+GETTER:`get_var
+SETTER:`set_var
+SIZE_T:`size_type
+PTR_T:`ptr_type
+ADDR_GETTER:`get_addr
+ADDR_SETTER:`set_addr
 
 TEST_DLL:.util.lib`test_q_ffi_dll
 
