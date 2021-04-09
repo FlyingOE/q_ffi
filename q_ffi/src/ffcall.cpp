@@ -311,6 +311,8 @@ q_ffi::Invocator::mapType(char typeCode)
         return make_unique<SimpleArgument<kReal>>(ffi_type_float);
     case 'f':
         return make_unique<SimpleArgument<kFloat>>(ffi_type_double);
+    case 's':
+        return make_unique<SimpleArgument<kSymbol>>(ffi_type_pointer);
     case '&':
         return make_unique<PointerArgument>();
     default:

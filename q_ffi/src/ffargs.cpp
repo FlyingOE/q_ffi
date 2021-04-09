@@ -56,15 +56,15 @@ q_ffi::VoidArgument::create() const
 void*
 q_ffi::PointerArgument::get(::K k) const
 {
-    static_assert(sizeof(long long) >= sizeof(void*), "ensure pointer size");
-    long long a = q2Decimal(k);
-    return *misc::ptr_alias<void**>(&a);
+    using pointer_traits = TypeCode<sizeof(void*)>::traits;
+    validate<-pointer_traits::type_id>(k);
+    return misc::ptr_alias<void*>(&pointer_traits::value(k));
 }
 
 void
 q_ffi::PointerArgument::set(::K, ffi_arg const&) const
 {
-    throw K_error("type: too small for a pointer");
+    throw K_error("type: invalid for a pointer");
 }
 
 size_t
@@ -95,31 +95,26 @@ q_ffi::PointerArgument::getAddr<kSymbol>(::K k)
 #pragma region q_ffi::getAddr(...) implementation
 
 K_ptr
-q_ffi::getAddr(::K typ, ::K k) noexcept(false)
+q_ffi::getAddr(::K k) noexcept(false)
 {
-    auto const typeCode = q2Char(typ);
-    switch (typeCode) {
-    case 'B':
-        return PointerArgument::getAddr<kBoolean>(k);
-    case 'X':
-        return PointerArgument::getAddr<kByte>(k);
-    case 'C':
-        return PointerArgument::getAddr<kChar>(k);
-    case 'H':
-        return PointerArgument::getAddr<kShort>(k);
-    case 'I':
-        return PointerArgument::getAddr<kInt>(k);
-    case 'J':
-        return PointerArgument::getAddr<kLong>(k);
-    case 'E':
-        return PointerArgument::getAddr<kReal>(k);
-    case 'F':
-        return PointerArgument::getAddr<kFloat>(k);
-    case 's':
+#   define GET_ADDR_CASE(kType) \
+        case (kType):   \
+            return PointerArgument::getAddr<(kType)>(k)
+
+    switch (type(k)) {
+        GET_ADDR_CASE(kBoolean);
+        GET_ADDR_CASE(kByte);
+        GET_ADDR_CASE(kChar);
+        GET_ADDR_CASE(kShort);
+        GET_ADDR_CASE(kInt);
+        GET_ADDR_CASE(kLong);
+        GET_ADDR_CASE(kReal);
+        GET_ADDR_CASE(kFloat);
+    case -kSymbol:
         return PointerArgument::getAddr<kSymbol>(k);
     default:
         ostringstream buffer;
-        buffer << "invalid type for FFI pointer: '" << typeCode << "'";
+        buffer << "invalid type for FFI pointer: " << type(k) << "h";
         throw K_error(buffer.str());
     }
 }

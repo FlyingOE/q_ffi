@@ -56,10 +56,10 @@ using namespace std;
     return TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId)).release();
 }
 
-::K K4_DECL get_addr(::K typ, ::K k)
+::K K4_DECL get_addr(::K k)
 {
     try {
-        return q_ffi::getAddr(typ, k).release();
+        return q_ffi::getAddr(k).release();
     }
     catch (K_error const& ex) {
         return ex.report().release();

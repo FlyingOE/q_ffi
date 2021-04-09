@@ -174,7 +174,7 @@ namespace q_ffi
         }
     };
 
-#pragma region Tests for different calling conventions (ABIs)
+#pragma region Tests for various calling conventions (ABIs)
 
     vector<FFCallTests::TestInfo>
     FFCallTests::ABI_TEST_CASES = {
@@ -265,9 +265,9 @@ namespace q_ffi
 
 #pragma endregion
 
-#pragma region Tests for different argument/type combinations
+#pragma region Tests for various argument/type combinations
 
-    TEST_F(FFCallTests, argsQ)
+    TEST_F(FFCallTests, argumentsQ)
     {
         SCOPED_TRACE("foreign-function argument combos");
         runGenericTest("test_ffcall_args.q");
@@ -275,12 +275,22 @@ namespace q_ffi
 
 #pragma endregion
 
-#pragma region Tests for different variable types
+#pragma region Tests for various variable types
 
-    TEST_F(FFCallTests, varsQ)
+    TEST_F(FFCallTests, variablesQ)
     {
         SCOPED_TRACE("foreign variables");
         runGenericTest("test_ffcall_vars.q");
+    }
+
+#pragma endregion
+
+#pragma region Tests for various pointer types
+
+    TEST_F(FFCallTests, pointersQ)
+    {
+        SCOPED_TRACE("pointer arguments");
+        runGenericTest("test_ffcall_neg.q");
     }
 
 #pragma endregion

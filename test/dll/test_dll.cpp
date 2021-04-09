@@ -32,7 +32,7 @@ using namespace std;
 extern "C"
 {
 
-#   define DEFINE_TEST_FUNCTION(Abi, AbiName, Type)  \
+#   define DEFINE_TEST_ADD(Abi, AbiName, Type)  \
         API_EXPORT  \
         Type Abi add_##Type##_##AbiName(Type a, Type b)    \
         {   \
@@ -42,26 +42,26 @@ extern "C"
             return c;   \
         }
 
-    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, char);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, int16_t);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, int32_t);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, int64_t);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, float);
-    DEFINE_TEST_FUNCTION(CALL_CDECL, cdecl, double);
+    DEFINE_TEST_ADD(CALL_CDECL, cdecl, char);
+    DEFINE_TEST_ADD(CALL_CDECL, cdecl, int16_t);
+    DEFINE_TEST_ADD(CALL_CDECL, cdecl, int32_t);
+    DEFINE_TEST_ADD(CALL_CDECL, cdecl, int64_t);
+    DEFINE_TEST_ADD(CALL_CDECL, cdecl, float);
+    DEFINE_TEST_ADD(CALL_CDECL, cdecl, double);
 
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, char);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, int16_t);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, int32_t);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, int64_t);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, float);
-    DEFINE_TEST_FUNCTION(CALL_STDCALL, stdcall, double);
+    DEFINE_TEST_ADD(CALL_STDCALL, stdcall, char);
+    DEFINE_TEST_ADD(CALL_STDCALL, stdcall, int16_t);
+    DEFINE_TEST_ADD(CALL_STDCALL, stdcall, int32_t);
+    DEFINE_TEST_ADD(CALL_STDCALL, stdcall, int64_t);
+    DEFINE_TEST_ADD(CALL_STDCALL, stdcall, float);
+    DEFINE_TEST_ADD(CALL_STDCALL, stdcall, double);
 
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, char);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, int16_t);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, int32_t);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, int64_t);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, float);
-    DEFINE_TEST_FUNCTION(CALL_FASTCALL, fastcall, double);
+    DEFINE_TEST_ADD(CALL_FASTCALL, fastcall, char);
+    DEFINE_TEST_ADD(CALL_FASTCALL, fastcall, int16_t);
+    DEFINE_TEST_ADD(CALL_FASTCALL, fastcall, int32_t);
+    DEFINE_TEST_ADD(CALL_FASTCALL, fastcall, int64_t);
+    DEFINE_TEST_ADD(CALL_FASTCALL, fastcall, float);
+    DEFINE_TEST_ADD(CALL_FASTCALL, fastcall, double);
 
 }//extern "C"
 #pragma endregion
@@ -227,7 +227,55 @@ double v_float = 3.141592653589793;
 
 #pragma region Tests for various pointer types
 
-//extern "C" API_EXPORT
-//std::size_t negate(int64)
+namespace
+{
+    template<typename T, typename Op>
+    T* process_any(T* data, size_t count, Op const& op)
+    {
+        assert(nullptr != data);
+        transform(data, data + count, data, op);
+        return data;
+    }
+}
 
+extern "C"
+{
+#   define DEFINE_TEST_NEGATE(Type) \
+        API_EXPORT  \
+        Type* negate_##Type(Type* data, size_t count)   \
+        {   \
+            return process_any(data, count, [](auto x) { return -x; }); \
+        }
+
+    DEFINE_TEST_NEGATE(int8_t);
+    DEFINE_TEST_NEGATE(int16_t);
+    DEFINE_TEST_NEGATE(int32_t);
+    DEFINE_TEST_NEGATE(int64_t);
+    DEFINE_TEST_NEGATE(float);
+    DEFINE_TEST_NEGATE(double);
+
+    API_EXPORT
+    bool* negate_bool(bool* data, size_t count)
+    {
+        return process_any(data, count, [](auto x) { return !x; });
+    }
+
+    API_EXPORT
+    char* negate_char(char* data, size_t count)
+    {
+        return process_any(data, count,
+            [](auto x) { return static_cast<char>(toupper(x)); });
+    }
+
+    API_EXPORT
+    char* trans_symbol(char* output, char const* input, size_t count)
+    {
+        assert(nullptr != output);
+        assert(nullptr != input);
+        transform(input, input + count, output,
+            [](auto x) { return static_cast<char>(toupper(x)); });
+        return output;
+    }
+
+}//extern "C"
 #pragma endregion

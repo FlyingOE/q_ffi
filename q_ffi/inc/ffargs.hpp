@@ -8,7 +8,7 @@
 
 namespace q_ffi
 {
-    q::K_ptr getAddr(::K typ, ::K k) noexcept(false);
+    q::K_ptr getAddr(::K k) noexcept(false);
 
     template<std::size_t nBytes>
     struct TypeCode;

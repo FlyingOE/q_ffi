@@ -57,7 +57,10 @@ target_sources(${target_name}_dll
 # q test scripst
 set(test_scripts
     q/test.lib.q
-    q/test_ffcall_add.q     q/test_ffcall_args.q    q/test_ffcall_vars.q
+    q/test_ffcall_add.q
+    q/test_ffcall_args.q
+    q/test_ffcall_vars.q
+    q/test_ffcall_neg.q
 )
 set_target_properties(${target_name} PROPERTIES
     RESOURCE  "${test_scripts}"

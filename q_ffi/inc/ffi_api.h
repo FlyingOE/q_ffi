@@ -21,4 +21,4 @@ q_ffi_EXTERN q_ffi_API
 K K4_DECL ptr_type(K /*`2:' requires >=1 args*/);
 
 q_ffi_EXTERN q_ffi_API
-K K4_DECL get_addr(K typ, K k);
+K K4_DECL get_addr(K k);
