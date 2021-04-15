@@ -60,21 +60,18 @@ namespace q_ffi
 #   pragma endregion
 
 #   pragma region FFI variable
-        void load(char const* var, char varType);
-
-        q::K_ptr operator()();
-        void operator()(::K val);
+//        void load(char const* var, char varType);
+//
+//        q::K_ptr operator()();
+//        void operator()(::K val);
 #   pragma endregion
 
     private:
         /// @brief Regenerates FFI info cache
         void prepareFFI(ffi_abi abi);
 
-        q::K_ptr invoke(void* params[]);
-
         void setReturnType(char typeCode);
         void setArgumentTypes(char const* typeCodes);
-        void verifyArgumentTypes(char const* funcName, ffi_abi abi);
 
         static ffi_abi mapABI(char const* abiType, char const* funcName);
         static ffi_abi guessABI(char const* funcName);

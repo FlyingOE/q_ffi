@@ -13,7 +13,7 @@ GETTER:`get_var
 SETTER:`set_var
 SIZE_T:`size_type
 PTR_T:`ptr_type
-ADDR_GETTER:`get_addr
+ADDR_GETTER:`to_addr
 ADDR_SETTER:`set_addr
 
 TEST_DLL:.util.lib`test_q_ffi_dll

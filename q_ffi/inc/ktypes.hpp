@@ -53,49 +53,6 @@ namespace q
         kError = -128,
     };
 
-    template<typename Elem, typename ElemTr>
-    std::basic_ostream<Elem, ElemTr>& operator<<(
-        std::basic_ostream<Elem, ElemTr>& os, TypeId tid)
-    {
-#   define Q_TYPEID_OUTPUT(T)  \
-        case -(k##T): return os << "<" #T ">";  \
-        case (k##T): return os << "<" #T "s>"
-        switch (tid)
-        {
-        case kMixed: return os << "<(...)>";
-            Q_TYPEID_OUTPUT(Boolean);
-            Q_TYPEID_OUTPUT(GUID);
-            Q_TYPEID_OUTPUT(Byte);
-            Q_TYPEID_OUTPUT(Short);
-            Q_TYPEID_OUTPUT(Int);
-            Q_TYPEID_OUTPUT(Long);
-            Q_TYPEID_OUTPUT(Real);
-            Q_TYPEID_OUTPUT(Float);
-            Q_TYPEID_OUTPUT(Char);
-            Q_TYPEID_OUTPUT(Symbol);
-            Q_TYPEID_OUTPUT(Timestamp);
-            Q_TYPEID_OUTPUT(Month);
-            Q_TYPEID_OUTPUT(Date);
-            Q_TYPEID_OUTPUT(Datetime);
-            Q_TYPEID_OUTPUT(Timespan);
-            Q_TYPEID_OUTPUT(Minute);
-            Q_TYPEID_OUTPUT(Second);
-            Q_TYPEID_OUTPUT(Time);
-        case kTable: return os << "<Table>";
-        case kDict: return os << "<Dict>";
-        case kNil: return os << "<::>";
-        case kError: return os << "<'Error>";
-        default:
-            if (-kEnumMin >= tid && tid >= -kEnumMax)
-                return os << "<Enum>";
-            else if (kEnumMin <= tid && tid <= kEnumMax)
-                return os << "<Enums>";
-            else
-                return os << '<' << tid << '>';
-        }
-#   undef Q_TYPEID_OUTPUT
-    }
-
     /// @brief Map @c TypeId to single-character type code in q.
     q_ffi_API extern std::unordered_map<TypeId, char> const TypeId2Code;
 

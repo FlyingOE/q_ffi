@@ -50,7 +50,6 @@ q_ffi::Invocator::load(char const* func, char retType, char const* argTypes,
         setReturnType(retType);
         setArgumentTypes(argTypes);
         auto const abi = mapABI(abiType, func);
-        verifyArgumentTypes(func, abi);
         prepareFFI(abi);
     }
     catch (runtime_error const& ex) {
@@ -58,6 +57,7 @@ q_ffi::Invocator::load(char const* func, char retType, char const* argTypes,
     }
 }
 
+/*
 void
 q_ffi::Invocator::load(char const* var, char varType)
 {
@@ -69,6 +69,7 @@ q_ffi::Invocator::load(char const* var, char varType)
         throw K_error(ex);
     }
 }
+*/
 
 K_ptr
 q_ffi::Invocator::operator()(initializer_list<::K> params)
@@ -80,13 +81,25 @@ q_ffi::Invocator::operator()(initializer_list<::K> params)
         throw K_error(buffer.str());
     }
 
-    auto pars = make_unique<void*[]>(rank);
-    transform(args_.cbegin(), args_.cend(), params.begin(), pars.get(),
-        [](auto const& arg, auto const& par) { return arg->get(par); });
+    // Prepare result
+    assert(ret_);
+    auto ret = ret_->create();
 
-    return invoke(pars.get());
+    // Prepare parameters
+    vector<unique_ptr<Parameter>> parms{ rank };
+    transform(args_.cbegin(), args_.cend(), params.begin(), parms.begin(),
+        [](auto const& arg, auto const param) { return arg->map(param); });
+
+    auto pars = make_unique<void*[]>(rank);
+    transform(parms.cbegin(), parms.cend(), pars.get(),
+        [](auto const& par) { return par->get(); });
+
+    // FFI invocation
+    ffi_call(&ffi_.cif, sym_.func, ret->get(), pars.get());
+    return ret->release();
 }
 
+/*
 K_ptr
 q_ffi::Invocator::operator()()
 {
@@ -97,6 +110,7 @@ q_ffi::Invocator::operator()()
 
     K_ptr val = ret_->create();
     memcpy(ret_->get(val), sym_.var, ret_->size());
+//PENDING
     return val;
 }
 
@@ -107,44 +121,36 @@ q_ffi::Invocator::operator()(::K val)
         throw K_error("not a foreign variable");
     else
         assert(!ffi_.arg_types);
-
+//PENDING
     memcpy(sym_.var, ret_->get(val), ret_->size());
 }
+*/
 
+/*
 K_ptr
-q_ffi::Invocator::invoke(void* params[])
+q_ffi::Invocator::invoke(q_ffi::Parameter** params)
 {
-    if (nullptr == ffi_.ret_type)
-        throw K_error("not a foreign function");
-    else
-        assert(ffi_.arg_types);
+//    if (nullptr == ffi_.ret_type)
+//        throw K_error("not a foreign function");
+//    else
+//        assert(ffi_.arg_types);
+    auto const rank = this->rank();
 
-    // Prepare result placeholder
+    // Prepare parameters
+    auto pars = make_unique<void*[]>(rank);
+    transform(params, params + rank, pars.get(),
+        [](auto const par) { return par->get(); });
+
+    // Prepare result
     assert(ret_);
-    K_ptr result{ ret_->create() };
-    ffi_arg placeholder{};
-    bool mapped = false;
-    void* res = nullptr;
-    if (Nil == result.get()) {
-        res = nullptr;
-    }
-    else if (ret_->size() < sizeof(ffi_arg)) {
-        mapped = true;
-        res = &placeholder;
-    }
-    else {
-        res = ret_->get(result.get());
-    }
+    auto ret = ret_->create();
 
     // FFI invocation
-    ffi_call(&ffi_.cif, sym_.func, res, params);
+    ffi_call(&ffi_.cif, sym_.func, ret->get(), pars.get());
 
-    // Fetch result
-    if (mapped)
-        ret_->set(result, placeholder);
-
-    return result;
+    return ret->release();
 }
+*/
 
 void
 q_ffi::Invocator::prepareFFI(ffi_abi abi)
@@ -189,46 +195,6 @@ q_ffi::Invocator::setArgumentTypes(char const* typeCodes)
     transform(typeCodes, typeCodes + arity, args_.begin(),
         [](char t) { return mapType(t); });
 }
-
-#ifdef PLATFORM_X86
-void
-q_ffi::Invocator::verifyArgumentTypes(char const* funcName, ffi_abi abi)
-{
-    static const regex mangling{ R"([_@].+@(\d+))" };
-    static constexpr auto PATTERN_CAPS = 1;
-    cmatch matches;
-    switch (abi) {
-    case FFI_STDCALL:
-    case FFI_FASTCALL:
-        if (regex_match(funcName, matches, mangling)) {
-            assert(matches.size() == 1 + PATTERN_CAPS);
-            auto const paramSize = stoi(matches[1]);
-            auto argSize = 0;
-            for (auto const& arg : args_)
-                argSize += max(arg->size(), sizeof(ffi_arg));
-            if (paramSize != argSize) {
-                ostringstream buffer;
-                buffer << "incorrect argument spec? ("
-                    << "actual=" << paramSize << ' '
-                    << "expected=" << argSize << ')';
-                throw K_error(buffer.str());
-            }
-        }
-        else {
-            //FIXME: Not MSVC default mangling
-        }
-        break;
-    case FFI_MS_CDECL:
-    default:
-        // Function names not mangled
-        break;
-    }
-}
-#else
-void
-q_ffi::Invocator::verifyArgumentTypes(char const* /*funcName*/, ffi_abi /*abi*/)
-{}
-#endif
 
 ffi_abi
 q_ffi::Invocator::mapABI(char const* abiType, char const* funcName)
@@ -294,27 +260,27 @@ q_ffi::Invocator::mapType(char typeCode)
 {
     switch (typeCode) {
     case ' ':
-        return make_unique<VoidArgument>();
+        return make_unique<Void>();
     case 'b':
-        return make_unique<SimpleArgument<kBoolean>>(ffi_type_sint);
+        return make_unique<Atom<kBoolean>>(ffi_type_sint8);
     case 'x':
-        return make_unique<SimpleArgument<kByte>>(ffi_type_uint8);
+        return make_unique<Atom<kByte>>(ffi_type_uint8);
     case 'c':
-        return make_unique<SimpleArgument<kChar>>(ffi_type_uchar);
+        return make_unique<Atom<kChar>>(ffi_type_uchar);
     case 'h':
-        return make_unique<SimpleArgument<kShort>>(ffi_type_sint16);
+        return make_unique<Atom<kShort>>(ffi_type_sint16);
     case 'i':
-        return make_unique<SimpleArgument<kInt>>(ffi_type_sint32);
+        return make_unique<Atom<kInt>>(ffi_type_sint32);
     case 'j':
-        return make_unique<SimpleArgument<kLong>>(ffi_type_sint64);
+        return make_unique<Atom<kLong>>(ffi_type_sint64);
     case 'e':
-        return make_unique<SimpleArgument<kReal>>(ffi_type_float);
+        return make_unique<Atom<kReal>>(ffi_type_float);
     case 'f':
-        return make_unique<SimpleArgument<kFloat>>(ffi_type_double);
+        return make_unique<Atom<kFloat>>(ffi_type_double);
     case 's':
-        return make_unique<SimpleArgument<kSymbol>>(ffi_type_pointer);
+        return make_unique<Atom<kSymbol>>();
     case '&':
-        return make_unique<PointerArgument>();
+        return make_unique<Pointer>();
     default:
         ostringstream buffer;
         buffer << "invalid type for FFI argument: '" << typeCode << "'";
@@ -513,6 +479,7 @@ noexcept(false)
 
 namespace
 {
+/*
     q_ffi::Invocator& createAccessor(::K dllSym, ::K varName, ::K typeCode)
     {
         auto const dll = q2String(dllSym);
@@ -524,23 +491,26 @@ namespace
 
         return accessor;
     }
-
-}//namespace /*anonymous*/
+*/
+}
 
 K_ptr
 q_ffi::getVar(::K dllSym, ::K varName, ::K typeCode)
 noexcept(false)
 {
-    auto& accessor = createAccessor(dllSym, varName, typeCode);
-    return accessor();
+//    auto& accessor = createAccessor(dllSym, varName, typeCode);
+//    return accessor();
+    dllSym++; varName++; typeCode++;
+    return K_ptr{};
 }
 
 K_ptr
 q_ffi::setVar(::K dllSym, ::K varName, ::K typeCode, ::K val)
 noexcept(false)
 {
-    auto& accessor = createAccessor(dllSym, varName, typeCode);
-    accessor(val);
+//    auto& accessor = createAccessor(dllSym, varName, typeCode);
+//    accessor(val);
+    dllSym++; varName++; typeCode++; val++;
     return K_ptr{};
 }
 

@@ -39,14 +39,14 @@ namespace misc
         >>
     inline constexpr To ptr_alias(From p) noexcept
     {
-        union aliaser
+        union Aliaser
         {
             From fptr;
             To tptr;
         };
-        aliaser a{};
-        a.fptr = p;
-        return a.tptr;
+        Aliaser alias{};
+        alias.fptr = p;
+        return alias.tptr;
     }
 
 }//namespace misc

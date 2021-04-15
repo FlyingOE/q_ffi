@@ -42,26 +42,46 @@ using namespace std;
     }
 }
 
-::K K4_DECL size_type(::K)
-{
-    using size_type = size_t;
-    static constexpr auto typeId = q_ffi::TypeCode<sizeof(size_type)>::traits::type_id;
-    return TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId)).release();
-}
-
-::K K4_DECL ptr_type(::K)
-{
-    using ptr_type = void*;
-    static constexpr auto typeId = q_ffi::TypeCode<sizeof(ptr_type)>::traits::type_id;
-    return TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId)).release();
-}
-
-::K K4_DECL get_addr(::K k)
+::K K4_DECL to_addr(::K k)
 {
     try {
-        return q_ffi::getAddr(k).release();
+        return q_ffi::to_addr(k).release();
     }
     catch (K_error const& ex) {
         return ex.report().release();
     }
+}
+
+::K K4_DECL addr_get(::K addr, ::K typ)
+{
+    try {
+        ++addr; ++typ;
+//        return q_ffi::getAddrValue(addr, typ).release();
+        throw K_error("get_at_addr");
+    }
+    catch (K_error const& ex) {
+        return ex.report().release();
+    }
+}
+
+::K K4_DECL addr_set(::K addr, ::K k)
+{
+    try {
+        ++addr; ++k;
+//        return q_ffi::setAddrValue(addr, k).release();
+        throw K_error("set_at_addr");
+    }
+    catch (K_error const& ex) {
+        return ex.report().release();
+    }
+}
+
+::K K4_DECL size_type(::K)
+{
+    return q_ffi::get_type<std::size_t>().release();
+}
+
+::K K4_DECL ptr_type(::K)
+{
+    return q_ffi::get_type<void*>().release();
 }

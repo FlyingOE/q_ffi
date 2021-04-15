@@ -268,6 +268,13 @@ extern "C"
     }
 
     API_EXPORT
+    size_t symbol_len(char const* sym)
+    {
+        assert(nullptr != sym);
+        return strlen(sym);
+    }
+
+    API_EXPORT
     char* trans_symbol(char* output, char const* input, size_t count)
     {
         assert(nullptr != output);
