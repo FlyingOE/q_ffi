@@ -3,7 +3,9 @@
 /////////////////////////////////////////////////////////////////////////////
 /// Enhanced FFI (foreign function interface) support for k4.
 /////////////////////////////////////////////////////////////////////////////
-DLL:$[.z.o like"w*"; `q_ffi; `libq_ffi ];
+DLL:@[value;`.ffi.DLL;{
+  $[.z.o like"w*"; `q_ffi; `libq_ffi]
+ }];
 
 /// @brief DLL version/build information.
 version:DLL 2:(`version;1);
