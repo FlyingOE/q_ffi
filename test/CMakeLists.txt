@@ -83,10 +83,16 @@ if(WIN32)
         VERBATIM
     )
 endif()
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    get_target_property(dll_suffix CapitalEdge::q_ffi DEBUG_POSTFIX)
+else()
+    set(dll_suffix "")
+endif()
 add_custom_target(${target_name}.test-scripts ALL
     COMMAND ${CMAKE_COMMAND}
             -D "test_scripts=${test_scripts}"
             -D "binary_dir=${CMAKE_CURRENT_BINARY_DIR}"
+            -D "dll_suffix=${dll_suffix}"
             -P q/tests.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${test_scripts_src}

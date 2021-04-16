@@ -3,6 +3,7 @@
 # Parameters:
 #   test_scripts - list of script files to be generated
 #   binary_dir   - output directory for the generated scripts
+#   dll_suffix   - suffix of DLL filename
 #############################################################################
 foreach(script ${test_scripts})
     if(${CMAKE_VERSION} VERSION_LESS "3.20")
@@ -10,5 +11,7 @@ foreach(script ${test_scripts})
     else()
         cmake_path(GET ${script} FILENAME script_file)
     endif()
-    configure_file(${script} ${binary_dir}/${script_file} COPYONLY)
+
+    configure_file(${script} ${binary_dir}/${script_file} @ONLY)
+
 endforeach()

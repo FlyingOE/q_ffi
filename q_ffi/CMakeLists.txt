@@ -1,5 +1,5 @@
 # vim: set et noai ts=4 sw=4 syntax=cmake:
-set(target_name q_ffi)
+set(target_name       q_ffi)
 set(target_source_dir src)
 set(target_header_dir inc)
 
@@ -64,6 +64,7 @@ target_sources(${target_name}
         ${q_ffi_ALWAYS_BUILD}
 )
 set_target_properties(${target_name} PROPERTIES
+    DEBUG_POSTFIX "d"
     RESOURCE      "${q_ffi_BINDING}"
     PUBLIC_HEADER "${q_ffi_PUBLIC_API}"
 )
@@ -91,6 +92,22 @@ target_link_libraries(${target_name}
         date::date
     PRIVATE
         libffi::static
+)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    get_target_property(dll_suffix ${target_name} DEBUG_POSTFIX)
+else()
+    set(dll_suffix "")
+endif()
+add_custom_target(${target_name}.binding ALL
+    COMMAND ${CMAKE_COMMAND}
+            -D "q_script=${q_ffi_BINDING}"
+            -D "binary_dir=${CMAKE_CURRENT_BINARY_DIR}"
+            -D "dll_suffix=${dll_suffix}"
+            -P q_ffi.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${q_ffi_BINDING}
+    COMMENT "Generate q script binding."
+    VERBATIM
 )
 
 # dlfcn-win32 to emulate dlopen/dlsym
@@ -160,15 +177,20 @@ add_custom_target(update_version ALL
     VERBATIM
 )
 add_dependencies(${target_name}
-    update_version )
+    update_version
+)
 
 # Installation steps
 install(TARGETS ${target_name}
     RUNTIME       DESTINATION bin/$ENV{k4_PLATFORM}
-    RESOURCE      DESTINATION bin
     ARCHIVE       DESTINATION lib/$ENV{k4_PLATFORM}
     PUBLIC_HEADER DESTINATION include
 )
+foreach(script ${q_ffi_BINDING})
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${script}
+        DESTINATION bin
+    )
+endforeach()
 
 ####################
 add_library(CapitalEdge::q_ffi ALIAS ${target_name})

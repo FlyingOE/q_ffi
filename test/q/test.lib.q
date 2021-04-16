@@ -7,7 +7,7 @@ lib:{ `$$[.z.o like"w*";"";"lib"],$[-11h=type x;string x;x] }
 /////////////////////////////////////////////////////////////////////////////
 \d .
 
-DLL:.util.lib`q_ffi
+DLL:.util.lib`q_ffi@dll_suffix@
 LOADER:`load_fun
 GETTER:`get_var
 SETTER:`set_var
