@@ -10,11 +10,15 @@ DLL:@[value;`.ffi.DLL;{
 /// @brief DLL version/build information.
 version:DLL 2:(`version;1);
 
-/// @brief q type code for a @c size_t in the current platform.
-size_t:(DLL 2:(`size_type;1))[];
+/// @brief Return a q type code for a @c size_t in the current platform.
+size_t:DLL 2:(`size_type;1);
+/// @brief Return the size of a @c size_t in the current platform.
+size_n:DLL 2:(`size_size;1);
 
-/// @brief q type code for a pointer in the current platform.
-ptr_t:(DLL 2:(`ptr_type;1))[];
+/// @brief Return a q type code for a pointer in the current platform.
+ptr_t:DLL 2:(`ptr_type;1);
+/// @brief Return the size of a pointer in the current platform.
+ptr_n:DLL 2:(`ptr_size;1);
 
 /// @brief Load a function from a DLL with the given signature and calling convention.
 ///     Parameters are similar to those in @ref .ffi.load

@@ -37,6 +37,13 @@ namespace q_ffi
         return q::TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId));
     }
 
+    template<typename T>
+    constexpr q::K_ptr get_size() noexcept
+    {
+        using traits = TypeCode<sizeof(T)>::traits;
+        return traits::atom(sizeof(typename traits::value_type));
+    }
+
     template<>
     struct TypeCode<sizeof(q::TypeTraits<q::kInt>::value_type)>
     {

@@ -79,7 +79,17 @@ using namespace std;
     return q_ffi::get_type<std::size_t>().release();
 }
 
+::K K4_DECL size_size(::K)
+{
+    return q_ffi::get_size<std::size_t>().release();
+}
+
 ::K K4_DECL ptr_type(::K)
 {
     return q_ffi::get_type<void*>().release();
+}
+
+::K K4_DECL ptr_size(::K)
+{
+    return q_ffi::get_size<void*>().release();
 }
