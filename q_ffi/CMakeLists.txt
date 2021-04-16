@@ -12,6 +12,9 @@ execute_process(
 configure_file(q_ffi_config.h.in q_ffi_config.h @ONLY)
 
 # Library contents
+set(q_ffi_BINDING
+    q_ffi.q
+)
 set(q_ffi_PUBLIC_API
     ${target_header_dir}/q_ffi.h
     ${target_header_dir}/std_ext.hpp
@@ -45,7 +48,7 @@ set(q_ffi_ALWAYS_BUILD
     ${target_source_dir}/version.cpp
 )
 
-source_group("q"              ${q_ffi_Q_SCRIPTS})
+source_group("q"              ${q_ffi_BINDING})
 source_group("Public Headers" ${q_ffi_PUBLIC_API})
 source_group("Headers"        ${q_ffi_HEADERS})
 source_group("Sources"        ${q_ffi_SOURCES} ${q_ffi_ALWAYS_BUILD})
@@ -61,7 +64,7 @@ target_sources(${target_name}
         ${q_ffi_ALWAYS_BUILD}
 )
 set_target_properties(${target_name} PROPERTIES
-    RESOURCE      "${q_ffi_Q_SCRIPTS}"
+    RESOURCE      "${q_ffi_BINDING}"
     PUBLIC_HEADER "${q_ffi_PUBLIC_API}"
 )
 target_compile_features(${target_name}
@@ -159,15 +162,13 @@ add_custom_target(update_version ALL
 add_dependencies(${target_name}
     update_version )
 
-#[==[
 # Installation steps
-install(TARGETS q_ffi
-    RUNTIME       DESTINATION ${q_ffi_DISTRIBUTABLES}/bin/$ENV{k4_PLATFORM}
-    RESOURCE      DESTINATION ${q_ffi_DISTRIBUTABLES}/bin
-    ARCHIVE       DESTINATION ${q_ffi_DISTRIBUTABLES}/lib/$ENV{k4_PLATFORM}
-    PUBLIC_HEADER DESTINATION ${q_ffi_DISTRIBUTABLES}/include
+install(TARGETS ${target_name}
+    RUNTIME       DESTINATION bin/$ENV{k4_PLATFORM}
+    RESOURCE      DESTINATION bin
+    ARCHIVE       DESTINATION lib/$ENV{k4_PLATFORM}
+    PUBLIC_HEADER DESTINATION include
 )
-#]==]
 
 ####################
 add_library(CapitalEdge::q_ffi ALIAS ${target_name})
