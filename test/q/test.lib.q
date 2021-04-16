@@ -13,8 +13,9 @@ GETTER:`get_var
 SETTER:`set_var
 SIZE_T:`size_type
 PTR_T:`ptr_type
-ADDR_GETTER:`to_addr
-ADDR_SETTER:`set_addr
+ADDR_OF:`addr_of
+ADDR_GETTER:`get_from_addr
+ADDR_SETTER:`set_to_addr
 
 TEST_DLL:.util.lib`test_q_ffi_dll
 

@@ -10,26 +10,26 @@ K K4_DECL version(K /*`2:' requires >=1 args*/);
 q_ffi_EXTERN q_ffi_API
 K K4_DECL load_fun(K dllSym, K funName, K abi, K ret, K args);
 
-/*
 q_ffi_EXTERN q_ffi_API
 K K4_DECL get_var(K dllSym, K varName, K typ);
 
+/// Writting to DLL variables is susceptible to values being overwritten during DLL reload.
+/// Use with caution!
 q_ffi_EXTERN q_ffi_API
-K K4_DECL set_var(K dllSym, K varName, K typ, K val);
-*/
+K K4_DECL set_var(K dllSym, K varName, K val);
 
 #pragma endregion
 
 #pragma region FFI pointer handling
 
 q_ffi_EXTERN q_ffi_API
-K K4_DECL to_addr(K k);
+K K4_DECL addr_of(K k);
 
 q_ffi_EXTERN q_ffi_API
-K K4_DECL addr_get(K addr, K typ);
+K K4_DECL get_from_addr(K addr, K typ);
 
 q_ffi_EXTERN q_ffi_API
-K K4_DECL addr_set(K addr, K k);
+K K4_DECL set_to_addr(K addr, K val);
 
 #pragma endregion
 

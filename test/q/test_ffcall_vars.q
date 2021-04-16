@@ -12,13 +12,16 @@ mem_check:{[check] check . mem mid+-1 0 }
 
 /////////////////////////////////////////////////////////////////////////////
 getter:0N!DLL 2:(GETTER;3)
-setter:0N!DLL 2:(SETTER;4)
+setter:0N!DLL 2:(SETTER;3)
 .test.log"After loading DLL ",.Q.s1[DLL];
 
 VAR:()!()
 VAR[`]:()
 
 // For values of v_*, refer to ./dll/test_dll.cpp
+VAR[`b]:0N!getter[TEST_DLL;`v_bool ;"b"]
+.test.assert_eq[VAR.b;1b];
+
 VAR[`c]:0N!getter[TEST_DLL;`v_char ;"c"]
 .test.assert_eq[VAR.c;"C"];
 
@@ -42,35 +45,35 @@ VAR[`f]:0N!getter[TEST_DLL;`v_float;"f"]
 
 .test.log"After loading variables from DLL ",.Q.s1[TEST_DLL];
 
-//===
-v:0N!setter[TEST_DLL;`v_char ;"c"; "a"]
-.test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_char ;"c"]; "a"];
+/////////////////////////////////////////////////////////////////////////////
+/ Writing into DLL address space is susceptible to values being overwritten due to DLL reload.
+/ The following will NOT perform read-back tests.
 
-v:0N!setter[TEST_DLL;`v_byte ;"x"; 0b sv@[;0;not]0b vs VAR.x]
+v:0N!setter[TEST_DLL;`v_bool ; 0b]
 .test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_byte ;"x"]; 0x4C];
 
-v:0N!setter[TEST_DLL;`v_short;"h"; 0b sv@[;0;not]0b vs VAR.h]
+v:0N!setter[TEST_DLL;`v_char ; "a"]
 .test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_short;"h"]; 0x0 sv 0x5EAD];
 
-v:0N!setter[TEST_DLL;`v_int  ;"i"; 0b sv@[;0; not]0b vs VAR.i]
+v:0N!setter[TEST_DLL;`v_byte ; 0b sv@[;0;not]0b vs VAR.x]
 .test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_int  ;"i"]; 0x0 sv 0x5EADBEEF];
 
-v:0N!setter[TEST_DLL;`v_long ;"j"; 0b sv@[;0;not]0b vs VAR.j]
+v:0N!setter[TEST_DLL;`v_short; 0b sv@[;0;not]0b vs VAR.h]
 .test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_long ;"j"]; 0x0 sv 0x5EADBEEF8BADF00D];
 
-v:0N!setter[TEST_DLL;`v_real ;"e"; neg VAR.e]
+v:0N!setter[TEST_DLL;`v_int  ; 0b sv@[;0; not]0b vs VAR.i]
 .test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_real ;"e"]; -3.14159265e];
 
-v:0N!setter[TEST_DLL;`v_float;"f"; neg VAR.f]
+v:0N!setter[TEST_DLL;`v_long ; 0b sv@[;0;not]0b vs VAR.j]
 .test.assert_eq[v;::]
-.test.assert_eq[getter[TEST_DLL;`v_float;"f"]; -3.141592653589793];
 
+v:0N!setter[TEST_DLL;`v_real ; neg VAR.e]
+.test.assert_eq[v;::]
+
+v:0N!setter[TEST_DLL;`v_float; neg VAR.f]
+.test.assert_eq[v;::]
+
+/////////////////////////////////////////////////////////////////////////////
 // Test erroneous cases
 .test.assert[
   10h=type .[getter;(TEST_DLL;`v_none;"c");::];
@@ -80,14 +83,8 @@ v:0N!setter[TEST_DLL;`v_float;"f"; neg VAR.f]
   "invalid variable type (R)" ];
 
 .test.assert[
-  10h=type .[setter;(TEST_DLL;`v_none;"c";"\000");::];
+  10h=type .[setter;(TEST_DLL;`v_none;"\000");::];
   "foreign variable not found (W)" ];
-.test.assert[
-  10h=type .[setter;(TEST_DLL;`v_none;"#";"\000");::];
-  "invalid variable type (W)" ];
-.test.assert[
-  10h=type .[setter;(TEST_DLL;`v_char;"c";3.14);::];
-  "invalid value type (W)" ];
 
 .test.log"All tests completed";
 \\

@@ -31,7 +31,7 @@ using namespace std;
 #pragma region q_ffi::Invocator implementations
 
 q_ffi::Invocator::Invocator(char const* dll)
-    : dll_(dll), sym_{ nullptr }, ret_{}, args_{}, ffi_{}
+    : dll_(dll), func_{ nullptr }, ret_{}, args_{}, ffi_{}
 {}
 
 unsigned int
@@ -46,7 +46,7 @@ q_ffi::Invocator::load(char const* func, char retType, char const* argTypes,
     char const* abiType)
 {
     try {
-        sym_.func = dll_.locateProc<function_type>(func);
+        func_ = dll_.locateProc<function_type>(func);
         setReturnType(retType);
         setArgumentTypes(argTypes);
         auto const abi = mapABI(abiType, func);
@@ -56,20 +56,6 @@ q_ffi::Invocator::load(char const* func, char retType, char const* argTypes,
         throw K_error(ex);
     }
 }
-
-/*
-void
-q_ffi::Invocator::load(char const* var, char varType)
-{
-    try {
-        sym_.var = dll_.locateProc<void*>(var);
-        setReturnType(varType);
-    }
-    catch (runtime_error const& ex) {
-        throw K_error(ex);
-    }
-}
-*/
 
 K_ptr
 q_ffi::Invocator::operator()(initializer_list<::K> params)
@@ -95,62 +81,9 @@ q_ffi::Invocator::operator()(initializer_list<::K> params)
         [](auto const& par) { return par->get(); });
 
     // FFI invocation
-    ffi_call(&ffi_.cif, sym_.func, ret->get(), pars.get());
+    ffi_call(&ffi_.cif, func_, ret->get(), pars.get());
     return ret->release();
 }
-
-/*
-K_ptr
-q_ffi::Invocator::operator()()
-{
-    if (nullptr != ffi_.ret_type)
-        throw K_error("not a foreign variable");
-    else
-        assert(!ffi_.arg_types);
-
-    K_ptr val = ret_->create();
-    memcpy(ret_->get(val), sym_.var, ret_->size());
-//PENDING
-    return val;
-}
-
-void
-q_ffi::Invocator::operator()(::K val)
-{
-    if (nullptr != ffi_.ret_type)
-        throw K_error("not a foreign variable");
-    else
-        assert(!ffi_.arg_types);
-//PENDING
-    memcpy(sym_.var, ret_->get(val), ret_->size());
-}
-*/
-
-/*
-K_ptr
-q_ffi::Invocator::invoke(q_ffi::Parameter** params)
-{
-//    if (nullptr == ffi_.ret_type)
-//        throw K_error("not a foreign function");
-//    else
-//        assert(ffi_.arg_types);
-    auto const rank = this->rank();
-
-    // Prepare parameters
-    auto pars = make_unique<void*[]>(rank);
-    transform(params, params + rank, pars.get(),
-        [](auto const par) { return par->get(); });
-
-    // Prepare result
-    assert(ret_);
-    auto ret = ret_->create();
-
-    // FFI invocation
-    ffi_call(&ffi_.cif, sym_.func, ret->get(), pars.get());
-
-    return ret->release();
-}
-*/
 
 void
 q_ffi::Invocator::prepareFFI(ffi_abi abi)
@@ -188,7 +121,7 @@ q_ffi::Invocator::setArgumentTypes(char const* typeCodes)
 {
     assert(nullptr != typeCodes);
     auto const arity = strlen(typeCodes);
-    if (arity > MAX_ARGC)
+    if (arity > MAX_ARGC - 1)
         throw K_error("too many arguments");
 
     args_.resize(arity);
@@ -258,25 +191,21 @@ q_ffi::Invocator::guessABI(char const* /*funcName*/)
 q_ffi::Invocator::argument_type
 q_ffi::Invocator::mapType(char typeCode)
 {
+#   define FFI_MAP_TYPE_CASE(kTypeCode, kType, ffiType)    \
+        case (kTypeCode):   \
+            return make_unique<Atom<(kType)>>((ffiType))
+
     switch (typeCode) {
+        FFI_MAP_TYPE_CASE('b', kBoolean, ffi_type_sint8);
+        FFI_MAP_TYPE_CASE('x', kByte, ffi_type_uint8);
+        FFI_MAP_TYPE_CASE('c', kChar, ffi_type_uchar);
+        FFI_MAP_TYPE_CASE('h', kShort, ffi_type_sint16);
+        FFI_MAP_TYPE_CASE('i', kInt, ffi_type_sint32);
+        FFI_MAP_TYPE_CASE('j', kLong, ffi_type_sint64);
+        FFI_MAP_TYPE_CASE('e', kReal, ffi_type_float);
+        FFI_MAP_TYPE_CASE('f', kFloat, ffi_type_double);
     case ' ':
         return make_unique<Void>();
-    case 'b':
-        return make_unique<Atom<kBoolean>>(ffi_type_sint8);
-    case 'x':
-        return make_unique<Atom<kByte>>(ffi_type_uint8);
-    case 'c':
-        return make_unique<Atom<kChar>>(ffi_type_uchar);
-    case 'h':
-        return make_unique<Atom<kShort>>(ffi_type_sint16);
-    case 'i':
-        return make_unique<Atom<kInt>>(ffi_type_sint32);
-    case 'j':
-        return make_unique<Atom<kLong>>(ffi_type_sint64);
-    case 'e':
-        return make_unique<Atom<kReal>>(ffi_type_float);
-    case 'f':
-        return make_unique<Atom<kFloat>>(ffi_type_double);
     case 's':
         return make_unique<Atom<kSymbol>>();
     case '&':
@@ -290,7 +219,7 @@ q_ffi::Invocator::mapType(char typeCode)
 
 #pragma endregion
 
-#pragma region q_ffi::loadFun(...) implementations
+#pragma region q_ffi::load_function(...) implementations
 
 namespace
 {
@@ -425,7 +354,7 @@ namespace
 }//namespace /*anonymous*/
 
 K_ptr
-q_ffi::loadFun(::K dllSym, ::K funName, ::K abi, ::K ret, ::K args)
+q_ffi::load_function(::K dllSym, ::K funName, ::K abi, ::K ret, ::K args)
 noexcept(false)
 {
     auto const dll = q2String(dllSym);
@@ -463,7 +392,7 @@ noexcept(false)
     caller.load(func.c_str(), retType, argTypes.c_str(), abiType.c_str());
 
     // First argument is already occupied by q_ffi::Invocator*
-    if (caller.rank() >= q_ffi::MAX_ARGC) {
+    if (caller.rank() > q_ffi::MAX_ARGC - 1) {
         ostringstream buffer;
         buffer << "too many arguments (<=" << (q_ffi::MAX_ARGC - 1) << " expected)";
         throw K_error(buffer.str());
@@ -471,47 +400,6 @@ noexcept(false)
     else {
         return wrapCaller(caller);
     }
-}
-
-#pragma endregion
-
-#pragma region q_ffi::getVar(...) and q_ffi::setVar(...) implementations
-
-namespace
-{
-/*
-    q_ffi::Invocator& createAccessor(::K dllSym, ::K varName, ::K typeCode)
-    {
-        auto const dll = q2String(dllSym);
-        auto const var = q2String(varName);
-        auto& accessor = createCaller(dll, var);
-
-        auto const varType = q2Char(typeCode);
-        accessor.load(var.c_str(), varType);
-
-        return accessor;
-    }
-*/
-}
-
-K_ptr
-q_ffi::getVar(::K dllSym, ::K varName, ::K typeCode)
-noexcept(false)
-{
-//    auto& accessor = createAccessor(dllSym, varName, typeCode);
-//    return accessor();
-    dllSym++; varName++; typeCode++;
-    return K_ptr{};
-}
-
-K_ptr
-q_ffi::setVar(::K dllSym, ::K varName, ::K typeCode, ::K val)
-noexcept(false)
-{
-//    auto& accessor = createAccessor(dllSym, varName, typeCode);
-//    accessor(val);
-    dllSym++; varName++; typeCode++; val++;
-    return K_ptr{};
 }
 
 #pragma endregion

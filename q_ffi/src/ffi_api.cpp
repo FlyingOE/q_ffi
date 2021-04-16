@@ -15,7 +15,7 @@ using namespace std;
 ::K K4_DECL load_fun(::K dllSym, ::K funName, ::K abi, ::K ret, ::K args)
 {
     try {
-        return q_ffi::loadFun(dllSym, funName, abi, ret, args).release();
+        return q_ffi::load_function(dllSym, funName, abi, ret, args).release();
     }
     catch (K_error const& ex) {
         return ex.report().release();
@@ -25,51 +25,49 @@ using namespace std;
 ::K K4_DECL get_var(::K dllSym, ::K varName, ::K typ)
 {
     try {
-        return q_ffi::getVar(dllSym, varName, typ).release();
+        return q_ffi::get_variable(dllSym, varName, typ).release();
     }
     catch (K_error const& ex) {
         return ex.report().release();
     }
 }
 
-::K K4_DECL set_var(::K dllSym, ::K varName, ::K typ, ::K val)
+::K K4_DECL set_var(::K dllSym, ::K varName, ::K val)
 {
     try {
-        return q_ffi::setVar(dllSym, varName, typ, val).release();
+        q_ffi::set_variable(dllSym, varName, val);
+        return Nil;
     }
     catch (K_error const& ex) {
         return ex.report().release();
     }
 }
 
-::K K4_DECL to_addr(::K k)
+::K K4_DECL addr_of(::K k)
 {
     try {
-        return q_ffi::to_addr(k).release();
+        return q_ffi::address_of(k).release();
     }
     catch (K_error const& ex) {
         return ex.report().release();
     }
 }
 
-::K K4_DECL addr_get(::K addr, ::K typ)
+::K K4_DECL get_from_addr(::K addr, ::K typ)
 {
     try {
-        ++addr; ++typ;
-//        return q_ffi::getAddrValue(addr, typ).release();
-        throw K_error("get_at_addr");
+        return q_ffi::get_from_address(addr, typ).release();
     }
     catch (K_error const& ex) {
         return ex.report().release();
     }
 }
 
-::K K4_DECL addr_set(::K addr, ::K k)
+::K K4_DECL set_to_addr(::K addr, ::K val)
 {
     try {
-        ++addr; ++k;
-//        return q_ffi::setAddrValue(addr, k).release();
-        throw K_error("set_at_addr");
+        q_ffi::set_to_address(addr, val);
+        return Nil;
     }
     catch (K_error const& ex) {
         return ex.report().release();

@@ -732,7 +732,8 @@ namespace q {
             K_ptr k{ ::ktn(type_id, n) };
             std::transform(begin, end, index(k.get()),
                 [](auto&& sym) {
-                    return ::ss(const_cast<::S>(str_getter()(std::forward<decltype(sym)>(sym))));
+                    return ::ss(const_cast<::S>(
+                        str_getter()(std::forward<decltype(sym)>(sym)) ));
                 });
             return k;
         }

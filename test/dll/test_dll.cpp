@@ -75,7 +75,7 @@ namespace
     {
         auto px = reinterpret_cast<T0 const*>(&p1);
         auto pn = sizeof(p1) / sizeof(p0);
-        for_each(px, px + pn, [&p0](auto const x) { p0 ^= x; });
+        for_each_n(px, pn, [&p0](auto const x) { p0 ^= x; });
         return p0;
     }
 }
@@ -201,6 +201,9 @@ int32_t CALL_FASTCALL f7_fastcall(float a, char b, int32_t c, int16_t d, int64_t
 #pragma endregion
 
 #pragma region Tests for various variable types
+
+extern "C" API_EXPORT bool v_bool;
+bool v_bool = true;
 
 extern "C" API_EXPORT char v_char;
 char v_char = 'C';

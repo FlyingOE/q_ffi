@@ -12,7 +12,7 @@ mem_check:{[check] check . mem mid+-1 0 }
 
 /////////////////////////////////////////////////////////////////////////////
 loader:0N!DLL 2:(LOADER;5)
-to_addr:0N!DLL 2:(ADDR_GETTER;1)
+addr_of:0N!DLL 2:(ADDR_OF;1)
 size_t:0N!(DLL 2:(SIZE_T;1))[]
 ptr_t :0N!(DLL 2:(PTR_T ;1))[]
 .test.log"After loading DLL ",.Q.s1[DLL];
@@ -28,7 +28,7 @@ neg_test:{[id;gen;op]
   .test.log"Testing ",.Q.s1[id]," list w/ ",string[n]," elements...";
   par0:gen n;
   par1:op par0;
-  0N!0x0 vs addr:to_addr par0;
+  0N!0x0 vs addr:addr_of par0;
   0N!0x0 vs res:FUN[id][addr;n];
   .test.assert_eq[addr;res];
   .test.assert_eq[par0;par1];
@@ -50,7 +50,7 @@ FUN[`symbol]:0N!loader[TEST_DLL;`trans_symbol;`;"&";"&s",size_t]
 par0:first 1?`$string n;
 out0:n#"\000";
 par1:upper string par0;
-0N!0x0 vs addr:to_addr out0;
+0N!0x0 vs addr:addr_of out0;
 0N!0x0 vs res:FUN.symbol[addr;par0;n];
 .test.assert_eq[addr;res];
 .test.assert_eq[out0;par1];
@@ -61,8 +61,8 @@ FUN[`symbol]:0N!loader[TEST_DLL;`trans_symbol;`;"&";"&&",size_t]
 par0:first 1?`$string n;
 out0:n#"\000";
 par1:upper string par0;
-0N!0x0 vs addr:to_addr out0;
-0N!0x0 vs addp:to_addr par0;
+0N!0x0 vs addr:addr_of out0;
+0N!0x0 vs addp:addr_of par0;
 0N!0x0 vs res:FUN.symbol[addr;addp;n];
 .test.assert_eq[addr;res];
 .test.assert_eq[out0;par1];

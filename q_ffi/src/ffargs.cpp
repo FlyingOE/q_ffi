@@ -1,4 +1,5 @@
 #include "ffargs.hpp"
+#include "dlloader.hpp"
 
 using namespace q;
 using namespace std;
@@ -125,61 +126,42 @@ q_ffi::Atom<kSymbol>::create(bool) const
 
 template<>
 K_ptr
-q_ffi::Pointer::toAddress<kSymbol>(::K k)
+q_ffi::Pointer::getAddress<kSymbol>(::K k)
 {
+    using value_traits = TypeTraits<kSymbol>;
+
     if (nullptr == k)
         throw K_error("nil symbol");
-    if (-kSymbol != q::type(k))
+    if (-value_traits::type_id != q::type(k))
         throw K_error("type: not a symbol");
 
-    auto const ptr = TypeTraits<kSymbol>::value(k);
+    auto const ptr = value_traits::value(k);
     return qTraits::atom(*misc::ptr_alias<typename qTraits::const_pointer>(&ptr));
 }
 
-#pragma endregion
-/*
 void*
-q_ffi::PointerArgument::get(::K k) const
+q_ffi::Pointer::validate(::K addr)
 {
-    using pointer_traits = TypeCode<sizeof(void*)>::traits;
-    validate<-pointer_traits::type_id>(k);
-    return misc::ptr_alias<void*>(&pointer_traits::value(k));
-}
+    if (nullptr == addr)
+        throw K_error("nil pointer");
+    if (-qTraits::type_id != q::type(addr))
+        throw q::K_error("type: not a pointer");
 
-void
-q_ffi::PointerArgument::set(::K, ffi_arg const&) const
-{
-    throw K_error("type: invalid for a pointer");
-}
-
-K_ptr
-q_ffi::PointerArgument::create(size_t& bytes) const
-{
-    bytes = sizeof(pointer_traits::value_type);
-    return pointer_traits::atom(0);
-}
-
-template<>
-K_ptr
-q_ffi::PointerArgument::getAddr<kSymbol>(::K k)
-{
-    validate<-kSymbol>(k);
-    auto const ptr = TypeTraits<kSymbol>::value(k);
-    return pointer_traits::atom(
-        *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
+    auto const ptr = *misc::ptr_alias<void**>(&qTraits::value(addr));
+    assert(nullptr != ptr);
+    return ptr;
 }
 
 #pragma endregion
-*/
 
-#pragma region FFI address handling
+#pragma region Pointer manipulation exposed to q
 
 K_ptr
-q_ffi::to_addr(::K k) noexcept(false)
+q_ffi::address_of(::K k) noexcept(false)
 {
 #   define GET_ADDR_CASE(kType) \
         case (kType):   \
-            return Pointer::toAddress<(kType)>(k)
+            return Pointer::getAddress<(kType)>(k)
 
     switch (type(k)) {
         GET_ADDR_CASE(kBoolean);
@@ -191,7 +173,7 @@ q_ffi::to_addr(::K k) noexcept(false)
         GET_ADDR_CASE(kReal);
         GET_ADDR_CASE(kFloat);
     case -kSymbol:
-        return Pointer::toAddress<kSymbol>(k);
+        return Pointer::getAddress<kSymbol>(k);
     default:
         ostringstream buffer;
         buffer << "type: " << type(k) << "h cannot get address";
@@ -199,30 +181,88 @@ q_ffi::to_addr(::K k) noexcept(false)
     }
 }
 
-/*
 K_ptr
-q_ffi::setAddr(::K addr, ::K k) noexcept(false)
+q_ffi::get_from_address(::K addr, ::K typ) noexcept(false)
 {
-#   define SET_ADDR_CASE(kType) \
-        case -(kType):  \
-            PointerArgument::setAddr<(kType)>(addr, k); \
-            break
+#   define GET_FROM_ADDR_CASE(tCode, kType) \
+        case (tCode):   \
+            return Pointer::getFromAddress<(kType)>(addr)
 
-    switch (type(k)) {
-        SET_ADDR_CASE(kBoolean);
-        SET_ADDR_CASE(kByte);
-        SET_ADDR_CASE(kChar);
-        SET_ADDR_CASE(kShort);
-        SET_ADDR_CASE(kInt);
-        SET_ADDR_CASE(kLong);
-        SET_ADDR_CASE(kReal);
-        SET_ADDR_CASE(kFloat);
+    switch (q2Char(typ)) {
+        GET_FROM_ADDR_CASE('b', kBoolean);
+        GET_FROM_ADDR_CASE('x', kByte);
+        GET_FROM_ADDR_CASE('c', kChar);
+        GET_FROM_ADDR_CASE('h', kShort);
+        GET_FROM_ADDR_CASE('i', kInt);
+        GET_FROM_ADDR_CASE('j', kLong);
+        GET_FROM_ADDR_CASE('e', kReal);
+        GET_FROM_ADDR_CASE('f', kFloat);
+        GET_FROM_ADDR_CASE('s', kSymbol);
     default:
         ostringstream buffer;
-        buffer << "cannot set value from address for " << type(k) << "h";
+        buffer << "type: \"" << q2Char(typ) << "\" cannot be get from address";
         throw K_error(buffer.str());
     }
-    return K_ptr{};
 }
 
-*/
+void
+q_ffi::set_to_address(::K addr, ::K val) noexcept(false)
+{
+#   define SET_TO_ADDR_CASE(kType)  \
+        case -(kType):   \
+            return Pointer::setToAddress<(kType)>(addr, val)
+
+    switch (type(val)) {
+        SET_TO_ADDR_CASE(kBoolean);
+        SET_TO_ADDR_CASE(kByte);
+        SET_TO_ADDR_CASE(kChar);
+        SET_TO_ADDR_CASE(kShort);
+        SET_TO_ADDR_CASE(kInt);
+        SET_TO_ADDR_CASE(kLong);
+        SET_TO_ADDR_CASE(kReal);
+        SET_TO_ADDR_CASE(kFloat);
+        SET_TO_ADDR_CASE(kSymbol);
+    default:
+        ostringstream buffer;
+        buffer << "type: " << type(val) << "h cannot be set to address";
+        throw K_error(buffer.str());
+    }
+}
+
+namespace
+{
+    K_ptr
+    addressOf(q_ffi::DLLoader& loader, ::K varName) noexcept(false)
+    {
+        try {
+            auto const var = q2String(varName);
+            auto const ptr = loader.locateProc(var.c_str());
+            assert(nullptr != ptr);
+
+            using pointer_traits = q_ffi::TypeCode<sizeof(ptr)>::traits;
+            return pointer_traits::atom(
+                    *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
+        }
+        catch (runtime_error const& ex) {
+            throw K_error(ex);
+        }
+    }
+}
+
+K_ptr
+q_ffi::get_variable(::K dllSym, ::K varName, ::K typ) noexcept(false)
+{
+    auto const dll = q2String(dllSym);
+    q_ffi::DLLoader loader{ dll.c_str() };
+    return get_from_address(addressOf(loader, varName).get(), typ);
+}
+
+void
+q_ffi::set_variable(::K dllSym, ::K varName, ::K val) noexcept(false)
+{
+    auto const dll = q2String(dllSym);
+    q_ffi::DLLoader loader{ dll.c_str() };
+    set_to_address(addressOf(loader, varName).get(), val);
+}
+
+#pragma endregion

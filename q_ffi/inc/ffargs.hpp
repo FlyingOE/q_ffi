@@ -8,21 +8,34 @@
 
 namespace q_ffi
 {
+#pragma region Memory address access
+
+    q::K_ptr address_of(::K k) noexcept(false);
+
+    q::K_ptr get_from_address(::K addr, ::K typ) noexcept(false);
+
+    void set_to_address(::K addr, ::K val) noexcept(false);
+
+#pragma endregion
+
+#pragma region FFI variable access
+
+    q::K_ptr get_variable(::K dllSym, ::K varName, ::K typ) noexcept(false);
+
+    void set_variable(::K dllSym, ::K varName, ::K val) noexcept(false);
+
+#pragma endregion
+
+#pragma region Data size (in bytes) to q type code mapping
+    template<std::size_t bytes>
+    struct TypeCode;
+
     template<typename T>
     constexpr q::K_ptr get_type() noexcept
     {
         constexpr auto typeId = TypeCode<sizeof(T)>::traits::type_id;
         return q::TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId));
     }
-
-    q::K_ptr to_addr(::K k) noexcept(false);
-
-//    q::K_ptr setAddr(::K addr, ::K k) noexcept(false);
-
-#pragma region Data size (in bytes) to q type code mapping
-
-    template<std::size_t bytes>
-    struct TypeCode;
 
     template<>
     struct TypeCode<sizeof(q::TypeTraits<q::kInt>::value_type)>
@@ -233,8 +246,8 @@ namespace q_ffi
             constexpr auto DUMMY_BYTES = 0x8BAD'F00D'DEAD'BEEFuLL;
             static_assert(sizeof(DUMMY_BYTES) >= sizeof(typename qTraits::value_type),
                 "ensure enough dummy bytes");
-            std::memcpy(&qTraits::value(k), &DUMMY_BYTES,
-                sizeof(typename qTraits::value_type));
+            qTraits::value(k) =
+                *misc::ptr_alias<typename qTraits::const_pointer>(&DUMMY_BYTES);
 #       endif
             return this->map(k.get(), asReturn);
         }
@@ -284,98 +297,39 @@ namespace q_ffi
         {}
 
         template<q::TypeId tid>
-        static q::K_ptr toAddress(::K k);
+        static q::K_ptr getAddress(::K k)
+        {
+            if (nullptr == k)
+                throw q::K_error("type: nil list");
+            if (tid != q::type(k))
+                throw q::K_error("type: pointer type mismatch");
+
+            auto const ptr = q::TypeTraits<tid>::index(k);
+            return qTraits::atom(*misc::ptr_alias<typename qTraits::const_pointer>(&ptr));
+        }
 
         template<>
-        static q::K_ptr toAddress<q::kSymbol>(::K k);
-    };
-/*
-    class PointerArgument : public Argument
-    {
-    private:
-        using pointer_traits = TypeCode<sizeof(void*)>::traits;
-
-    public:
-        PointerArgument() : Argument(ffi_type_pointer)
-        {}
-
-        void* get(::K k) const override;
-
-        void set(::K k, ffi_arg const& x) const override;
-
-        q::K_ptr create(std::size_t& bytes) const override;
+        static q::K_ptr getAddress<q::kSymbol>(::K k);
 
         template<q::TypeId tid>
-        static q::K_ptr getAddr(::K k);
-
-        template<q::TypeId tid>
-        static void setAddr(::K addr, ::K k);
-
-    private:
-        template<std::underlying_type_t<q::TypeId> tid>
-        static void validate(::K k)
+        static q::K_ptr getFromAddress(::K addr)
         {
-            if (q::Nil == k)
-                throw q::K_error("nil: pointer argument");
-
-            if (tid != q::type(k)) {
-                std::ostringstream buffer;
-                buffer << "type: pointer argument (" << tid << "h expected)";
-                throw q::K_error(buffer.str());
-            }
+            using traits = q::TypeTraits<tid>;
+            auto const ptr = static_cast<typename traits::const_pointer>(validate(addr));
+            return traits::atom(*ptr);
         }
+
+        template<q::TypeId tid>
+        static void setToAddress(::K addr, ::K val)
+        {
+            using traits = q::TypeTraits<tid>;
+            auto const ptr = static_cast<typename traits::pointer>(validate(addr));
+            *ptr = traits::value(val);
+        }
+
+    private:
+        static void* validate(::K addr);
     };
-    */
 
 #pragma endregion
 }//namespace q_ffi
-
-#pragma region q_ffi::Pointer implementations
-
-template<q::TypeId tid>
-q::K_ptr
-q_ffi::Pointer::toAddress(::K k)
-{
-    if (nullptr == k)
-        throw q::K_error("type: nil list");
-    if (tid != q::type(k))
-        throw q::K_error("type: pointer type mismatch");
-    
-    auto const ptr = q::TypeTraits<tid>::index(k);
-    return qTraits::atom(*misc::ptr_alias<typename qTraits::const_pointer>(&ptr));
-}
-
-#pragma endregion
-/*
-#pragma region q_ffi::PointerArgument implementations
-
-template<q::TypeId tid>
-q::K_ptr
-q_ffi::PointerArgument::getAddr(::K k)
-{
-    validate<tid>(k);
-    auto const ptr = q::TypeTraits<tid>::index(k);
-    return pointer_traits::atom(
-        *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
-}
-
-template<>
-q::K_ptr
-q_ffi::PointerArgument::getAddr<q::kSymbol>(::K k);
-
-template<q::TypeId tid>
-void
-q_ffi::PointerArgument::setAddr(::K addr, ::K k)
-{
-    validate<-pointer_traits::type_id>(addr);
-    validate<-tid>(k);
-
-    using value__traits = q::TypeTraits<tid>;
-
-    auto const ptr = q::TypeTraits<tid>::index(k);
-    /*return*./ pointer_traits::atom(
-        *misc::ptr_alias<pointer_traits::const_pointer>(&ptr));
-}
-
-#pragma endregion
-*/

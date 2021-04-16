@@ -180,10 +180,10 @@ q::q2Strings(K x, bool dryRun) noexcept(false)
     case kMixed:
         try {
             if (dryRun)
-                for_each(TypeTraits<kMixed>::index(x), TypeTraits<kMixed>::index(x) + count(x),
+                for_each_n(TypeTraits<kMixed>::index(x), count(x),
                     [](::K s) { q2String(s); });
             else
-                for_each(TypeTraits<kMixed>::index(x), TypeTraits<kMixed>::index(x) + count(x),
+                for_each_n(TypeTraits<kMixed>::index(x), count(x),
                     [&result](::K s) { result.push_back(q2String(s)); });
         }
         catch (K_error const& ) {
@@ -192,7 +192,7 @@ q::q2Strings(K x, bool dryRun) noexcept(false)
         break;
     case kSymbol:
         if (!dryRun)
-            for_each(TypeTraits<kSymbol>::index(x), TypeTraits<kSymbol>::index(x) + count(x),
+            for_each_n(TypeTraits<kSymbol>::index(x), count(x),
                 [&result](auto const s) { result.push_back(s); });
         break;
     default:
