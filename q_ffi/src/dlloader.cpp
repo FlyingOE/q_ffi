@@ -17,6 +17,7 @@ q_ffi::DLLoader::DLLoader(char const* filename)
     cout << "Loading DLL `" << filename << "'..." << endl;
 #endif
     assert(nullptr != filename);
+    if (':' == filename[0]) ++filename;     // de-hsym
     dll_ = dlopen(filename, RTLD_LAZY);
 
     if (nullptr == dll_) {
