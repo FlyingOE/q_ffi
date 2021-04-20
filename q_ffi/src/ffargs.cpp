@@ -127,40 +127,29 @@ q_ffi::Atom<kSymbol>::getAddress(::K k) const
 
 template<>
 K_ptr
-q_ffi::Pointer::getFromAddress<kSymbol>(::K addr)
+q_ffi::Pointer::getFromAddress<kSymbol>(::K addr) const
 {
-    using traits = TypeTraits<kSymbol>;
-    auto const str = static_cast<traits::value_type>(validate(addr));
-    return traits::atom(str);
+    using symbol_traits = TypeTraits<kSymbol>;
+    auto const param = this->map(addr);
+    auto const str = *static_cast<symbol_traits::const_pointer>(param->get());
+    return symbol_traits::atom(str);
 }
 
 template<>
 void
-q_ffi::Pointer::setToAddress<kSymbol>(::K /*addr*/, ::K /*val*/)
+q_ffi::Pointer::setToAddress<kSymbol>(::K /*addr*/, ::K /*val*/) const
 {
     throw K_error("nyi: cannot set a symbol");
 }
 
 template<>
 K_ptr
-q_ffi::Pointer::listFromAddress<kChar>(::K addr)
+q_ffi::Pointer::listFromAddress<kChar>(::K addr) const
 {
-    using traits = TypeTraits<kChar>;
-    auto const str = static_cast<traits::const_pointer>(validate(addr));
-    return traits::list(str);
-}
-
-void*
-q_ffi::Pointer::validate(::K addr)
-{
-    if (nullptr == addr)
-        throw K_error("nil pointer");
-    if (-qTraits::type_id != q::type(addr))
-        throw q::K_error("type: not a pointer");
-
-    auto const ptr = *misc::ptr_alias<void**>(&qTraits::value(addr));
-    assert(nullptr != ptr);
-    return ptr;
+    using string_traits = TypeTraits<kChar>;
+    auto const param = this->map(addr);
+    auto const str = *static_cast<string_traits::const_pointer*>(param->get());
+    return string_traits::list(str);
 }
 
 #pragma endregion
@@ -199,22 +188,27 @@ q_ffi::address_of(::K k) noexcept(false)
 K_ptr
 q_ffi::get_from_address(::K addr, ::K typ) noexcept(false)
 {
-#   define GET_FROM_ADDR_CASE(tCode, kType) \
-        case (tCode):   \
-            return Pointer::getFromAddress<(kType)>(addr)
-
     switch (q2Char(typ)) {
-        GET_FROM_ADDR_CASE('b', kBoolean);
-        GET_FROM_ADDR_CASE('x', kByte);
-        GET_FROM_ADDR_CASE('c', kChar);
-        GET_FROM_ADDR_CASE('h', kShort);
-        GET_FROM_ADDR_CASE('i', kInt);
-        GET_FROM_ADDR_CASE('j', kLong);
-        GET_FROM_ADDR_CASE('e', kReal);
-        GET_FROM_ADDR_CASE('f', kFloat);
-        GET_FROM_ADDR_CASE('s', kSymbol);
+    case 'b':
+        return Pointer{}.getFromAddress<kBoolean>(addr);
+    case 'x':
+        return Pointer{}.getFromAddress<kByte>(addr);
+    case 'c':
+        return Pointer{}.getFromAddress<kChar>(addr);
+    case 'h':
+        return Pointer{}.getFromAddress<kShort>(addr);
+    case 'i':
+        return Pointer{}.getFromAddress<kInt>(addr);
+    case 'j':
+        return Pointer{}.getFromAddress<kLong>(addr);
+    case 'e':
+        return Pointer{}.getFromAddress<kReal>(addr);
+    case 'f':
+        return Pointer{}.getFromAddress<kFloat>(addr);
+    case 's':
+        return Pointer{}.getFromAddress<kSymbol>(addr);
     case 'C':
-        return Pointer::listFromAddress<kChar>(addr);
+        return Pointer{}.listFromAddress<kChar>(addr);
     default:
         ostringstream buffer;
         buffer << "type: \"" << q2Char(typ) << "\" cannot be get from address";
@@ -225,19 +219,23 @@ q_ffi::get_from_address(::K addr, ::K typ) noexcept(false)
 void
 q_ffi::set_to_address(::K addr, ::K val) noexcept(false)
 {
-#   define SET_TO_ADDR_CASE(kType)  \
-        case -(kType):   \
-            return Pointer::setToAddress<(kType)>(addr, val)
-
     switch (type(val)) {
-        SET_TO_ADDR_CASE(kBoolean);
-        SET_TO_ADDR_CASE(kByte);
-        SET_TO_ADDR_CASE(kChar);
-        SET_TO_ADDR_CASE(kShort);
-        SET_TO_ADDR_CASE(kInt);
-        SET_TO_ADDR_CASE(kLong);
-        SET_TO_ADDR_CASE(kReal);
-        SET_TO_ADDR_CASE(kFloat);
+    case -kBoolean:
+        return Pointer{}.setToAddress<kBoolean>(addr, val);
+    case -kByte:
+        return Pointer{}.setToAddress<kByte>(addr, val);
+    case -kChar:
+        return Pointer{}.setToAddress<kChar>(addr, val);
+    case -kShort:
+        return Pointer{}.setToAddress<kShort>(addr, val);
+    case -kInt:
+        return Pointer{}.setToAddress<kInt>(addr, val);
+    case -kLong:
+        return Pointer{}.setToAddress<kLong>(addr, val);
+    case -kReal:
+        return Pointer{}.setToAddress<kReal>(addr, val);
+    case -kFloat:
+        return Pointer{}.setToAddress<kFloat>(addr, val);
     default:
         ostringstream buffer;
         buffer << "type: " << type(val) << "h cannot be set to address";

@@ -307,32 +307,39 @@ namespace q_ffi
         {}
 
         template<q::TypeId tid>
-        static q::K_ptr getFromAddress(::K addr)
+        q::K_ptr getFromAddress(::K addr) const
         {
-            using traits = q::TypeTraits<tid>;
-            auto const ptr = static_cast<typename traits::const_pointer>(validate(addr));
-            return traits::atom(*ptr);
+            using value_traits = q::TypeTraits<tid>;
+            auto const param = this->map(addr);
+            auto const ptr = *static_cast<typename value_traits::const_pointer*>(param->get());
+            assert(ptr != nullptr);
+            return value_traits::atom(*ptr);
         }
 
         template<>
-        static q::K_ptr getFromAddress<q::kSymbol>(::K addr);
+        q::K_ptr getFromAddress<q::kSymbol>(::K addr) const;
 
         template<q::TypeId tid>
-        static q::K_ptr listFromAddress(::K addr);
-
-        template<>
-        static q::K_ptr listFromAddress<q::kChar>(::K addr);
-
-        template<q::TypeId tid>
-        static void setToAddress(::K addr, ::K val)
+        q::K_ptr listFromAddress(::K) const
         {
-            using traits = q::TypeTraits<tid>;
-            auto const ptr = static_cast<typename traits::pointer>(validate(addr));
-            *ptr = traits::value(val);
+            throw q::K_error("nyi: cannot create unbounded list");
         }
 
         template<>
-        static void setToAddress<q::kSymbol>(::K addr, ::K val);
+        q::K_ptr listFromAddress<q::kChar>(::K addr) const;
+
+        template<q::TypeId tid>
+        void setToAddress(::K addr, ::K val) const
+        {
+            using value_traits = q::TypeTraits<tid>;
+            auto const param = this->map(addr);
+            auto const ptr = static_cast<typename value_traits::pointer>(param->get());
+            assert(ptr != nullptr);
+            *ptr = value_traits::value(val);
+        }
+
+        template<>
+        void setToAddress<q::kSymbol>(::K addr, ::K val) const;
 
         void freeAddress(::K addr) const
         {
@@ -340,9 +347,6 @@ namespace q_ffi
             auto const ptr = *misc::ptr_alias<char**>(param->get());
             std::free(ptr);
         }
-
-    private:
-        static void* validate(::K addr);
     };
 
     /// @brief FFI callback argument: list value
