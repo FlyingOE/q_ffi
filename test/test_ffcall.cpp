@@ -78,7 +78,8 @@ namespace q_ffi
         };
 
     protected:
-        static vector<TestInfo> ABI_TEST_CASES;
+        static vector<TestInfo> ABI_ATOM_TESTS;
+        static vector<TestInfo> ABI_LIST_TESTS;
 
         static bool exists(string const& filename)
         {
@@ -110,7 +111,7 @@ namespace q_ffi
             buffer << qbin << ' ' << testScript << " -q " << EXTRA_OPTS;
             for (auto const& p : params) {
                 buffer << ' ';
-                if (p.empty() || string::npos != p.find(' '))
+                if (p.empty() || string::npos != p.find(' ') || string::npos != p.find('&'))
                     buffer << '"' << p << '"';
                 else
                     buffer << p;
@@ -137,15 +138,14 @@ namespace q_ffi
 #       endif
         }
 
-        void runAbiTest(string const& func,
+        void runAbiTestCase(char const* testScript, string const& func,
             string const& abi, string const& retType, string const& argTypes)
         {
             auto const testDump = outputName();
-            static constexpr auto testScript = "test_ffcall_add.q";
             int status = -1;
             for (auto const& qbin : QBINs) {
                 auto const cmd = makeCommand(qbin, testDump, testScript, {
-                    func, abi, retType, argTypes
+                    func, abi, retType
                 });
 #           ifndef NDEBUG
                 cout << "RUNNING: " << cmd << endl;
@@ -155,6 +155,17 @@ namespace q_ffi
                     break;
             }
             ASSERT_EQ(status, 0) << "Test script `" << testScript << "' failed";
+        }
+
+        void runAbiTests(vector<TestInfo> const& tests, char const* abi, bool isAtom)
+        {
+            for (auto const& testCase : tests) {
+                if (testCase.abi_ == abi) {
+                    SCOPED_TRACE(testCase.name());
+                    runAbiTestCase(isAtom ? "test_ffcall_add.q" : "test_ffcall_adds.q",
+                        testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+                }
+            }
         }
 
         void runGenericTest(string const& testScript)
@@ -174,10 +185,10 @@ namespace q_ffi
         }
     };
 
-#pragma region Tests for various calling conventions (ABIs)
+#pragma region Tests for various calling conventions (ABIs) for atoms
 
     vector<FFCallTests::TestInfo>
-    FFCallTests::ABI_TEST_CASES = {
+    FFCallTests::ABI_ATOM_TESTS = {
         { "add_char_cdecl"   , "", "x", "xx", true },
         { "add_int16_t_cdecl", "", "h", "hh", true },
         { "add_int32_t_cdecl", "", "i", "ii", true },
@@ -221,46 +232,97 @@ namespace q_ffi
 
     TEST_F(FFCallTests, addQ)
     {
-        for (auto const& testCase : ABI_TEST_CASES) {
-            if (testCase.abi_ != "")
-                continue;
-
-            SCOPED_TRACE(testCase.name());
-            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
-        }
+        constexpr bool is_atom = true;
+        runAbiTests(ABI_ATOM_TESTS, "", is_atom);
     }
 
     TEST_F(FFCallTests, addCdeclQ)
     {
-        for (auto const& testCase : ABI_TEST_CASES) {
-            if (testCase.abi_ != "cdecl")
-                continue;
-
-            SCOPED_TRACE(testCase.name());
-            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
-        }
+        constexpr bool is_atom = true;
+        runAbiTests(ABI_ATOM_TESTS, "cdecl", is_atom);
     }
 
     TEST_F(FFCallTests, addStdcallQ)
     {
-        for (auto const& testCase : ABI_TEST_CASES) {
-            if (testCase.abi_ != "stdcall")
-                continue;
-
-            SCOPED_TRACE(testCase.name());
-            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
-        }
+        constexpr bool is_atom = true;
+        runAbiTests(ABI_ATOM_TESTS, "stdcall", is_atom);
     }
 
     TEST_F(FFCallTests, addFastcallQ)
     {
-        for (auto const& testCase : ABI_TEST_CASES) {
-            if (testCase.abi_ != "fastcall")
-                continue;
+        constexpr bool is_atom = true;
+        runAbiTests(ABI_ATOM_TESTS, "fastcall", is_atom);
+    }
 
-            SCOPED_TRACE(testCase.name());
-            runAbiTest(testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
-        }
+#pragma endregion
+
+#pragma region Tests for various calling conventions (ABIs) for lists
+
+    vector<FFCallTests::TestInfo>
+    FFCallTests::ABI_LIST_TESTS = {
+        { "adds_char_cdecl"   , "", "X", "XX", true },
+        { "adds_int16_t_cdecl", "", "H", "HH", true },
+        { "adds_int32_t_cdecl", "", "I", "II", true },
+        { "adds_int64_t_cdecl", "", "J", "JJ", true },
+        { "adds_float_cdecl"  , "", "E", "EE", true },
+        { "adds_double_cdecl" , "", "F", "FF", true },
+#   if defined(PLATFORM_X86)
+        { "adds_char_cdecl"   , "cdecl", "X", "XX", true },
+        { "adds_int16_t_cdecl", "cdecl", "H", "HH", true },
+        { "adds_int32_t_cdecl", "cdecl", "I", "II", true },
+        { "adds_int64_t_cdecl", "cdecl", "J", "JJ", true },
+        { "adds_float_cdecl"  , "cdecl", "E", "EE", true },
+        { "adds_double_cdecl" , "cdecl", "F", "FF", true },
+        { "_adds_char_stdcall@12"    , "stdcall", "X", "XX", true },
+        { "_adds_int16_t_stdcall@12" , "stdcall", "H", "HH", true },
+        { "_adds_int32_t_stdcall@12" , "stdcall", "I", "II", true },
+        { "_adds_int64_t_stdcall@12", "stdcall", "J", "JJ", true },
+        { "_adds_float_stdcall@12"   , "stdcall", "E", "EE", true },
+        { "_adds_double_stdcall@12" , "stdcall", "F", "FF", true },
+        { "@adds_char_fastcall@12"    , "fastcall", "X", "XX", true },
+        { "@adds_int16_t_fastcall@12" , "fastcall", "H", "HH", true },
+        { "@adds_int32_t_fastcall@12" , "fastcall", "I", "II", true },
+        { "@adds_int64_t_fastcall@12", "fastcall", "J", "JJ", true },
+        { "@adds_float_fastcall@12"   , "fastcall", "E", "EE", true },
+        { "@adds_double_fastcall@12" , "fastcall", "F", "FF", true },
+#   elif defined(PLATFORM_X86_64)
+        { "adds_char_stdcall"   , "", "X", "XX", true },
+        { "adds_int16_t_stdcall", "", "H", "HH", true },
+        { "adds_int32_t_stdcall", "", "I", "II", true },
+        { "adds_int64_t_stdcall", "", "J", "JJ", true },
+        { "adds_float_stdcall"  , "", "E", "EE", true },
+        { "adds_double_stdcall" , "", "F", "FF", true },
+        { "adds_char_fastcall"   , "", "X", "XX", true },
+        { "adds_int16_t_fastcall", "", "H", "HH", true },
+        { "adds_int32_t_fastcall", "", "I", "II", true },
+        { "adds_int64_t_fastcall", "", "J", "JJ", true },
+        { "adds_float_fastcall"  , "", "E", "EE", true },
+        { "adds_double_fastcall" , "", "F", "FF", true },
+#   endif
+    };
+
+    TEST_F(FFCallTests, addsQ)
+    {
+        constexpr bool is_atom = false;
+        runAbiTests(ABI_LIST_TESTS, "", is_atom);
+    }
+
+    TEST_F(FFCallTests, addsCdeclQ)
+    {
+        constexpr bool is_atom = false;
+        runAbiTests(ABI_LIST_TESTS, "cdecl", is_atom);
+    }
+
+    TEST_F(FFCallTests, addsStdcallQ)
+    {
+        constexpr bool is_atom = false;
+        runAbiTests(ABI_LIST_TESTS, "stdcall", is_atom);
+    }
+
+    TEST_F(FFCallTests, addsFastcallQ)
+    {
+        constexpr bool is_atom = false;
+        runAbiTests(ABI_LIST_TESTS, "fastcall", is_atom);
     }
 
 #pragma endregion

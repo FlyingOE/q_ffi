@@ -191,23 +191,43 @@ q_ffi::Invocator::guessABI(char const* /*funcName*/)
 q_ffi::Invocator::argument_type
 q_ffi::Invocator::mapType(char typeCode)
 {
-#   define FFI_MAP_TYPE_CASE(kTypeCode, kType, ffiType)    \
-        case (kTypeCode):   \
-            return make_unique<Atom<(kType)>>((ffiType))
-
     switch (typeCode) {
-        FFI_MAP_TYPE_CASE('b', kBoolean, ffi_type_sint8);
-        FFI_MAP_TYPE_CASE('x', kByte, ffi_type_uint8);
-        FFI_MAP_TYPE_CASE('c', kChar, ffi_type_uchar);
-        FFI_MAP_TYPE_CASE('h', kShort, ffi_type_sint16);
-        FFI_MAP_TYPE_CASE('i', kInt, ffi_type_sint32);
-        FFI_MAP_TYPE_CASE('j', kLong, ffi_type_sint64);
-        FFI_MAP_TYPE_CASE('e', kReal, ffi_type_float);
-        FFI_MAP_TYPE_CASE('f', kFloat, ffi_type_double);
     case ' ':
         return make_unique<Void>();
+    case 'b':
+        return make_unique<Atom<kBoolean>>(ffi_type_sint8);
+    case 'x':
+        return make_unique<Atom<kByte>>(ffi_type_uint8);
+    case 'c':
+        return make_unique<Atom<kChar>>(ffi_type_uchar);
+    case 'h':
+        return make_unique<Atom<kShort>>(ffi_type_sint16);
+    case 'i':
+        return make_unique<Atom<kInt>>(ffi_type_sint32);
+    case 'j':
+        return make_unique<Atom<kLong>>(ffi_type_sint64);
+    case 'e':
+        return make_unique<Atom<kReal>>(ffi_type_float);
+    case 'f':
+        return make_unique<Atom<kFloat>>(ffi_type_double);
     case 's':
         return make_unique<Atom<kSymbol>>();
+    case 'B':
+        return make_unique<List<kBoolean>>();
+    case 'X':
+        return make_unique<List<kByte>>();
+    case 'C':
+        return make_unique<List<kChar>>();
+    case 'H':
+        return make_unique<List<kShort>>();
+    case 'I':
+        return make_unique<List<kInt>>();
+    case 'J':
+        return make_unique<List<kLong>>();
+    case 'E':
+        return make_unique<List<kReal>>();
+    case 'F':
+        return make_unique<List<kFloat>>();
     case '&':
         return make_unique<Pointer>();
     default:

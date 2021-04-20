@@ -8,14 +8,16 @@ lib:{ `$$[.z.o like"w*";"";"lib"],$[-11h=type x;string x;x] }
 \d .
 
 DLL:.util.lib`q_ffi@dll_suffix@
-LOADER:`load_fun
-GETTER:`get_var
-SETTER:`set_var
-SIZE_T:`size_type
-PTR_T:`ptr_type
-ADDR_OF:`addr_of
-ADDR_GETTER:`get_from_addr
-ADDR_SETTER:`set_to_addr
+VERSION:(`version;1)
+LOADER:(`load_fun;5)
+GETTER:(`get_var;3)
+SETTER:(`set_var;3)
+SIZE_T:(`size_type;1)
+PTR_T:(`ptr_type;1)
+ADDR_OF:(`addr_of;1)
+ADDR_GETTER:(`get_from_addr;2)
+ADDR_SETTER:(`set_to_addr;2)
+FREE_ADDR:(`free_addr;1)
 
 TEST_DLL:.util.lib`test_q_ffi_dll
 

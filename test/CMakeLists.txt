@@ -58,6 +58,7 @@ target_sources(${target_name}_dll
 set(test_scripts
     q/test.lib.q
     q/test_ffcall_add.q
+    q/test_ffcall_adds.q
     q/test_ffcall_args.q
     q/test_ffcall_vars.q
     q/test_ffcall_neg.q
@@ -93,7 +94,7 @@ add_custom_target(${target_name}.test-scripts ALL
             -D "test_scripts=${test_scripts}"
             -D "binary_dir=${CMAKE_CURRENT_BINARY_DIR}"
             -D "dll_suffix=${dll_suffix}"
-            -P q/tests.cmake
+            -P tests.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     DEPENDS ${test_scripts_src}
     COMMENT "Generate q test scripts into the test directory."

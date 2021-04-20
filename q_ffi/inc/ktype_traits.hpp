@@ -113,10 +113,15 @@ namespace q {
             template<typename It>
             static K_ptr list(It begin, It end) noexcept
             {
-                auto const n = std::distance(begin, end);
+                return list(begin, std::distance(begin, end));
+            }
+
+            template<typename It>
+            static K_ptr list(It begin, std::size_t n) noexcept
+            {
                 assert(0 <= n && n <= std::numeric_limits<::J>::max());
                 K_ptr k{ ::ktn(Tr::type_id, n) };
-                std::copy(begin, end, Tr::index(k));
+                std::copy_n(begin, n, Tr::index(k));
                 return k;
             }
         };
@@ -727,10 +732,15 @@ namespace q {
         template<typename It>
         static K_ptr list(It begin, It end) noexcept
         {
-            auto const n = std::distance(begin, end);
+            return list(begin, std::distance(begin, end));
+        }
+
+        template<typename It>
+        static K_ptr list(It begin, std::size_t n) noexcept
+        {
             assert(0 <= n && n <= std::numeric_limits<::J>::max());
             K_ptr k{ ::ktn(type_id, n) };
-            std::transform(begin, end, index(k.get()),
+            std::transform(begin, begin + n, index(k.get()),
                 [](auto&& sym) {
                     return ::ss(const_cast<::S>(
                         str_getter()(std::forward<decltype(sym)>(sym)) ));

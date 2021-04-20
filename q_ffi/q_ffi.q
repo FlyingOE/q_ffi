@@ -4,7 +4,8 @@
 /// Enhanced FFI (foreign function interface) support for k4.
 /////////////////////////////////////////////////////////////////////////////
 DLL:@[value;`.ffi.DLL;{
-  $[.z.o like"w*"; `q_ffi@dll_suffix@; `libq_ffi@dll_suffix@]
+  .Q.dd[hsym .z.o;]
+    $[.z.o like"w*"; `q_ffi@dll_suffix@; `libq_ffi@dll_suffix@]
  }];
 
 /// @brief DLL version/build information.
@@ -60,6 +61,9 @@ load0:DLL 2:(`load_fun;5);
 /// @brief Get the pointer to the values in a q list.
 /// @return The memory address of the value in @ref ptr_t type.
 .ffi.addr:DLL 2:(`addr_of;1);
+
+/// @brief Calls @c free on a given address.
+free:DLL 2:(`free_addr;1);
 
 /// @brief Get the value at the address provided by a pointer.
 /// @param addr The memory address. The data type is platform-dependent, given by @ref ptr_t

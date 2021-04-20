@@ -68,11 +68,6 @@ q_ffi::Atom<kSymbol>::Param::Param(::K k)
     str_ = qTraits::value(param_);
 }
 
-q_ffi::Atom<kSymbol>::Param::~Param()
-{
-    // No write-back, as symbol atoms are read-only!
-}
-
 void*
 q_ffi::Atom<kSymbol>::Param::get()
 {
@@ -80,44 +75,50 @@ q_ffi::Atom<kSymbol>::Param::get()
 }
 
 void
-q_ffi::Atom<kSymbol>::Param::set(::K)
+q_ffi::Atom<kSymbol>::Param::set(::K k)
 {
-    throw K_error("nyi: symbol atoms are read-only!");
+    validate(k);
+    if (param_)
+        param_ = qTraits::atom(qTraits::value(k));
+    else
+        throw K_error("state: invalid symbol parameter");
 }
 
 K_ptr
 q_ffi::Atom<kSymbol>::Param::release()
 {
-    throw K_error("nyi: symbol atoms are read-only!");
+    return move(param_);
 }
 
 void
 q_ffi::Atom<kSymbol>::Param::validate(::K k)
 {
-    if (nullptr == k) {
+    if (nullptr == k)
         throw K_error("nil atomic symbol");
-    }
-
-    if (-kSymbol != q::type(k)) {
-        ostringstream buffer;
-        buffer << "type: atomic symbol (" << -kSymbol << "h expected)";
-        throw K_error(buffer.str());
-    }
+    if (-kSymbol != q::type(k))
+        throw K_error("type: not a symbol");
 }
 
 unique_ptr<q_ffi::Parameter>
-q_ffi::Atom<kSymbol>::map(::K k, bool asReturn) const
+q_ffi::Atom<kSymbol>::map(::K k, bool) const
 {
-    if (asReturn)
-        throw K_error("nyi: symbol atoms are read-only!");
-    else
-        return make_unique<Param>(k);
+    return make_unique<Param>(k);
 }
 
 unique_ptr<q_ffi::Parameter>
-q_ffi::Atom<kSymbol>::create(bool) const
+q_ffi::Atom<kSymbol>::create(bool asReturn) const
 {
-    throw K_error("nyi: symbol atoms are read-only!");
+    auto k = qTraits::atom(qTraits::null());
+    return this->map(k.get(), asReturn);
+}
+
+K_ptr
+q_ffi::Atom<kSymbol>::getAddress(::K k) const
+{
+    auto const param = this->map(k);
+    using pointer_traits = TypeCode<sizeof(qTraits::value_type)>::traits;
+    return pointer_traits::atom(
+        *misc::ptr_alias<pointer_traits::const_pointer>(param->get()));
 }
 
 #pragma endregion
@@ -126,17 +127,27 @@ q_ffi::Atom<kSymbol>::create(bool) const
 
 template<>
 K_ptr
-q_ffi::Pointer::getAddress<kSymbol>(::K k)
+q_ffi::Pointer::getFromAddress<kSymbol>(::K addr)
 {
-    using value_traits = TypeTraits<kSymbol>;
+    using traits = TypeTraits<kSymbol>;
+    auto const str = static_cast<traits::value_type>(validate(addr));
+    return traits::atom(str);
+}
 
-    if (nullptr == k)
-        throw K_error("nil symbol");
-    if (-value_traits::type_id != q::type(k))
-        throw K_error("type: not a symbol");
+template<>
+void
+q_ffi::Pointer::setToAddress<kSymbol>(::K /*addr*/, ::K /*val*/)
+{
+    throw K_error("nyi: cannot set a symbol");
+}
 
-    auto const ptr = value_traits::value(k);
-    return qTraits::atom(*misc::ptr_alias<typename qTraits::const_pointer>(&ptr));
+template<>
+K_ptr
+q_ffi::Pointer::listFromAddress<kChar>(::K addr)
+{
+    using traits = TypeTraits<kChar>;
+    auto const str = static_cast<traits::const_pointer>(validate(addr));
+    return traits::list(str);
 }
 
 void*
@@ -159,21 +170,25 @@ q_ffi::Pointer::validate(::K addr)
 K_ptr
 q_ffi::address_of(::K k) noexcept(false)
 {
-#   define GET_ADDR_CASE(kType) \
-        case (kType):   \
-            return Pointer::getAddress<(kType)>(k)
-
     switch (type(k)) {
-        GET_ADDR_CASE(kBoolean);
-        GET_ADDR_CASE(kByte);
-        GET_ADDR_CASE(kChar);
-        GET_ADDR_CASE(kShort);
-        GET_ADDR_CASE(kInt);
-        GET_ADDR_CASE(kLong);
-        GET_ADDR_CASE(kReal);
-        GET_ADDR_CASE(kFloat);
+    case kBoolean:
+        return List<kBoolean>{}.getAddress(k);
+    case kByte:
+        return List<kByte>{}.getAddress(k);
+    case kChar:
+        return List<kChar>{}.getAddress(k);
+    case kShort:
+        return List<kShort>{}.getAddress(k);
+    case kInt:
+        return List<kInt>{}.getAddress(k);
+    case kLong:
+        return List<kLong>{}.getAddress(k);
+    case kReal:
+        return List<kReal>{}.getAddress(k);
+    case kFloat:
+        return List<kFloat>{}.getAddress(k);
     case -kSymbol:
-        return Pointer::getAddress<kSymbol>(k);
+        return Atom<kSymbol>{}.getAddress(k);
     default:
         ostringstream buffer;
         buffer << "type: " << type(k) << "h cannot get address";
@@ -198,6 +213,8 @@ q_ffi::get_from_address(::K addr, ::K typ) noexcept(false)
         GET_FROM_ADDR_CASE('e', kReal);
         GET_FROM_ADDR_CASE('f', kFloat);
         GET_FROM_ADDR_CASE('s', kSymbol);
+    case 'C':
+        return Pointer::listFromAddress<kChar>(addr);
     default:
         ostringstream buffer;
         buffer << "type: \"" << q2Char(typ) << "\" cannot be get from address";
@@ -221,12 +238,17 @@ q_ffi::set_to_address(::K addr, ::K val) noexcept(false)
         SET_TO_ADDR_CASE(kLong);
         SET_TO_ADDR_CASE(kReal);
         SET_TO_ADDR_CASE(kFloat);
-        SET_TO_ADDR_CASE(kSymbol);
     default:
         ostringstream buffer;
         buffer << "type: " << type(val) << "h cannot be set to address";
         throw K_error(buffer.str());
     }
+}
+
+void
+q_ffi::free_address(::K addr) noexcept(false)
+{
+    Pointer{}.freeAddress(addr);
 }
 
 namespace

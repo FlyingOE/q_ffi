@@ -11,8 +11,8 @@ mid:-1
 mem_check:{[check] check . mem mid+-1 0 }
 
 /////////////////////////////////////////////////////////////////////////////
-getter:0N!DLL 2:(GETTER;3)
-setter:0N!DLL 2:(SETTER;3)
+getter:0N!DLL 2:GETTER
+setter:0N!DLL 2:SETTER
 .test.log"After loading DLL ",.Q.s1[DLL];
 
 VAR:()!()

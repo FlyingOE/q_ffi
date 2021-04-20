@@ -74,6 +74,17 @@ using namespace std;
     }
 }
 
+::K K4_DECL free_addr(::K addr)
+{
+    try {
+        q_ffi::free_address(addr);
+        return Nil;
+    }
+    catch (K_error const& ex) {
+        return ex.report().release();
+    }
+}
+
 ::K K4_DECL size_type(::K)
 {
     return q_ffi::get_type<std::size_t>().release();

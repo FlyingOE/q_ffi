@@ -31,6 +31,9 @@ K K4_DECL get_from_addr(K addr, K typ);
 q_ffi_EXTERN q_ffi_API
 K K4_DECL set_to_addr(K addr, K val);
 
+q_ffi_EXTERN q_ffi_API
+K K4_DECL free_addr(K addr);
+
 #pragma endregion
 
 #pragma region FFI type mapping

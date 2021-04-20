@@ -16,7 +16,7 @@ mangle:{[pref;func;post]
  }
 
 /////////////////////////////////////////////////////////////////////////////
-loader:0N!DLL 2:(LOADER;5)
+loader:0N!DLL 2:LOADER
 .test.log"After loading DLL ",.Q.s1[DLL];
 
 MAX_ARGC:8;

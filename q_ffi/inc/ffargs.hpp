@@ -16,6 +16,8 @@ namespace q_ffi
 
     void set_to_address(::K addr, ::K val) noexcept(false);
 
+    void free_address(::K addr) noexcept(false);
+
 #pragma endregion
 
 #pragma region FFI variable access
@@ -275,7 +277,6 @@ namespace q_ffi
 
         public:
             Param(::K k);
-            virtual ~Param();
 
             void* get() override;
             void set(::K) override;
@@ -291,6 +292,8 @@ namespace q_ffi
 
         std::unique_ptr<Parameter> map(::K k, bool asReturn = false) const override;
         std::unique_ptr<Parameter> create(bool asReturn = true) const override;
+
+        q::K_ptr getAddress(::K k) const;
     };
 
     /// @brief FFI callback argument: pointer
@@ -304,27 +307,21 @@ namespace q_ffi
         {}
 
         template<q::TypeId tid>
-        static q::K_ptr getAddress(::K k)
-        {
-            if (nullptr == k)
-                throw q::K_error("type: nil list");
-            if (tid != q::type(k))
-                throw q::K_error("type: pointer type mismatch");
-
-            auto const ptr = q::TypeTraits<tid>::index(k);
-            return qTraits::atom(*misc::ptr_alias<typename qTraits::const_pointer>(&ptr));
-        }
-
-        template<>
-        static q::K_ptr getAddress<q::kSymbol>(::K k);
-
-        template<q::TypeId tid>
         static q::K_ptr getFromAddress(::K addr)
         {
             using traits = q::TypeTraits<tid>;
             auto const ptr = static_cast<typename traits::const_pointer>(validate(addr));
             return traits::atom(*ptr);
         }
+
+        template<>
+        static q::K_ptr getFromAddress<q::kSymbol>(::K addr);
+
+        template<q::TypeId tid>
+        static q::K_ptr listFromAddress(::K addr);
+
+        template<>
+        static q::K_ptr listFromAddress<q::kChar>(::K addr);
 
         template<q::TypeId tid>
         static void setToAddress(::K addr, ::K val)
@@ -334,8 +331,98 @@ namespace q_ffi
             *ptr = traits::value(val);
         }
 
+        template<>
+        static void setToAddress<q::kSymbol>(::K addr, ::K val);
+
+        void freeAddress(::K addr) const
+        {
+            auto const param = this->map(addr);
+            auto const ptr = *misc::ptr_alias<char**>(param->get());
+            std::free(ptr);
+        }
+
     private:
         static void* validate(::K addr);
+    };
+
+    /// @brief FFI callback argument: list value
+    template<q::TypeId tid>
+    class List : public Argument
+    {
+    protected:
+        using qTraits = q::TypeTraits<tid>;
+
+        class Param : public Parameter
+        {
+        private:
+            q::K_ptr param_;
+            typename qTraits::pointer ptr_;
+
+        public:
+            Param(::K k) : param_{ q::dup_K(k) }, ptr_{ nullptr }
+            {
+                validate(param_.get());
+                ptr_ = qTraits::index(param_);
+            }
+
+            void* get() override
+            {
+                return &ptr_;
+            }
+
+            void set(::K k) override
+            {
+                validate(k);
+                if (param_)
+                    param_ = qTraits::list(qTraits::index(k), count(k));
+                else
+                    throw q::K_error("state: invalid list parameter");
+            }
+
+            q::K_ptr release() override
+            {
+                return std::move(param_);
+            }
+
+        private:
+            static void validate(::K k)
+            {
+                if (nullptr == k)
+                    throw q::K_error("nil list parameter");
+
+                if (qTraits::type_id != q::type(k)) {
+                    std::ostringstream buffer;
+                    buffer << "type: list parameter"
+                        " (" << qTraits::type_id << "h expected)";
+                    throw q::K_error(buffer.str());
+                }
+            }
+        };
+
+    public:
+        List() : Argument(ffi_type_pointer)
+        {}
+
+        std::unique_ptr<Parameter> map(::K k, bool asReturn = false) const override
+        {
+            if (asReturn)
+                throw q::K_error("nyi: use pointer return instead");
+            else
+                return std::make_unique<Param>(k);
+        }
+
+        std::unique_ptr<Parameter> create(bool = true) const override
+        {
+            throw q::K_error("nyi: use pointer parameter/return instead");
+        }
+
+        q::K_ptr getAddress(::K k) const
+        {
+            auto const param = this->map(k);
+            using pointer_traits = TypeCode<sizeof(typename qTraits::const_pointer)>::traits;
+            return pointer_traits::atom(
+                *misc::ptr_alias<pointer_traits::const_pointer>(param->get()));
+        }
     };
 
 #pragma endregion

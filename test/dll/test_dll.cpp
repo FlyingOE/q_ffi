@@ -28,6 +28,17 @@
 
 using namespace std;
 
+namespace
+{
+    struct Freer
+    {
+        void operator()(void* p)
+        {
+            std::free(p);
+        }
+    };
+}
+
 #pragma region Tests for different calling conventions (ABIs)
 extern "C"
 {
@@ -40,6 +51,18 @@ extern "C"
             cout << dec << "In add_" #Type "_" #AbiName " with "    \
                 << '(' << a << ") + (" << b << ") = (" << c << ')' << endl; \
             return c;   \
+        }   \
+        \
+        API_EXPORT  \
+        Type* Abi adds_##Type##_##AbiName(Type const* a, Type const* b, size_t n)   \
+        {   \
+            unique_ptr<void, Freer> cc{ std::malloc(sizeof(Type) * n) };    \
+            Type* c = static_cast<Type*>(cc.get());     \
+            cout << dec << "In adds_" #Type "_" #AbiName " with (" << n << ") " << hex  \
+                << '[0x' << a << "] + [0x" << b << "] = [0x" << c << ']' << endl;   \
+            for (auto i = 0; i < n; ++i)    \
+                c[i] = a[i] + b[i];     \
+            return static_cast<Type*>(cc.release());    \
         }
 
     DEFINE_TEST_ADD(CALL_CDECL, cdecl, char);
