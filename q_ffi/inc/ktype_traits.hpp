@@ -119,7 +119,7 @@ namespace q {
             template<typename It>
             static K_ptr list(It begin, std::size_t n) noexcept
             {
-                assert(0 <= n && n <= std::numeric_limits<::J>::max());
+                assert(n <= static_cast<std::size_t>(std::numeric_limits<::J>::max()));
                 K_ptr k{ ::ktn(Tr::type_id, n) };
                 std::copy_n(begin, n, Tr::index(k));
                 return k;

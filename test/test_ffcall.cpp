@@ -56,23 +56,12 @@ namespace q_ffi
         {
             string func_;
             string abi_;
-            string retType_;
-            string argTypes_;
-            bool noThrow_;
+            string type_;
 
             string name() const
             {
                 ostringstream buffer;
-                buffer << retType_ << ' ' << func_ << '[';
-                bool first = true;
-                for (char a : argTypes_) {
-                    if (first)
-                        first = false;
-                    else
-                        buffer << ';';
-                    buffer << a;
-                }
-                buffer << ']';
+                buffer << ' ' << func_ << '[' << type_ << ';' << type_ << ']';
                 return buffer.str();
             }
         };
@@ -138,14 +127,14 @@ namespace q_ffi
 #       endif
         }
 
-        void runAbiTestCase(char const* testScript, string const& func,
-            string const& abi, string const& retType, string const& argTypes)
+        void runAbiTestCase(char const* testScript,
+            string const& func, string const& abi, string const& type)
         {
             auto const testDump = outputName();
             int status = -1;
             for (auto const& qbin : QBINs) {
                 auto const cmd = makeCommand(qbin, testDump, testScript, {
-                    func, abi, retType
+                    func, abi, type
                 });
 #           ifndef NDEBUG
                 cout << "RUNNING: " << cmd << endl;
@@ -163,7 +152,7 @@ namespace q_ffi
                 if (testCase.abi_ == abi) {
                     SCOPED_TRACE(testCase.name());
                     runAbiTestCase(isAtom ? "test_ffcall_add.q" : "test_ffcall_adds.q",
-                        testCase.func_, testCase.abi_, testCase.retType_, testCase.argTypes_);
+                        testCase.func_, testCase.abi_, testCase.type_);
                 }
             }
         }
@@ -189,44 +178,44 @@ namespace q_ffi
 
     vector<FFCallTests::TestInfo>
     FFCallTests::ABI_ATOM_TESTS = {
-        { "add_char_cdecl"   , "", "x", "xx", true },
-        { "add_int16_t_cdecl", "", "h", "hh", true },
-        { "add_int32_t_cdecl", "", "i", "ii", true },
-        { "add_int64_t_cdecl", "", "j", "jj", true },
-        { "add_float_cdecl"  , "", "e", "ee", true },
-        { "add_double_cdecl" , "", "f", "ff", true },
+        { "add_char_cdecl"   , "", "x" },
+        { "add_int16_t_cdecl", "", "h" },
+        { "add_int32_t_cdecl", "", "i" },
+        { "add_int64_t_cdecl", "", "j" },
+        { "add_float_cdecl"  , "", "e" },
+        { "add_double_cdecl" , "", "f" },
 #   if defined(PLATFORM_X86)
-        { "add_char_cdecl"   , "cdecl", "x", "xx", true },
-        { "add_int16_t_cdecl", "cdecl", "h", "hh", true },
-        { "add_int32_t_cdecl", "cdecl", "i", "ii", true },
-        { "add_int64_t_cdecl", "cdecl", "j", "jj", true },
-        { "add_float_cdecl"  , "cdecl", "e", "ee", true },
-        { "add_double_cdecl" , "cdecl", "f", "ff", true },
-        { "_add_char_stdcall@8"    , "stdcall", "x", "xx", true },
-        { "_add_int16_t_stdcall@8" , "stdcall", "h", "hh", true },
-        { "_add_int32_t_stdcall@8" , "stdcall", "i", "ii", true },
-        { "_add_int64_t_stdcall@16", "stdcall", "j", "jj", true },
-        { "_add_float_stdcall@8"   , "stdcall", "e", "ee", true },
-        { "_add_double_stdcall@16" , "stdcall", "f", "ff", true },
-        { "@add_char_fastcall@8"    , "fastcall", "x", "xx", true },
-        { "@add_int16_t_fastcall@8" , "fastcall", "h", "hh", true },
-        { "@add_int32_t_fastcall@8" , "fastcall", "i", "ii", true },
-        { "@add_int64_t_fastcall@16", "fastcall", "j", "jj", true },
-        { "@add_float_fastcall@8"   , "fastcall", "e", "ee", true },
-        { "@add_double_fastcall@16" , "fastcall", "f", "ff", true },
+        { "add_char_cdecl"   , "cdecl", "x" },
+        { "add_int16_t_cdecl", "cdecl", "h" },
+        { "add_int32_t_cdecl", "cdecl", "i" },
+        { "add_int64_t_cdecl", "cdecl", "j" },
+        { "add_float_cdecl"  , "cdecl", "e" },
+        { "add_double_cdecl" , "cdecl", "f" },
+        { "_add_char_stdcall@8"    , "stdcall", "x" },
+        { "_add_int16_t_stdcall@8" , "stdcall", "h" },
+        { "_add_int32_t_stdcall@8" , "stdcall", "i" },
+        { "_add_int64_t_stdcall@16", "stdcall", "j" },
+        { "_add_float_stdcall@8"   , "stdcall", "e" },
+        { "_add_double_stdcall@16" , "stdcall", "f" },
+        { "@add_char_fastcall@8"    , "fastcall", "x" },
+        { "@add_int16_t_fastcall@8" , "fastcall", "h" },
+        { "@add_int32_t_fastcall@8" , "fastcall", "i" },
+        { "@add_int64_t_fastcall@16", "fastcall", "j" },
+        { "@add_float_fastcall@8"   , "fastcall", "e" },
+        { "@add_double_fastcall@16" , "fastcall", "f" },
 #   elif defined(PLATFORM_X86_64)
-        { "add_char_stdcall"   , "", "x", "xx", true },
-        { "add_int16_t_stdcall", "", "h", "hh", true },
-        { "add_int32_t_stdcall", "", "i", "ii", true },
-        { "add_int64_t_stdcall", "", "j", "jj", true },
-        { "add_float_stdcall"  , "", "e", "ee", true },
-        { "add_double_stdcall" , "", "f", "ff", true },
-        { "add_char_fastcall"   , "", "x", "xx", true },
-        { "add_int16_t_fastcall", "", "h", "hh", true },
-        { "add_int32_t_fastcall", "", "i", "ii", true },
-        { "add_int64_t_fastcall", "", "j", "jj", true },
-        { "add_float_fastcall"  , "", "e", "ee", true },
-        { "add_double_fastcall" , "", "f", "ff", true },
+        { "add_char_stdcall"   , "", "x" },
+        { "add_int16_t_stdcall", "", "h" },
+        { "add_int32_t_stdcall", "", "i" },
+        { "add_int64_t_stdcall", "", "j" },
+        { "add_float_stdcall"  , "", "e" },
+        { "add_double_stdcall" , "", "f" },
+        { "add_char_fastcall"   , "", "x" },
+        { "add_int16_t_fastcall", "", "h" },
+        { "add_int32_t_fastcall", "", "i" },
+        { "add_int64_t_fastcall", "", "j" },
+        { "add_float_fastcall"  , "", "e" },
+        { "add_double_fastcall" , "", "f" },
 #   endif
     };
 
@@ -260,44 +249,44 @@ namespace q_ffi
 
     vector<FFCallTests::TestInfo>
     FFCallTests::ABI_LIST_TESTS = {
-        { "adds_char_cdecl"   , "", "X", "XX", true },
-        { "adds_int16_t_cdecl", "", "H", "HH", true },
-        { "adds_int32_t_cdecl", "", "I", "II", true },
-        { "adds_int64_t_cdecl", "", "J", "JJ", true },
-        { "adds_float_cdecl"  , "", "E", "EE", true },
-        { "adds_double_cdecl" , "", "F", "FF", true },
+        { "adds_char_cdecl"   , "", "X" },
+        { "adds_int16_t_cdecl", "", "H" },
+        { "adds_int32_t_cdecl", "", "I" },
+        { "adds_int64_t_cdecl", "", "J" },
+        { "adds_float_cdecl"  , "", "E" },
+        { "adds_double_cdecl" , "", "F" },
 #   if defined(PLATFORM_X86)
-        { "adds_char_cdecl"   , "cdecl", "X", "XX", true },
-        { "adds_int16_t_cdecl", "cdecl", "H", "HH", true },
-        { "adds_int32_t_cdecl", "cdecl", "I", "II", true },
-        { "adds_int64_t_cdecl", "cdecl", "J", "JJ", true },
-        { "adds_float_cdecl"  , "cdecl", "E", "EE", true },
-        { "adds_double_cdecl" , "cdecl", "F", "FF", true },
-        { "_adds_char_stdcall@12"    , "stdcall", "X", "XX", true },
-        { "_adds_int16_t_stdcall@12" , "stdcall", "H", "HH", true },
-        { "_adds_int32_t_stdcall@12" , "stdcall", "I", "II", true },
-        { "_adds_int64_t_stdcall@12", "stdcall", "J", "JJ", true },
-        { "_adds_float_stdcall@12"   , "stdcall", "E", "EE", true },
-        { "_adds_double_stdcall@12" , "stdcall", "F", "FF", true },
-        { "@adds_char_fastcall@12"    , "fastcall", "X", "XX", true },
-        { "@adds_int16_t_fastcall@12" , "fastcall", "H", "HH", true },
-        { "@adds_int32_t_fastcall@12" , "fastcall", "I", "II", true },
-        { "@adds_int64_t_fastcall@12", "fastcall", "J", "JJ", true },
-        { "@adds_float_fastcall@12"   , "fastcall", "E", "EE", true },
-        { "@adds_double_fastcall@12" , "fastcall", "F", "FF", true },
+        { "adds_char_cdecl"   , "cdecl", "X" },
+        { "adds_int16_t_cdecl", "cdecl", "H" },
+        { "adds_int32_t_cdecl", "cdecl", "I" },
+        { "adds_int64_t_cdecl", "cdecl", "J" },
+        { "adds_float_cdecl"  , "cdecl", "E" },
+        { "adds_double_cdecl" , "cdecl", "F" },
+        { "_adds_char_stdcall@12"   , "stdcall", "X" },
+        { "_adds_int16_t_stdcall@12", "stdcall", "H" },
+        { "_adds_int32_t_stdcall@12", "stdcall", "I" },
+        { "_adds_int64_t_stdcall@12", "stdcall", "J" },
+        { "_adds_float_stdcall@12"  , "stdcall", "E" },
+        { "_adds_double_stdcall@12" , "stdcall", "F" },
+        { "@adds_char_fastcall@12"   , "fastcall", "X" },
+        { "@adds_int16_t_fastcall@12", "fastcall", "H" },
+        { "@adds_int32_t_fastcall@12", "fastcall", "I" },
+        { "@adds_int64_t_fastcall@12", "fastcall", "J" },
+        { "@adds_float_fastcall@12"  , "fastcall", "E" },
+        { "@adds_double_fastcall@12" , "fastcall", "F" },
 #   elif defined(PLATFORM_X86_64)
-        { "adds_char_stdcall"   , "", "X", "XX", true },
-        { "adds_int16_t_stdcall", "", "H", "HH", true },
-        { "adds_int32_t_stdcall", "", "I", "II", true },
-        { "adds_int64_t_stdcall", "", "J", "JJ", true },
-        { "adds_float_stdcall"  , "", "E", "EE", true },
-        { "adds_double_stdcall" , "", "F", "FF", true },
-        { "adds_char_fastcall"   , "", "X", "XX", true },
-        { "adds_int16_t_fastcall", "", "H", "HH", true },
-        { "adds_int32_t_fastcall", "", "I", "II", true },
-        { "adds_int64_t_fastcall", "", "J", "JJ", true },
-        { "adds_float_fastcall"  , "", "E", "EE", true },
-        { "adds_double_fastcall" , "", "F", "FF", true },
+        { "adds_char_stdcall"   , "", "X" },
+        { "adds_int16_t_stdcall", "", "H" },
+        { "adds_int32_t_stdcall", "", "I" },
+        { "adds_int64_t_stdcall", "", "J" },
+        { "adds_float_stdcall"  , "", "E" },
+        { "adds_double_stdcall" , "", "F" },
+        { "adds_char_fastcall"   , "", "X" },
+        { "adds_int16_t_fastcall", "", "H" },
+        { "adds_int32_t_fastcall", "", "I" },
+        { "adds_int64_t_fastcall", "", "J" },
+        { "adds_float_fastcall"  , "", "E" },
+        { "adds_double_fastcall" , "", "F" },
 #   endif
     };
 
