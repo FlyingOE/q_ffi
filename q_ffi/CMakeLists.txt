@@ -48,10 +48,10 @@ set(q_ffi_ALWAYS_BUILD
     ${target_source_dir}/version.cpp
 )
 
-source_group("q"              ${q_ffi_BINDING})
-source_group("Public Headers" ${q_ffi_PUBLIC_API})
-source_group("Headers"        ${q_ffi_HEADERS})
-source_group("Sources"        ${q_ffi_SOURCES} ${q_ffi_ALWAYS_BUILD})
+source_group("q"              FILES ${q_ffi_BINDING})
+source_group("Public Headers" FILES ${q_ffi_PUBLIC_API})
+source_group("Headers"        FILES ${q_ffi_HEADERS})
+source_group("Sources"        FILES ${q_ffi_SOURCES} ${q_ffi_ALWAYS_BUILD})
 
 # Library build definition
 add_library(${target_name} SHARED)
