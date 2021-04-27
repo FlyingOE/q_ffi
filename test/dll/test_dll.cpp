@@ -24,6 +24,8 @@
 #   error FIXME: add unit test for this platform...
 #endif
 
+#include <cassert>
+#include <cstring>
 #include <algorithm>
 
 using namespace std;

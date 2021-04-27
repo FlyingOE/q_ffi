@@ -34,7 +34,7 @@ namespace q_ffi
     constexpr q::K_ptr get_type() noexcept
     {
         constexpr auto typeId = TypeCode<sizeof(T)>::traits::type_id;
-        return q::TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId));
+        return q::TypeTraits<q::kChar>::atom(q::TypeId2Code.at(typeId));
     }
 
     template<>
@@ -193,7 +193,7 @@ namespace q_ffi
                 if (param_)
                     return mapper_.read(param_);
                 else
-                    throw K_error("state: invalid atomic parameter");
+                    throw q::K_error("state: invalid atomic parameter");
             }
 
             void set(::K k) override
@@ -202,7 +202,7 @@ namespace q_ffi
                 if (param_)
                     return mapper_.write(param_, k);
                 else
-                    throw K_error("state: invalid atomic parameter");
+                    throw q::K_error("state: invalid atomic parameter");
             }
 
             q::K_ptr release() override
@@ -308,9 +308,6 @@ namespace q_ffi
             return qTraits::atom(*misc::ptr_alias<typename qTraits::const_pointer>(&ptr));
         }
 
-        template<>
-        static q::K_ptr getAddress<q::kSymbol>(::K k);
-
         template<q::TypeId tid>
         static q::K_ptr getFromAddress(::K addr)
         {
@@ -330,6 +327,9 @@ namespace q_ffi
     private:
         static void* validate(::K addr);
     };
+
+    template<>
+    q::K_ptr Pointer::getAddress<q::kSymbol>(::K k);
 
 #pragma endregion
 }//namespace q_ffi
