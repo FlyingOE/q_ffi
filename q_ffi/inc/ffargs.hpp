@@ -36,13 +36,13 @@ namespace q_ffi
     constexpr q::K_ptr get_type() noexcept
     {
         constexpr auto typeId = TypeCode<sizeof(T)>::traits::type_id;
-        return q::TypeTraits<kChar>::atom(q::TypeId2Code.at(typeId));
+        return q::TypeTraits<q::kChar>::atom(q::TypeId2Code.at(typeId));
     }
 
     template<typename T>
     constexpr q::K_ptr get_size() noexcept
     {
-        using traits = TypeCode<sizeof(T)>::traits;
+        using traits = typename TypeCode<sizeof(T)>::traits;
         return traits::atom(sizeof(typename traits::value_type));
     }
 
@@ -202,7 +202,7 @@ namespace q_ffi
                 if (param_)
                     return mapper_.read(param_);
                 else
-                    throw K_error("state: invalid atomic parameter");
+                    throw q::K_error("state: invalid atomic parameter");
             }
 
             void set(::K k) override
@@ -211,7 +211,7 @@ namespace q_ffi
                 if (param_)
                     return mapper_.write(param_, k);
                 else
-                    throw K_error("state: invalid atomic parameter");
+                    throw q::K_error("state: invalid atomic parameter");
             }
 
             q::K_ptr release() override
@@ -316,17 +316,11 @@ namespace q_ffi
             return value_traits::atom(*ptr);
         }
 
-        template<>
-        q::K_ptr getFromAddress<q::kSymbol>(::K addr) const;
-
         template<q::TypeId tid>
         q::K_ptr listFromAddress(::K) const
         {
             throw q::K_error("nyi: cannot create unbounded list");
         }
-
-        template<>
-        q::K_ptr listFromAddress<q::kChar>(::K addr) const;
 
         template<q::TypeId tid>
         void setToAddress(::K addr, ::K val) const
@@ -338,9 +332,6 @@ namespace q_ffi
             *ptr = value_traits::value(val);
         }
 
-        template<>
-        void setToAddress<q::kSymbol>(::K addr, ::K val) const;
-
         void freeAddress(::K addr) const
         {
             auto const param = this->map(addr);
@@ -348,6 +339,16 @@ namespace q_ffi
             std::free(ptr);
         }
     };
+
+    template<>
+    q::K_ptr Pointer::getFromAddress<q::kSymbol>(::K addr) const;
+
+    template<>
+    q::K_ptr Pointer::listFromAddress<q::kChar>(::K addr) const;
+
+    template<>
+    void Pointer::setToAddress<q::kSymbol>(::K addr, ::K val) const;
+
 
     /// @brief FFI callback argument: list value
     template<q::TypeId tid>
@@ -378,7 +379,7 @@ namespace q_ffi
             {
                 validate(k);
                 if (param_)
-                    param_ = qTraits::list(qTraits::index(k), count(k));
+                    param_ = qTraits::list(qTraits::index(k), q::count(k));
                 else
                     throw q::K_error("state: invalid list parameter");
             }
@@ -423,9 +424,10 @@ namespace q_ffi
         q::K_ptr getAddress(::K k) const
         {
             auto const param = this->map(k);
-            using pointer_traits = TypeCode<sizeof(typename qTraits::const_pointer)>::traits;
+            using pointer_traits =
+                typename TypeCode<sizeof(typename qTraits::const_pointer)>::traits;
             return pointer_traits::atom(
-                *misc::ptr_alias<pointer_traits::const_pointer>(param->get()));
+                *misc::ptr_alias<typename pointer_traits::const_pointer>(param->get()));
         }
     };
 
