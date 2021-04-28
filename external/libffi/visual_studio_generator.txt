@@ -1,0 +1,14 @@
+-- Building for: Visual Studio 16 2019
+-- Selecting Windows SDK version 10.0.19041.0 to target Windows 10.0.19042.
+-- The C compiler identification is MSVC 19.28.29913.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: D:/visual studio/VC/Tools/MSVC/14.28.29910/bin/Hostx64/x86/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- The ASM_MASM compiler identification is MSVC
+-- Found assembler: D:/visual studio/VC/Tools/MSVC/14.28.29910/bin/Hostx64/x86/ml.exe
+-- Build configured for x86 architecture
+-- Configuring done
+-- Generating done
+-- Build files have been written to: E:/libffi/Libffi/build
