@@ -2,13 +2,15 @@
 #define NOMINMAX
 #include <windows.h>
 
+#include "dll/test_dll.h"
+
 #define CALL_CDECL    __cdecl
 #define CALL_STDCALL  __stdcall
 #define CALL_FASTCALL __fastcall
 
 namespace q_ffi
 {
-    std::string TEST_DLL{ "test_q_ffi_dll.dll" };
+    std::string TEST_DLL{ ::TEST_DLL_NAME };
 
     TEST(LibffiBaseTests, Win32API)
     {

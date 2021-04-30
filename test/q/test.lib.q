@@ -19,7 +19,7 @@ ADDR_GETTER:(`get_from_addr;2)
 ADDR_SETTER:(`set_to_addr;2)
 FREE_ADDR:(`free_addr;1)
 
-TEST_DLL:.util.lib`test_q_ffi_dll
+TEST_DLL:.util.lib`$"@test_dll@"
 
 /////////////////////////////////////////////////////////////////////////////
 \d .test

@@ -6,6 +6,8 @@
 #define NOMINMAX
 #include <windows.h>
 
+#include "dll/test_dll.h"
+
 #define CALL_CDECL    __cdecl
 #define CALL_STDCALL  __stdcall
 #define CALL_FASTCALL __fastcall
@@ -14,7 +16,7 @@
 
 namespace
 {
-    char const* DLL_NAME = "test_q_ffi_dll.dll";
+    char const* DLL_NAME = ::TEST_DLL_NAME;
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule,

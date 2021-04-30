@@ -33,7 +33,5 @@ add_subdirectory(external)
 add_subdirectory(q_ffi)
 
 # Unit tests
-if(BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(test)
-endif()
+enable_testing()
+add_subdirectory(test)

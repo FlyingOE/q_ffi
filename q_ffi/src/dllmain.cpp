@@ -16,17 +16,11 @@ using namespace std;
 namespace
 {
 #ifdef _WIN32
-#   define q_ffi_DLL "q_ffi.dll"
-
 #   define DLL_CONSTRUCTOR
 #   define DLL_DESTRUCTOR
-
 #else
-#   define q_ffi_DLL "libq_ffi.so"
-
 #   define DLL_CONSTRUCTOR __attribute__((constructor))
 #   define DLL_DESTRUCTOR  __attribute__((destructor))
-
 #endif
 
     DLL_CONSTRUCTOR void dllOnLoad() noexcept
@@ -35,7 +29,7 @@ namespace
         // @ref https://code.kx.com/q/interfaces/c-client-for-q/#managing-memory-and-reference-counting
         call_once(onLoad, []() {
 #       ifndef NDEBUG
-            printf("# <" q_ffi_DLL "> loading...\n");
+            printf("# <q_ffi> loading...\n");
 #       endif
             ::setm(1);
         });
@@ -46,7 +40,7 @@ namespace
         static once_flag onUnload;
         call_once(onUnload, []() {
 #       ifndef NDEBUG
-            printf("# <" q_ffi_DLL "> unloading...\n");
+            printf("# <q_ffi> unloading...\n");
 #       endif
         });
     }

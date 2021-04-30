@@ -3,6 +3,7 @@
 # Parameters:
 #   test_scripts - list of script files to be generated
 #   binary_dir   - output directory for the generated scripts
+#   test_dll     - name (less filext) of the test DLL
 #   dll_suffix   - suffix of DLL filename
 #############################################################################
 foreach(script ${test_scripts})

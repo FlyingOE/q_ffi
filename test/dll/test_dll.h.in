@@ -1,0 +1,11 @@
+#pragma once
+
+char const TEST_DLL_NAME[] =
+#if defined(_WIN32)
+    "@test_dll@.dll"
+#elif defined(__linux__) && !defined(__ANDROID__)
+    "lib@test_dll@.so"
+#else
+#   error FIXME: add support for this platform...
+#endif
+;

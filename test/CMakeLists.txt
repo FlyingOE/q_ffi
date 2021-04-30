@@ -1,34 +1,45 @@
 # vim: set et noai ts=4 sw=4 syntax=cmake:
-set(target_name "test_q_ffi")
+set(target_name "q_ffi_Tests")
+set(target_test "${target_name}_dll")
 
-# GTest
-enable_testing()
-include(GoogleTest)
+# GoogleTest
+find_package(GTest CONFIG REQUIRED)
+
+# Test DLL
+add_library(${target_test} SHARED
+    dll/test_dll.h
+    dll/test_dll.cpp    dll/test_dll_win.hpp    dll/test_dll_linux.hpp
+)
+target_compile_features(${target_test}
+    PRIVATE
+        cxx_std_17
+)
+
+set(test_dll "${target_test}")
+configure_file(dll/test_dll.h.in dll/test_dll.h @ONLY)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # Unit test implementation
-add_executable(${target_name})
-target_sources(${target_name}
-    PRIVATE
-        setup.cpp     setup.hpp
-        test_std_ext.cpp
-        test_kpointer.cpp
-        test_ktypes.cpp
-        test_temporals.cpp
-        test_type_convert.cpp
-        test_libffi.cpp     test_libffi_win.hpp     test_libffi_linux.hpp
-        test_ffcall.cpp
+add_executable(${target_name}
+    setup.cpp     setup.hpp
+    test_std_ext.cpp
+    test_kpointer.cpp
+    test_ktypes.cpp
+    test_temporals.cpp
+    test_type_convert.cpp
+    test_libffi.cpp     test_libffi_win.hpp     test_libffi_linux.hpp
+    test_ffcall.cpp
 )
+add_dependencies(${target_name} ${target_test})
 target_include_directories(${target_name}
     PRIVATE
-        ${header_dir}
-        ${target_name}_dll
         kdb::C-exe
         libffi::static
         CapitalEdge::q_ffi
 )
 target_link_libraries(${target_name}
     PRIVATE
-        gtest       gtest_main
+        GTest::gtest    GTest::gtest_main
         kdb::C-exe
         libffi::static
         CapitalEdge::q_ffi
@@ -43,16 +54,6 @@ if(WIN32)
             dlfcn-win32::dl
     )
 endif()
-
-# Test DLL
-add_library(${target_name}_dll SHARED)
-add_dependencies(${target_name}
-    ${target_name}_dll
-)
-target_sources(${target_name}_dll
-    PRIVATE
-        dll/test_dll.cpp    dll/test_dll_win.hpp    dll/test_dll_linux.hpp
-)
 
 # q test scripst
 set(test_scripts
@@ -89,10 +90,11 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 else()
     set(dll_suffix "")
 endif()
-add_custom_target(${target_name}.test-scripts ALL
+add_custom_target(${target_name}.q-scripts ALL
     COMMAND ${CMAKE_COMMAND}
             -D "test_scripts=${test_scripts}"
             -D "binary_dir=${CMAKE_CURRENT_BINARY_DIR}"
+            -D "test_dll=${target_test}"
             -D "dll_suffix=${dll_suffix}"
             -P tests.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -102,8 +104,9 @@ add_custom_target(${target_name}.test-scripts ALL
 )
 
 # Test cases
-add_test(
-    NAME q_ffi_Tests
-    COMMAND test_q_ffi
+include(GoogleTest)
+gtest_discover_tests(${target_name}
+    EXTRA_ARGS --gtest_shuffle --gtest_color=yes
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}
+    DISCOVERY_MODE PRE_TEST     # allow other post-build events to take place first
 )

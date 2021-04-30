@@ -1,4 +1,11 @@
 # vim: set et noai ts=4 sw=4 syntax=cmake:
+####################
+# This file is deprecated (replaced by find_package w/ vcpkg support).
+#
+# To install and use GTest packages locally:
+#> vcpkg install gtest:x86-windows gtest:x64-windows
+#> vcpkg integrate install
+####################
 cmake_minimum_required(VERSION 3.14)
 
 set(GTEST_NAME GoogleTest)

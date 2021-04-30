@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "dll/test_dll.h"
+
 #define CALL_CDECL    __attribute__((cdecl))
 #define CALL_STDCALL  __attribute__((stdcall))
 #define CALL_FASTCALL __attribute__((fastcall))
@@ -11,7 +13,7 @@
 
 namespace
 {
-    char const* DLL_NAME = "libtest_q_ffi_dll.so";
+    char const* DLL_NAME = ::TEST_DLL_NAME;
 
     pid_t pid()
     {

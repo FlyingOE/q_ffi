@@ -11,6 +11,8 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE )
 configure_file(q_ffi_config.h.in q_ffi_config.h @ONLY)
 
+find_package(date CONFIG REQUIRED)
+
 # Library contents
 set(q_ffi_BINDING
     q_ffi.q

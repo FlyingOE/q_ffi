@@ -2,6 +2,8 @@
 #include <string>
 #include <unistd.h>
 
+#include "dll/test_dll.h"
+
 #define CALL_CDECL    __attribute__((cdecl))
 #define CALL_STDCALL  __attribute__((stdcall))
 #define CALL_FASTCALL __attribute__((fastcall))
@@ -17,8 +19,7 @@ namespace q_ffi
         char* p = std::strrchr(path, '/');
         assert(p != nullptr && p <= path + PATH_MAX);
 
-        auto const DLL_NAME = "libtest_q_ffi_dll.so";
-        std::strncpy(p + 1, DLL_NAME, PATH_MAX - std::strlen(path));
+        std::strncpy(p + 1, ::TEST_DLL_NAME, PATH_MAX - std::strlen(path));
         return path;
     }
 
