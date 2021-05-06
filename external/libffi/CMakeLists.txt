@@ -1,95 +1,31 @@
-# vim: set et noai ts=4 sw=4 syntax=cmake:
-cmake_minimum_required(VERSION 3.15)
+###########################
+# To install and use libffi packages locally:
+# dynamic library
+#> vcpkg install libffi:x86-windows libffi:x64-windows
+# static library
+#> vcpkg install libffi:x86-windows-static libffi:x64-windows-static
+# make installed package available (especially for Visual Studio)
+#> vcpkg integrate install
 
-include(CMakePrintHelpers)
+# !! the find_package always try to find the dynamic library, so if the dynamic version is installed, we shall comment out the -DFFI_BUILDING
+###########################
+cmake_minimum_required(VERSION 3.5)
 
-########################################
-project(libffi_msvc
-    VERSION 3.3
-    DESCRIPTION "libffi (MSVC build)"
-    HOMEPAGE_URL "https://github.com/libffi/libffi"
+set(LIBFFI_NAME libffi)
+set(LIBFFI_VERSION 3.3)
+
+include(FetchContent)
+
+FetchContent_Declare(${LIBFFI_NAME}
+    GIT_REPOSITORY  https://github.com/libffi/libffi.git
+    GIT_TAG         v${LIBFFI_VERSION}          
 )
 
-# Platform detection
-if(WIN32)
-    if(NOT (MSVC OR MSYS OR MINGW))
-        message(FATAL_ERROR "FIXME: Support non-MSVC?")
-    endif()
-    set(libffi_SYSTEM "msvc")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(libffi_PLATFORM "x86")
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(libffi_PLATFORM "x64")
-    else()
-        message(FATAL_ERROR "Unknown sizeof(void*): CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
-    endif()
-elseif(UNIX AND NOT APPLE)
-    set(libffi_SYSTEM "linux")
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-        set(libffi_PLATFORM "i686")
-    elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-        set(libffi_PLATFORM "x86_64")
-    else()
-        message(FATAL_ERROR "Failed to detect Linux platform: CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
-    endif()
-elseif(APPLE)
-    set(libffi_SYSTEM "mac")
-    message(FATAL_ERROR "FIXME: macOS not support yet!")
-else()
-    message(FATAL_ERROR "FIXME: Unsupport target platform!")
-endif()
+message(message(STATUS "GitHub >> Fetching ${LIBFFI_NAME}/v${LIBFFI_VERSION} ..."))
 
-# Library contents
-set(libffi_IMPORTS ${CMAKE_CURRENT_SOURCE_DIR}/${libffi_SYSTEM}/${libffi_PLATFORM})
-cmake_print_variables(libffi_IMPORTS)
+set(CMAKE_CXX_STANDARD 17)
+set(USE_SYSTEM_TZ_DB   ON)
 
-add_library(libffi_static STATIC IMPORTED GLOBAL)
-target_include_directories(libffi_static
-    INTERFACE ${libffi_IMPORTS}/include
-)
-target_compile_definitions(libffi_static
-    INTERFACE FFI_BUILDING
-)
+FetchContent_MakeAvailable(${LIBFFI_NAME})
 
-add_library(libffi_shared SHARED IMPORTED GLOBAL)
-target_include_directories(libffi_shared
-    INTERFACE ${libffi_IMPORTS}/include
-)
-target_compile_definitions(libffi_shared
-    PRIVATE #FFI_BUILDING_DLL
-)
-
-if(libffi_SYSTEM STREQUAL "msvc")
-    set_target_properties(libffi_static PROPERTIES
-        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/libffi_convenience.lib
-    )
-    set_target_properties(libffi_shared PROPERTIES
-        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/libffi-7.dll
-        IMPORTED_IMPLIB ${libffi_IMPORTS}/lib/libffi-7.lib
-    )
-
-elseif(libffi_SYSTEM STREQUAL "linux")
-    set_target_properties(libffi_static PROPERTIES
-        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/libffi_convenience.a
-    )
-    set_target_properties(libffi_shared PROPERTIES
-        IMPORTED_LOCATION ${libffi_IMPORTS}/lib/libffi.so.8.1.0
-        IMPORTED_IMPLIB ${libffi_IMPORTS}/lib/libffi.a
-    )
-
-elseif(libffi_SYSTEM STREQUAL "mac")
-    # FIXME
-else()
-    # FIXME
-endif()
-
-add_library(libffi::static ALIAS libffi_static)
-add_library(libffi::shared ALIAS libffi_shared)
-
-cmake_print_properties(
-    TARGETS libffi::shared libffi::static
-    PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES
-        IMPORTED_LOCATION
-        IMPORTED_IMPLIB
-)
+message(STATUS "------ << Updated ${LIBFFI_NAME}/v${LIBFFI_VERSION} .")

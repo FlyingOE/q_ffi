@@ -13,6 +13,8 @@ configure_file(q_ffi_config.h.in q_ffi_config.h @ONLY)
 
 find_package(date CONFIG REQUIRED)
 
+find_package(libffi REQUIRED)
+
 # Library contents
 set(q_ffi_BINDING
     q_ffi.q
@@ -86,14 +88,14 @@ target_include_directories(${target_name}
         $<INSTALL_INTERFACE:${target_header_dir}>
         kdb::C-dll
     PRIVATE
-        libffi::static
+        libffi
 )
 target_link_libraries(${target_name}
     PUBLIC
         kdb::C-dll
         date::date
     PRIVATE
-        libffi::static
+        libffi
 )
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     get_target_property(dll_suffix ${target_name} DEBUG_POSTFIX)
