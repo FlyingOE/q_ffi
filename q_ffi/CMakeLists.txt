@@ -14,6 +14,7 @@ configure_file(q_ffi_config.h.in q_ffi_config.h @ONLY)
 find_package(date CONFIG REQUIRED)
 
 find_package(libffi REQUIRED)
+find_path(FFI_H_DIR ffi.h)
 
 # Library contents
 set(q_ffi_BINDING
@@ -88,7 +89,7 @@ target_include_directories(${target_name}
         $<INSTALL_INTERFACE:${target_header_dir}>
         kdb::C-dll
     PRIVATE
-        libffi
+        ${FFI_H_DIR}
 )
 target_link_libraries(${target_name}
     PUBLIC

@@ -2,12 +2,12 @@
 # To install and use libffi packages locally:
 # dynamic library
 #> vcpkg install libffi:x86-windows libffi:x64-windows
-# static library
-#> vcpkg install libffi:x86-windows-static libffi:x64-windows-static
-# make installed package available (especially for Visual Studio)
 #> vcpkg integrate install
+# static libraray
+#> vcpkg install libffi:x[86|64]-windows-static
+#!! for static lib, the following definition is necessary https://github.com/microsoft/vcpkg/issues/1338
+#> cmake -DCMAKE_TOOCHAIN_FILE=** -DVCPKG_TARGET_TRIPLET=x[86|64]-windows-static
 
-# !! the find_package always try to find the dynamic library, so if the dynamic version is installed, we shall comment out the -DFFI_BUILDING
 ###########################
 cmake_minimum_required(VERSION 3.5)
 

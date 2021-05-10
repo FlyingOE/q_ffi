@@ -7,6 +7,7 @@ find_package(GTest CONFIG REQUIRED)
 
 # libffi
 find_package(libffi CONFIG REQUIRED)
+find_path(FFI_H_DIR ffi.h)
 
 # Test DLL
 add_library(${target_test} SHARED
@@ -37,15 +38,16 @@ add_dependencies(${target_name} ${target_test})
 target_include_directories(${target_name}
     PRIVATE
         kdb::C-exe
-        libffi
+        ${FFI_H_DIR}
         CapitalEdge::q_ffi
 )
 target_link_libraries(${target_name}
     PRIVATE
         GTest::gtest    GTest::gtest_main
         kdb::C-exe
-        libffi
         CapitalEdge::q_ffi
+    PUBLIC
+        libffi
 )
 if(WIN32)
     target_include_directories(${target_name}
